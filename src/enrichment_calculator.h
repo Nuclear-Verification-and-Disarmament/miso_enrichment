@@ -13,11 +13,11 @@ class EnrichmentCalculator {
  public:
   EnrichmentCalculator() {};  //TODO this constructor can be removed later
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp, 
-                       double desired_product_assay, 
-                       double desired_tails_assay, double gamma);
+                       double target_product_assay, 
+                       double target_tails_assay, double gamma);
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
-                       double desired_product_assay,
-                       double desired_tails_assay, double gamma,
+                       double target_product_assay,
+                       double target_tails_assay, double gamma,
                        double feed_qty=1e299, double product_qty=1e299,
                        double tails_qty=1e299, double max_swu=1e299);
   // TODO in the above constructor it might not make sense to keep the 
