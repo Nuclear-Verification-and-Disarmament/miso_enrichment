@@ -2,9 +2,10 @@
 #define MULTIISOTOPEENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
 
 #include <gtest/gtest.h>
+#include <map>
+#include <vector>
 
 #include "composition.h"
-#include "multi_isotope_helper.h"
 
 namespace multiisotopeenrichment {
 
@@ -24,7 +25,10 @@ class EnrichmentCalculator {
   // determined in later steps of the implementation.
 
   void BuildMatchedAbundanceRatioCascade();
-  void SetFeedComp(cyclus::Composition::Ptr feed_comp);
+  void SetInput(cyclus::Composition::Ptr new_feed_composition,
+      double new_target_product_assay, double new_target_tails_assay, 
+      double new_feed_qty, double new_product_qty, double new_tails_qty, 
+      double new_max_swu);
   
   void EnrichmentOutput(cyclus::CompMap& product_comp, 
                         cyclus::CompMap& tails_comp, int& n_enrich, 
@@ -33,12 +37,15 @@ class EnrichmentCalculator {
   FRIEND_TEST(EnrichmentCalculatorTest, ConcentrationDifference);
 
  private:
+  // epsilon used for checking the equality of compositions
+  const double eps_comp = 1e-10;  
+
   cyclus::CompMap feed_composition;
   cyclus::CompMap product_composition;
   cyclus::CompMap tails_composition;
 
-  double design_product_assay;
-  double design_tails_assay;
+  double target_product_assay;
+  double target_tails_assay;
   
   // Units of all of the streams are kg/month
   double feed_qty;

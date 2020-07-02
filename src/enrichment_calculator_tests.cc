@@ -22,8 +22,8 @@ TEST(EnrichmentCalculatorTest, ConcentrationDifference) {
 
   e.product_composition = product_comp;
   e.tails_composition = tails_comp;
-  e.design_product_assay = 0.1;
-  e.design_tails_assay = 0.001;
+  e.target_product_assay = 0.1;
+  e.target_tails_assay = 0.001;
   
   EXPECT_TRUE(cyclus::AlmostEq(2., 
                                std::pow(e.ConcentrationDifference(), 2.)));

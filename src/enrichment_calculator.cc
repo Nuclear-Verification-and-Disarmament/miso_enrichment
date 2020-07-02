@@ -1,8 +1,6 @@
 #include "enrichment_calculator.h"
 
 #include <cmath>
-#include <map>
-#include <vector>
 
 #include "error.h"
 #include "comp_math.h"
@@ -14,13 +12,14 @@ namespace multiisotopeenrichment {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
     cyclus::Composition::Ptr feed_composition, 
-    double designed_product_assay, double designed_tails_assay, 
-    double gamma) : feed_composition(feed_composition->atom()),
-                    design_product_assay(design_product_assay),
-                    design_tails_assay(design_tails_assay),
-                    gamma_235(gamma) {
-  
-  gamma_235 = gamma;
+    double target_product_assay, double target_tails_assay, 
+    double gamma_235) : feed_composition(feed_composition->atom()),
+                        target_product_assay(target_product_assay),
+                        target_tails_assay(target_tails_assay),
+                        gamma_235(gamma_235) {
+
+  cyclus::compmath::Normalize(&this->feed_composition); 
+
   IsotopesNucID(isotopes);
   separation_factors = CalculateSeparationFactor(gamma_235);
   for (int i : isotopes) {
@@ -28,28 +27,31 @@ EnrichmentCalculator::EnrichmentCalculator(
     alpha_star[i] = separation_factors[i]
                     / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
   }
-  
-  // TODO think about using member initialisation or put the initialisation
-  // in the function body, as well. Do this consistently with the other
-  // constructors.
+
   BuildMatchedAbundanceRatioCascade();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
-    cyclus::Composition::Ptr feed_comp, double desired_product_assay,
-    double desired_tails_assay, double gamma, double feed_qty, 
-    double product_qty, double tails_qty, double max_swu) {
+    cyclus::Composition::Ptr feed_composition, 
+    double target_product_assay, double target_tails_assay, 
+    double gamma_235, double feed_qty, double product_qty, 
+    double tails_qty, double max_swu) : 
+      feed_composition(feed_composition->atom()),
+      target_product_assay(target_product_assay),
+      target_tails_assay(target_tails_assay),
+      gamma_235(gamma_235), 
+      feed_qty(feed_qty),
+      product_qty(product_qty),
+      tails_qty(tails_qty),
+      max_swu(max_swu) {
   if (feed_qty==1e299 && product_qty==1e299 && tails_qty==1e299 
       && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be 
     // defined. Additionally, add an exception that should be thrown.
   }
-  feed_composition = feed_comp->atom();
-  design_product_assay = desired_product_assay;
-  design_tails_assay = desired_tails_assay;
-  
-  gamma_235 = gamma;
+  cyclus::compmath::Normalize(&this->feed_composition);
+
   IsotopesNucID(isotopes);
   separation_factors = CalculateSeparationFactor(gamma_235);
   for (int i : isotopes) {
@@ -62,9 +64,47 @@ EnrichmentCalculator::EnrichmentCalculator(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void EnrichmentCalculator::BuildMatchedAbundanceRatioCascade() {
-  CalculateNStages(n_enriching);
-  CalculateNStages(n_stripping);
+void EnrichmentCalculator::SetInput(
+    cyclus::Composition::Ptr new_feed_composition,
+    double new_target_product_assay, double new_target_tails_assay, 
+    double new_feed_qty, double new_product_qty, double new_tails_qty, 
+    double new_max_swu) {
+  
+  // This temporary variable is needed because feed_comp->atom() returns
+  // a const cyclus::CompMap object and hence it cannot be normalised.
+  // However, the normalisation is needed to be able to compare it to the
+  // current feed_composition
+  cyclus::CompMap new_compmap = new_feed_composition->atom();
+  cyclus::compmath::Normalize(&new_compmap);
+
+  // If any of the concentrations change, then redesign the cascade from
+  // scratch.
+  if (!cyclus::compmath::AlmostEq(new_compmap, feed_composition, eps_comp)
+      || !cyclus::AlmostEq(new_target_product_assay, target_product_assay)
+      || !cyclus::AlmostEq(new_target_tails_assay, target_tails_assay)) {
+    feed_composition = new_compmap;
+    target_product_assay = new_target_product_assay;
+    target_tails_assay = new_target_tails_assay;
+
+    BuildMatchedAbundanceRatioCascade();
+  }
+  // If any of the flows change, then recalculate the flows. The
+  // concentrations remain unaffected of this change.
+  if (!cyclus::AlmostEq(new_feed_qty, feed_qty) 
+      || !cyclus::AlmostEq(new_product_qty, product_qty)
+      || !cyclus::AlmostEq(new_tails_qty, tails_qty)
+      || !cyclus::AlmostEq(new_max_swu, max_swu)) {
+    feed_qty = new_feed_qty;
+    product_qty = new_product_qty;
+    tails_qty = new_tails_qty;
+    
+    if (feed_qty==1e299 && product_qty==1e299 && tails_qty==1e299 
+        && max_swu==1e299) {
+      // TODO think about whether one or two of these variables have to be
+      // defined. Additionally, add an exception that should be thrown.
+    }
+    CalculateFlows();
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -93,22 +133,12 @@ void EnrichmentCalculator::EnrichmentOutput(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// TODO REMOVE THIS FUNCTION AND REPLACE IT WITH STH MORE COMPREHENSIVE
-/*
-void EnrichmentCalculator::SetFeedComp(cyclus::Composition::Ptr feed_comp) {
-  cyclus::CompMap feed_compmap = feed_comp->atom();
-  cyclus::compmath::Normalize(&feed_compmap);
-  cyclus::compmath::Normalize(&feed_composition);
+void EnrichmentCalculator::BuildMatchedAbundanceRatioCascade() {
+  CalculateNStages(n_enriching);
+  CalculateNStages(n_stripping);
 
-  // Check if feed is different from previous one, if no then do not 
-  // rebuild the cascade.
-  if (!cyclus::compmath::AlmostEq(feed_compmap, feed_composition, 1e-12)) {
-    feed_composition = feed_comp;
-    BuildMatchedAbundanceRatioCascade();
-  }
+  CalculateFlows();
 }
-*/
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::CalculateNStages(double &n_stages) {
@@ -202,10 +232,10 @@ double EnrichmentCalculator::ConcentrationDifference() {
   double product_assay = product_composition[nuc_id235];
   double tails_assay = tails_composition[nuc_id235];
 
-  double delta_product = (product_assay-design_product_assay)
-                         / design_product_assay;
-  double delta_tails = (tails_assay-design_tails_assay) 
-                       / design_tails_assay;
+  double delta_product = (product_assay-target_product_assay)
+                         / target_product_assay;
+  double delta_tails = (tails_assay-target_tails_assay) 
+                       / target_tails_assay;
   double delta = std::sqrt(std::pow(delta_product, 2.) 
                            + std::pow(delta_tails, 2.));
   return delta;
