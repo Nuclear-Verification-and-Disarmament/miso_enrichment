@@ -1,0 +1,2 @@
+/Users/test/.local/lib/cyclus/./libmultiisotopeenrichment.dylib
+/Users/test/.local/bin/multiisotopeenrichment_unit_tests

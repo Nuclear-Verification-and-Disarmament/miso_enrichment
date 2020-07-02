@@ -1,0 +1,15 @@
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/CMakeFiles/install/local.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/CMakeFiles/rebuild_cache.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/CMakeFiles/edit_cache.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/CMakeFiles/install/strip.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/CMakeFiles/uninstall.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/CMakeFiles/install.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/CMakeFiles/list_install_components.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/install/local.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/install/strip.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/install.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/list_install_components.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/multiisotopeenrichment_unit_tests.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/rebuild_cache.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/edit_cache.dir
+/Users/test/Uni/Masterarbeit/multi_isotope_enrichment/build/src/CMakeFiles/multiisotopeenrichment.dir
