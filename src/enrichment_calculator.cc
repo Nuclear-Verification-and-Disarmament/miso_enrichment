@@ -66,7 +66,8 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
     alpha_star[i] = separation_factors[i]
                     / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
   }
-
+  
+  // TODO Check why the recalculated variables are not copied
   BuildMatchedAbundanceRatioCascade();
 
   return *this;

@@ -25,13 +25,14 @@ class EnrichmentCalculator {
 
   void BuildMatchedAbundanceRatioCascade();
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
-      double new_target_product_assay, double new_target_tails_assay, 
-      double new_feed_qty, double new_product_qty, double new_tails_qty, 
-      double new_max_swu);
+    double new_target_product_assay, double new_target_tails_assay, 
+    double new_feed_qty, double new_product_qty, double new_tails_qty, 
+    double new_max_swu);
   
-  void EnrichmentOutput(cyclus::CompMap& product_comp, 
-                        cyclus::CompMap& tails_comp, int& n_enrich, 
-                        int& n_strip);
+  void EnrichmentOutput(
+    cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
+    double& feed_used, double& swu_used, double& product_produced, 
+    double& tails_produced, int& n_enrich, int& n_strip);
   
   FRIEND_TEST(EnrichmentCalculatorTest, ConcentrationDifference);
   FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
@@ -69,10 +70,6 @@ class EnrichmentCalculator {
   
   void CalculateNStages(double &n_stages);
   void CalculateFlows();
-  void EnrichmentOutput(
-      cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
-      double& feed_used, double& swu_used, double& product_produced, 
-      double& tails_produced, int& n_enrich, int& n_strip);
   double CalculateConcentrations();
   double ConcentrationDifference();
 };
