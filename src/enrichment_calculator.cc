@@ -131,11 +131,11 @@ void EnrichmentCalculator::EnrichmentOutput(
   tails_produced = tails_qty;
 
   // Verify again that the numbers of stages are whole numbers.
-  if (std::fmod(n_enriching, 1.) < 1e-9) {
+  if (std::fmod(n_enriching, 1.) > 1e-9) {
     throw cyclus::ValueError("n_enriching is not a whole number!");
   }
   n_enrich = (int) n_enriching;
-  if (std::fmod(n_stripping, 1.) < 1e-9) {
+  if (std::fmod(n_stripping, 1.) > 1e-9) {
     throw cyclus::ValueError("n_stripping is not a whole number!");
   }
   n_strip = (int) n_stripping;
