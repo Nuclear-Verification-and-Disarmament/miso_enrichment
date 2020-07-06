@@ -12,9 +12,6 @@ namespace multiisotopeenrichment {
 class EnrichmentCalculator {
  public:
   EnrichmentCalculator() {};  //TODO this constructor can be removed later
-  EnrichmentCalculator(cyclus::Composition::Ptr feed_comp, 
-                       double target_product_assay, 
-                       double target_tails_assay, double gamma);
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
@@ -23,6 +20,8 @@ class EnrichmentCalculator {
   // TODO in the above constructor it might not make sense to keep the 
   // default arguments for feed_qty and for product_qty. This will be
   // determined in later steps of the implementation.
+  EnrichmentCalculator& operator= (const EnrichmentCalculator& e);
+
 
   void BuildMatchedAbundanceRatioCascade();
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
@@ -35,6 +34,7 @@ class EnrichmentCalculator {
                         int& n_strip);
   
   FRIEND_TEST(EnrichmentCalculatorTest, ConcentrationDifference);
+  FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
 
  private:
   // epsilon used for checking the equality of compositions

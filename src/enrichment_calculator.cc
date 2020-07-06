@@ -13,28 +13,6 @@ namespace multiisotopeenrichment {
 EnrichmentCalculator::EnrichmentCalculator(
     cyclus::Composition::Ptr feed_composition, 
     double target_product_assay, double target_tails_assay, 
-    double gamma_235) : feed_composition(feed_composition->atom()),
-                        target_product_assay(target_product_assay),
-                        target_tails_assay(target_tails_assay),
-                        gamma_235(gamma_235) {
-
-  cyclus::compmath::Normalize(&this->feed_composition); 
-
-  IsotopesNucID(isotopes);
-  separation_factors = CalculateSeparationFactor(gamma_235);
-  for (int i : isotopes) {
-    // E. von Halle Eq. (15)
-    alpha_star[i] = separation_factors[i]
-                    / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
-  }
-
-  BuildMatchedAbundanceRatioCascade();
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EnrichmentCalculator::EnrichmentCalculator(
-    cyclus::Composition::Ptr feed_composition, 
-    double target_product_assay, double target_tails_assay, 
     double gamma_235, double feed_qty, double product_qty, 
     double tails_qty, double max_swu) : 
       feed_composition(feed_composition->atom()),
@@ -61,6 +39,37 @@ EnrichmentCalculator::EnrichmentCalculator(
   }
    
   BuildMatchedAbundanceRatioCascade();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EnrichmentCalculator& EnrichmentCalculator::operator= (
+    const EnrichmentCalculator& e) {
+  
+  feed_composition = e.feed_composition;
+  product_composition = e.product_composition;
+  tails_composition = e.tails_composition;
+
+  target_product_assay = e.target_product_assay;
+  target_tails_assay = e.target_tails_assay;
+  
+  feed_qty = e.feed_qty;
+  product_qty = e.product_qty;
+  tails_qty = e.tails_qty;
+  max_swu = e.max_swu;  // in kg SWU month^-1
+  swu = e.swu;
+  
+  IsotopesNucID(isotopes);
+  gamma_235 = e.gamma_235;
+  separation_factors = CalculateSeparationFactor(gamma_235);
+  for (int i : isotopes) {
+    // E. von Halle Eq. (15)
+    alpha_star[i] = separation_factors[i]
+                    / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
+  }
+
+  BuildMatchedAbundanceRatioCascade();
+
+  return *this;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -163,7 +172,7 @@ void EnrichmentCalculator::CalculateNStages(double &n_stages) {
              ? n_stages + eps : n_stages + (1+eps);
 
   // ensure that the number of stages is an integer (stored as double)
-  if (std::fmod(n_stages, 1.) < 1e-9) {
+  if (std::fmod(n_stages, 1.) > 1e-9) {
     throw cyclus::ValueError("n_stages is not a whole number!");
   }
   CalculateConcentrations();
