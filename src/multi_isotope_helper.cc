@@ -136,22 +136,18 @@ double MultiIsotopeMassFrac(std::map<int,double> compmap, int isotope) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::map<int,double> CalculateSeparationFactor(double alpha_235) {
+std::map<int,double> CalculateSeparationFactor(double gamma_235) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   std::map<int,double> separation_factors;
-  
-  // Convert the product to feed separation factor to overall stage 
-  // separation factor.
-  alpha_235 *= alpha_235;
   
   // We consider U-238 to be the key component hence the mass differences
   // are calculated with respect to this isotope.
   for (int i : isotopes) {
     double delta_mass = 238. - NucIDToIsotope(i);
-    double alpha = 1. + delta_mass*(alpha_235-1.) / (238.-235.);
-    separation_factors[i] = alpha;
-    }
+    double gamma = 1. + delta_mass*(gamma_235-1.) / (238.-235.);
+    separation_factors[i] = gamma;
+  }
   return separation_factors;
 }
 

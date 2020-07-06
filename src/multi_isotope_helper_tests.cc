@@ -79,9 +79,9 @@ TEST(MultiIsotopeHelperTest, CheckFractionsMaterial) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST(MultiIsotopeHelperTest, SeparationFactor) {
   // The values below are valid for alpha*beta = 1.6
-  double alpha_235 = std::pow(1.6, 0.5);
+  double gamma_235 = 1.6;
   std::map<int,double> separation_factor = CalculateSeparationFactor(
-                                                              alpha_235);
+                                                              gamma_235);
 
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);

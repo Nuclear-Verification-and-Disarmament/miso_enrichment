@@ -32,7 +32,7 @@ double MultiIsotopeMassFrac(cyclus::Material::Ptr rsrc, int isotope);
 double MultiIsotopeMassFrac(std::map<int,double> compmap, int isotope);
 
 // Calculates the stage separation factor for all isotopes starting from 
-// the given U235 product to feed separation factor.
+// the given U235 overall separation factor.
 //
 // Returns a map containing the stage separation factors for all U isotopes
 // with the keys being the isotopes' mass.
@@ -43,7 +43,7 @@ double MultiIsotopeMassFrac(std::map<int,double> compmap, int isotope);
 // Uranium Isotopes in Enrichment Cascades'. In: Science and Global 
 // Security, 16:26--36 (2008). ISSN: 0892-9882.
 // DOI: 10.1080/08929880802361796
-std::map<int,double> CalculateSeparationFactor(double alpha_235);
+std::map<int,double> CalculateSeparationFactor(double gamma_235);
 
 } // namespace multiisotopeenrichment
 
