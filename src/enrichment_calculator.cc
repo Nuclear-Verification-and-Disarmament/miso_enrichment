@@ -2,8 +2,9 @@
 
 #include <cmath>
 
-#include "error.h"
 #include "comp_math.h"
+#include "cyc_limits.h"
+#include "error.h"
 
 #include "multi_isotope_helper.h"
 

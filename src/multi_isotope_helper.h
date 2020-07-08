@@ -9,6 +9,8 @@
 
 namespace multiisotopeenrichment {
 
+const double eps_compmap = 1e-10;
+
 void IsotopesNucID(std::vector<int> &isotopes);
 int IsotopeToNucID(int isotope);
 int NucIDToIsotope(int nuc_id);
