@@ -191,13 +191,12 @@ class MultiIsotopeEnrich : public cyclus::Facility,
   double intra_timestep_swu;
   double intra_timestep_feed;
   
-  std::vector<cyclus::toolkit::ResBuf<cyclus::Material>> feed_inv;
-  std::vector<cyclus::toolkit::ResBuf<cyclus::Material>> tails_inv;
-
+  std::vector<cyclus::toolkit::ResBuf<cyclus::Material> > feed_inv;
   std::vector<cyclus::Composition::Ptr> feed_inv_comp;
   int current_feed_inv;
-  
-  
+
+  cyclus::toolkit::ResBuf<cyclus::Material> tails_inv;
+
 };
 
 }  // namespace multiisotopeenrichment
