@@ -1,13 +1,13 @@
 
 #include <gtest/gtest.h>
-#include "multi_isotope_helper.h"
+#include "miso_helper.h"
 
 #include "cyc_limits.h"
 #include "pyne.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
-namespace multiisotopehelpertest {
+namespace misohelpertest {
 
 cyclus::Composition::Ptr comp_natU() {
   cyclus::CompMap comp;
@@ -34,25 +34,25 @@ cyclus::Material::Ptr mat_natU() {
   return cyclus::Material::CreateUntracked(qty, comp);
 };
 
-} // namespace multiisotopehelpertest
+} // namespace misohelpertest
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST(MultiIsotopeHelperTest, ChooseCorrectResBuf) {
+TEST(MIsoHelperTest, ChooseCorrectResBuf) {
   using cyclus::Composition;
   std::vector<Composition::Ptr> comp_vec;
-  comp_vec.push_back(multiisotopehelpertest::comp_natU());
-  comp_vec.push_back(multiisotopehelpertest::comp_weapons_grade_U());
+  comp_vec.push_back(MIsohelpertest::comp_natU());
+  comp_vec.push_back(MIsohelpertest::comp_weapons_grade_U());
   
   cyclus::CompMap plutonium_cm;
   plutonium_cm[942390000] = 1.;
   Composition::Ptr plutonium = Composition::CreateFromAtom(plutonium_cm);
 
-  EXPECT_EQ(ResBufIdx(comp_vec, multiisotopehelpertest::comp_natU()), 0);
+  EXPECT_EQ(ResBufIdx(comp_vec, MIsohelpertest::comp_natU()), 0);
   EXPECT_EQ(ResBufIdx(comp_vec, plutonium), 2);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST(MultiIsotopeHelperTest, NucIDConversion) {
+TEST(MIsoHelperTest, NucIDConversion) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   
@@ -63,45 +63,45 @@ TEST(MultiIsotopeHelperTest, NucIDConversion) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST(MultiIsotopeHelperTest, CheckFractionsComposition) {
+TEST(MIsoHelperTest, CheckFractionsComposition) {
   double expected_mass235 = 0.00711;
   double expected_atom235 = 0.00711 / pyne::atomic_mass(922350000)
                             / (5.5e-5/pyne::atomic_mass(922340000)
                                + 0.00711/pyne::atomic_mass(922350000)
                                + 0.992835/pyne::atomic_mass(922380000));
 
-  cyclus::Composition::Ptr comp = multiisotopehelpertest::comp_natU();
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeAtomAssay(comp), 
+  cyclus::Composition::Ptr comp = MIsohelpertest::comp_natU();
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomAssay(comp), 
                                expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeAtomFrac(comp, 922350000),
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomFrac(comp, 922350000),
                                expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeMassAssay(comp), 
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassAssay(comp), 
                                expected_mass235));
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeMassFrac(comp, 922350000), 
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassFrac(comp, 922350000), 
                                expected_mass235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST(MultiIsotopeHelperTest, CheckFractionsMaterial) {
+TEST(MIsoHelperTest, CheckFractionsMaterial) {
   double expected_mass235 = 0.00711;
   double expected_atom235 = 0.00711 / pyne::atomic_mass(922350000)
                             / (5.5e-5/pyne::atomic_mass(922340000)
                                + 0.00711/pyne::atomic_mass(922350000)
                                + 0.992835/pyne::atomic_mass(922380000));
 
-  cyclus::Material::Ptr mat = multiisotopehelpertest::mat_natU();
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeAtomAssay(mat), 
+  cyclus::Material::Ptr mat = MIsohelpertest::mat_natU();
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomAssay(mat), 
                                expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeAtomFrac(mat, 922350000),
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomFrac(mat, 922350000),
                                expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeMassAssay(mat), 
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassAssay(mat), 
                                expected_mass235));
-  EXPECT_TRUE(cyclus::AlmostEq(MultiIsotopeMassFrac(mat, 922350000), 
+  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassFrac(mat, 922350000), 
                                expected_mass235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST(MultiIsotopeHelperTest, SeparationFactor) {
+TEST(MIsoHelperTest, SeparationFactor) {
   // The values below are valid for alpha*beta = 1.6
   double gamma_235 = 1.6;
   std::map<int,double> separation_factor = CalculateSeparationFactor(
@@ -122,7 +122,7 @@ TEST(MultiIsotopeHelperTest, SeparationFactor) {
   }
 }
 
-} // namespace multiisotopeenrichment
+} // namespace misoenrichment
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

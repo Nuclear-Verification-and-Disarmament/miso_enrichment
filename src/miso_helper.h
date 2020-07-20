@@ -1,5 +1,5 @@
-#ifndef MULTIISOTOPEENRICHMENT_SRC_MULTI_ISOTOPE_HELPER_H_
-#define MULTIISOTOPEENRICHMENT_SRC_MULTI_ISOTOPE_HELPER_H_
+#ifndef MISOENRICHMENT_SRC_MISO_HELPER_H_
+#define MISOENRICHMENT_SRC_MISO_HELPER_H_
 
 #include <map>
 #include <vector>
@@ -7,7 +7,7 @@
 #include "composition.h"
 #include "material.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 const double eps_compmap = 1e-10;
 
@@ -18,23 +18,23 @@ int ResBufIdx(
     const std::vector<cyclus::Composition::Ptr>& buf_compositions,
     const cyclus::Composition::Ptr& in_comp);
 
-double MultiIsotopeAtomAssay(cyclus::Composition::Ptr comp);
-double MultiIsotopeAtomAssay(cyclus::Material::Ptr rsrc);
-double MultiIsotopeAtomAssay(std::map<int,double> compmap);
+double MIsoAtomAssay(cyclus::Composition::Ptr comp);
+double MIsoAtomAssay(cyclus::Material::Ptr rsrc);
+double MIsoAtomAssay(std::map<int,double> compmap);
 
-double MultiIsotopeMassAssay(cyclus::Composition::Ptr comp);
-double MultiIsotopeMassAssay(cyclus::Material::Ptr rsrc);
-double MultiIsotopeMassAssay(std::map<int,double> compmap);
+double MIsoMassAssay(cyclus::Composition::Ptr comp);
+double MIsoMassAssay(cyclus::Material::Ptr rsrc);
+double MIsoMassAssay(std::map<int,double> compmap);
 
-double MultiIsotopeAtomFrac(cyclus::Composition::Ptr composition,
+double MIsoAtomFrac(cyclus::Composition::Ptr composition,
                             int isotope);
-double MultiIsotopeAtomFrac(cyclus::Material::Ptr rsrc, int isotope);
-double MultiIsotopeAtomFrac(cyclus::CompMap compmap, int isotope);
+double MIsoAtomFrac(cyclus::Material::Ptr rsrc, int isotope);
+double MIsoAtomFrac(cyclus::CompMap compmap, int isotope);
 
-double MultiIsotopeMassFrac(cyclus::Composition::Ptr composition, 
+double MIsoMassFrac(cyclus::Composition::Ptr composition, 
                             int isotope);
-double MultiIsotopeMassFrac(cyclus::Material::Ptr rsrc, int isotope);
-double MultiIsotopeMassFrac(std::map<int,double> compmap, int isotope);
+double MIsoMassFrac(cyclus::Material::Ptr rsrc, int isotope);
+double MIsoMassFrac(std::map<int,double> compmap, int isotope);
 
 // Calculates the stage separation factor for all isotopes starting from 
 // the given U235 overall separation factor.
@@ -50,7 +50,6 @@ double MultiIsotopeMassFrac(std::map<int,double> compmap, int isotope);
 // DOI: 10.1080/08929880802361796
 std::map<int,double> CalculateSeparationFactor(double gamma_235);
 
-} // namespace multiisotopeenrichment
+} // namespace misoenrichment
 
-#endif  // MULTIISOTOPEENRICHMENT_SRC_MULTI_ISOTOPE_HELPER_H_
-
+#endif  // MISOENRICHMENT_SRC_MISO_HELPER_H_

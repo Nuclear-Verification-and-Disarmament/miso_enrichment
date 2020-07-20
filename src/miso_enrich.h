@@ -1,5 +1,5 @@
-#ifndef MULTIISOTOPEENRICHMENT_SRC_MULTI_ISOTOPE_ENRICH_H_
-#define MULTIISOTOPEENRICHMENT_SRC_MULTI_ISOTOPE_ENRICH_H_
+#ifndef MISOENRICHMENT_SRC_MISO_ENRICH_H_
+#define MISOENRICHMENT_SRC_MISO_ENRICH_H_
 
 #include <string>
 #include <vector>
@@ -7,9 +7,9 @@
 #include "cyclus.h"
 
 #include "enrichment_calculator.h"
-#include "multi_isotope_helper.h"
+#include "miso_helper.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
@@ -26,7 +26,7 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
     EnrichmentCalculator e;
     
     double product_qty = m->quantity();
-    double product_assay = MultiIsotopeAtomAssay(m);
+    double product_assay = MIsoAtomAssay(m);
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
                1e299);
     double swu_used = e.SwuUsed();
@@ -68,7 +68,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
           const * ctx = NULL) const {
     
     double product_qty = m->quantity();
-    double product_assay = MultiIsotopeAtomAssay(m);
+    double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e;
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
                1e299);
@@ -102,12 +102,12 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
   cyclus::Composition::Ptr feed_comp_;
   double tails_assay_;
 };
-/// @class MultiIsotopeEnrich
+/// @class MIsoEnrich
 ///
 /// This Facility is intended
 /// as a skeleton to guide the implementation of new Facility
 /// agents.
-/// The MultiIsotopeEnrich class inherits from the Facility class and is
+/// The MIsoEnrich class inherits from the Facility class and is
 /// dynamically loaded by the Agent class when requested.
 ///
 /// @section intro Introduction
@@ -125,12 +125,12 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
 /// Place a description of the detailed behavior of the agent. Consider
 /// describing the behavior at the tick and tock as well as the behavior
 /// upon sending and receiving materials and messages.
-class MultiIsotopeEnrich : public cyclus::Facility,
+class MIsoEnrich : public cyclus::Facility,
                            public cyclus::toolkit::Position {
  public:
-  /// Constructor for MultiIsotopeEnrich Class
+  /// Constructor for MIsoEnrich Class
   /// @param ctx the cyclus context for access to simulation-wide parameters
-  explicit MultiIsotopeEnrich(cyclus::Context* ctx);
+  explicit MIsoEnrich(cyclus::Context* ctx);
 
   /// The Prime Directive
   /// @warning The Prime Directive must have a space before it! (A fix will be
@@ -140,7 +140,7 @@ class MultiIsotopeEnrich : public cyclus::Facility,
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
   
-  virtual ~MultiIsotopeEnrich();
+  virtual ~MIsoEnrich();
 
   virtual std::string str();
   virtual void Build(cyclus::Agent* parent);
@@ -177,7 +177,7 @@ class MultiIsotopeEnrich : public cyclus::Facility,
   // The Offer function only considers U235 content that needs to be 
   // achieved and it ignores the minor isotopes. This has the advantage 
   // that the evolution of minor isotopes does not need to be taken into 
-  // account when performing requests to a MultiIsotopeEnrich facility.
+  // account when performing requests to a MIsoEnrich facility.
   cyclus::Material::Ptr Offer_(cyclus::Material::Ptr req);
 
   cyclus::Material::Ptr Enrich_(cyclus::Material::Ptr mat, double qty);
@@ -323,6 +323,6 @@ class MultiIsotopeEnrich : public cyclus::Facility,
   cyclus::toolkit::Position coordinates;
 };
 
-}  // namespace multiisotopeenrichment
+}  // namespace misoenrichment
 
-#endif  // CYCLUS_MULTIISOTOPEENRICHMENT_MULTI_ISOTOPE_ENRICH_H_
+#endif  // MISOENRICHMENT_MISO_ENRICH_H_

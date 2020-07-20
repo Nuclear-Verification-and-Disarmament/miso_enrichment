@@ -1,4 +1,4 @@
-#include "multi_isotope_enrich.h"
+#include "miso_enrich.h"
 
 #include <algorithm>
 #include <cmath>
@@ -6,12 +6,12 @@
 #include <sstream> 
 #include <vector>
 
-#include "multi_isotope_helper.h"
+#include "misotope_helper.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-MultiIsotopeEnrich::MultiIsotopeEnrich(cyclus::Context* ctx)
+MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
     : cyclus::Facility(ctx),
       tails_assay(0),
       swu_capacity(0),
@@ -28,10 +28,10 @@ MultiIsotopeEnrich::MultiIsotopeEnrich(cyclus::Context* ctx)
       coordinates(latitude, longitude) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-MultiIsotopeEnrich::~MultiIsotopeEnrich() {}
+MIsoEnrich::~MIsoEnrich() {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::string MultiIsotopeEnrich::str() {
+std::string MIsoEnrich::str() {
   std::stringstream ss;
   ss << cyclus::Facility::str() << " with enrichment facility parameters:";
   // TODO complete stringstream
@@ -40,7 +40,7 @@ std::string MultiIsotopeEnrich::str() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::Build(cyclus::Agent* parent) {
+void MIsoEnrich::Build(cyclus::Agent* parent) {
   cyclus::Facility::Build(parent);
 
   if (initial_feed > 0) {
@@ -58,12 +58,12 @@ void MultiIsotopeEnrich::Build(cyclus::Agent* parent) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::Tick() {
+void MIsoEnrich::Tick() {
   current_swu_capacity = swu_capacity;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::Tock() {
+void MIsoEnrich::Tock() {
   using cyclus::toolkit::RecordTimeSeries;
   
   LOG(cyclus::LEV_INFO4, "MIsoEn") << prototype() << " used "
@@ -80,7 +80,7 @@ void MultiIsotopeEnrich::Tock() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr> 
-MultiIsotopeEnrich::GetMatlRequests() {
+MIsoEnrich::GetMatlRequests() {
   using cyclus::Material;
   using cyclus::RequestPortfolio;
   using cyclus::Request;
@@ -98,7 +98,7 @@ MultiIsotopeEnrich::GetMatlRequests() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-cyclus::Material::Ptr MultiIsotopeEnrich::Request_() {
+cyclus::Material::Ptr MIsoEnrich::Request_() {
   double qty = std::max(0.0, feed_inv[feed_idx].capacity()
                              - feed_inv[feed_idx].quantity());
   return cyclus::Material::CreateUntracked(qty, feed_inv_comp[feed_idx]);
@@ -106,7 +106,7 @@ cyclus::Material::Ptr MultiIsotopeEnrich::Request_() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> 
-    MultiIsotopeEnrich::GetMatlBids(
+    MIsoEnrich::GetMatlBids(
       cyclus::CommodMap<cyclus::Material>::type& out_requests) {
   using cyclus::Bid;
   using cyclus::BidPortfolio;
@@ -166,7 +166,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
     for (it = commod_requests.begin(); it != commod_requests.end(); it++) {
       Request<Material>* req = *it;
       Material::Ptr mat = req->target();
-      double request_enrich = MultiIsotopeAtomAssay(mat);
+      double request_enrich = MIsoAtomAssay(mat);
       if (ValidReq(req->target()) 
           && ((request_enrich < max_enrich) 
               || (cyclus::AlmostEq(request_enrich, max_enrich)))) {
@@ -199,20 +199,20 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-cyclus::Material::Ptr MultiIsotopeEnrich::Offer_(
+cyclus::Material::Ptr MIsoEnrich::Offer_(
     cyclus::Material::Ptr mat) {
   cyclus::CompMap comp;
-  comp[IsotopeToNucID(235)] = MultiIsotopeAtomAssay(mat);
-  comp[IsotopeToNucID(238)] = MultiIsotopeAtomFrac(mat, 238);
+  comp[IsotopeToNucID(235)] = MIsoAtomAssay(mat);
+  comp[IsotopeToNucID(238)] = MIsoAtomFrac(mat, 238);
 
   return cyclus::Material::CreateUntracked(
       mat->quantity(), cyclus::Composition::CreateFromAtom(comp)); 
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool MultiIsotopeEnrich::ValidReq_(const cyclus::Material::Ptr mat) {
-  double u_235 = MultiIsotopeAtomAssay(mat);
-  double u_238 = MultiIsotopeAtomFrac(mat, 238);
+bool MIsoEnrich::ValidReq_(const cyclus::Material::Ptr mat) {
+  double u_235 = MIsoAtomAssay(mat);
+  double u_238 = MIsoAtomFrac(mat, 238);
 
   bool u_238_present = u_238 > 0;
   bool not_depleted = u_235 / (u_235+u_238) > tails_assay;
@@ -229,11 +229,11 @@ bool SortBids(cyclus::Bid<cyclus::Material>* i,
   // TODO cycamore uses mass(U235) compared to total mass. This would also
   // include possible non-U elements that are sent directly to tails. 
   // Because of this, they should not be considered here IMO.
-  return MultiIsotopeAtomAssay(mat_i) <= MultiIsotopeAtomAssay(mat_j);
+  return MIsoAtomAssay(mat_i) <= MIsoAtomAssay(mat_j);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::AdjustMatlPrefs(
+void MIsoEnrich::AdjustMatlPrefs(
     cyclus::PrefMap<cyclus::Material>::type& prefs) {
   using cyclus::Bid;
   using cyclus::Material;
@@ -263,7 +263,7 @@ void MultiIsotopeEnrich::AdjustMatlPrefs(
 
       if (!u_235_mass) {
         cyclus::Material::Ptr mat = bids_vector[bid_i]->offer();
-        if (MultiIsotopeAtomAssay(mat) == 0.) {
+        if (MIsoAtomAssay(mat) == 0.) {
           new_pref = -1;
         } else {
           u_235_mass = true;
@@ -276,7 +276,7 @@ void MultiIsotopeEnrich::AdjustMatlPrefs(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::GetMatlTrades(
+void MIsoEnrich::GetMatlTrades(
     const std::vector<cyclus::Trade<cyclus::Material> >& trades,
     std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                           cyclus::Material::Ptr> >& responses) {
@@ -322,7 +322,7 @@ void MultiIsotopeEnrich::GetMatlTrades(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::AcceptMatlTrades(
+void MIsoEnrich::AcceptMatlTrades(
     const std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                                 cyclus::Material::Ptr> >& responses) {
   using cyclus::Material;
@@ -336,7 +336,7 @@ void MultiIsotopeEnrich::AcceptMatlTrades(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::AddMat_(cyclus::Material::Ptr mat) {
+void MIsoEnrich::AddMat_(cyclus::Material::Ptr mat) {
   cyclus::CompMap cm = mat->comp()->atom();
   bool non_u_elem = false;  
   
@@ -373,15 +373,15 @@ void MultiIsotopeEnrich::AddMat_(cyclus::Material::Ptr mat) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-cyclus::Material::Ptr MultiIsotopeEnrich::Enrich_(
+cyclus::Material::Ptr MIsoEnrich::Enrich_(
     cyclus::Material::Ptr mat, double qty) {
 
   cyclus::CompMap product_comp, tails_comp;
   double feed_required, swu_required, product_qty, tails_qty;
   int n_enriching, n_stripping;
 
-  double feed_assay = MultiIsotopeAtomAssay(feed_inv_comp[feed_idx]);
-  double product_assay = MultiIsotopeAtomAssay(mat);
+  double feed_assay = MIsoAtomAssay(feed_inv_comp[feed_idx]);
+  double product_assay = MIsoAtomAssay(mat);
   
   // In the following line, the enrichment is calculated but it is not yet
   // performed!
@@ -424,10 +424,10 @@ cyclus::Material::Ptr MultiIsotopeEnrich::Enrich_(
                                    << feed_assay;
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Product Qty: " << product_qty;
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Product Assay: "
-                                   << MultiIsotopeAtomAssay(product_comp);
+                                   << MIsoAtomAssay(product_comp);
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Tails Qty: " << tails_qty;
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Tails Assay: "
-                                   << MultiIsotopeAtomAssay(tails_comp);
+                                   << MIsoAtomAssay(tails_comp);
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * SWU: " << swu_required;
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Current SWU capacity: " 
                                    << current_swu_capacity;
@@ -436,7 +436,7 @@ cyclus::Material::Ptr MultiIsotopeEnrich::Enrich_(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::RecordEnrichment_(double feed_qty, double swu,
+void MIsoEnrich::RecordEnrichment_(double feed_qty, double swu,
                                            int feed_inv_idx) {
   LOG(cyclus::LEV_DEBUG1, "MIsoEn") << prototype()
                                     << " has enriched a material:";
@@ -454,7 +454,7 @@ void MultiIsotopeEnrich::RecordEnrichment_(double feed_qty, double swu,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MultiIsotopeEnrich::RecordPosition() {
+void MIsoEnrich::RecordPosition() {
   std::string specification = this->spec();
   context()->NewDatum("AgentPosition")
            ->AddVal("Spec", specification)
@@ -470,8 +470,8 @@ void MultiIsotopeEnrich::RecordPosition() {
 // WARNING! Do not change the following this function!!! This enables your
 // archetype to be dynamically loaded and any alterations will cause your
 // archetype to fail.
-extern "C" cyclus::Agent* ConstructMultiIsotopeEnrich(cyclus::Context* ctx) {
-  return new MultiIsotopeEnrich(ctx);
+extern "C" cyclus::Agent* ConstructMIsoEnrich(cyclus::Context* ctx) {
+  return new MIsoEnrich(ctx);
 }
 
-}  // namespace multiisotopeenrichment
+}  // namespace misoenrichment
