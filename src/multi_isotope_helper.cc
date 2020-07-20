@@ -43,7 +43,7 @@ int NucIDToIsotope(int nuc_id) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int ResBufIdx(
-    std::vector<cyclus::Composition::Ptr> buf_compositions,
+    const std::vector<cyclus::Composition::Ptr>& buf_compositions,
     const cyclus::Composition::Ptr& in_comp) {
   cyclus::CompMap in_compmap = in_comp->atom();
   cyclus::compmath::Normalize(&in_compmap);

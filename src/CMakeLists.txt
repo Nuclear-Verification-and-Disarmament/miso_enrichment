@@ -1,6 +1,6 @@
 ### DO NOT DELETE THIS COMMENT: INSERT_ARCHETYPES_HERE ###
 
-#USE_CYCLUS("multiisotopeenrichment" "multi_isotope_enrich")
+USE_CYCLUS("multiisotopeenrichment" "multi_isotope_enrich")
 USE_CYCLUS("multiisotopeenrichment" "enrichment_calculator")
 USE_CYCLUS("multiisotopeenrichment" "multi_isotope_helper")
 
