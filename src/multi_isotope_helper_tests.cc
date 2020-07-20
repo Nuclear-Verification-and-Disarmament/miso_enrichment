@@ -1,25 +1,33 @@
 
 #include <gtest/gtest.h>
-
-#include "composition.h"
-#include "cyc_limits.h"
-#include "material.h"
-#include "pyne.h"
-
 #include "multi_isotope_helper.h"
+
+#include "cyc_limits.h"
+#include "pyne.h"
 
 namespace multiisotopeenrichment {
 
 namespace multiisotopehelpertest {
 
 cyclus::Composition::Ptr comp_natU() {
-  std::map<int,double> m;
-  m[922340000] = 5.5e-3;
-  m[922350000] = 0.711;
-  m[922380000] = 99.2835;
-  m[10010000] = 10;  // insert hydrogen to check if it is filtered out
-  return cyclus::Composition::CreateFromMass(m);
+  cyclus::CompMap comp;
+  comp[922340000] = 5.5e-3;
+  comp[922350000] = 0.711;
+  comp[922380000] = 99.2835;
+  comp[10010000] = 10;  // insert hydrogen to check if it is filtered out
+  
+  return cyclus::Composition::CreateFromAtom(comp);
 };
+
+cyclus::Composition::Ptr comp_weapons_grade_U() {
+  cyclus::CompMap comp;
+  comp[922340000] = 0.00780791;
+  comp[922350000] = 0.91020719;
+  comp[922380000] = 0.08198490;
+
+  return cyclus::Composition::CreateFromAtom(comp);
+};
+
 cyclus::Material::Ptr mat_natU() {
   cyclus::Composition::Ptr comp = comp_natU();
   double qty = 1.;
@@ -27,6 +35,21 @@ cyclus::Material::Ptr mat_natU() {
 };
 
 } // namespace multiisotopehelpertest
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST(MultiIsotopeHelperTest, ChooseCorrectResBuf) {
+  using cyclus::Composition;
+  std::vector<Composition::Ptr> comp_vec;
+  comp_vec.push_back(multiisotopehelpertest::comp_natU());
+  comp_vec.push_back(multiisotopehelpertest::comp_weapons_grade_U());
+  
+  cyclus::CompMap plutonium_cm;
+  plutonium_cm[942390000] = 1.;
+  Composition::Ptr plutonium = Composition::CreateFromAtom(plutonium_cm);
+
+  EXPECT_EQ(ResBufIdx(comp_vec, multiisotopehelpertest::comp_natU()), 0);
+  EXPECT_EQ(ResBufIdx(comp_vec, plutonium), 2);
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST(MultiIsotopeHelperTest, NucIDConversion) {
@@ -38,6 +61,7 @@ TEST(MultiIsotopeHelperTest, NucIDConversion) {
     EXPECT_EQ(IsotopeToNucID(isotope), i);
   }
 }
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST(MultiIsotopeHelperTest, CheckFractionsComposition) {
   double expected_mass235 = 0.00711;

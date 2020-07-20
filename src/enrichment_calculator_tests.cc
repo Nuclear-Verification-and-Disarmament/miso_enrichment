@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+
 #include <gtest/gtest.h>
 
 #include "cyc_limits.h"
@@ -88,6 +89,8 @@ bool EnrichmentCalculatorTest::expect_true_compmap(cyclus::CompMap cm1,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
+  using cyclus::Composition;
+
   EnrichmentCalculator e2(
     cyclus::Composition::CreateFromAtom(weapons_grade_U()), 0.95, 0.1, 1.1,
     1.);
@@ -167,30 +170,6 @@ TEST_F(EnrichmentCalculatorTest, NumberStages) {
       cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
       double& feed_used, double& swu_used, double& product_produced, 
  */
-
-
-/* --------------------------------------------------------------------
-
-TEST(EnrichmentCalculatorTest, ConcentrationDifference) {
-  EnrichmentCalculator e;
-  
-  cyclus::CompMap product_comp;
-  product_comp[922350000] = 0.2;
-  product_comp[922380000] = 0.8;
-
-  cyclus::CompMap tails_comp;
-  tails_comp[922350000] = 0.002;
-  tails_comp[922380000] = 0.998;
-
-  e.product_composition = product_comp;
-  e.tails_composition = tails_comp;
-  e.target_product_assay = 0.1;
-  e.target_tails_assay = 0.001;
-  
-  EXPECT_TRUE(cyclus::AlmostEq(2., 
-                               std::pow(e.ConcentrationDifference(), 2.)));
-}
-   -------------------------------------------------------------------- */
 
 }  // namespace multiisotopeenrichment
 

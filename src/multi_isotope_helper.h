@@ -9,9 +9,14 @@
 
 namespace multiisotopeenrichment {
 
+const double eps_compmap = 1e-10;
+
 void IsotopesNucID(std::vector<int> &isotopes);
 int IsotopeToNucID(int isotope);
 int NucIDToIsotope(int nuc_id);
+int ResBufIdx(
+    const std::vector<cyclus::Composition::Ptr>& buf_compositions,
+    const cyclus::Composition::Ptr& in_comp);
 
 double MultiIsotopeAtomAssay(cyclus::Composition::Ptr comp);
 double MultiIsotopeAtomAssay(cyclus::Material::Ptr rsrc);

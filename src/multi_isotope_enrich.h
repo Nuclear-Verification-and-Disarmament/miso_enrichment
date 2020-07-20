@@ -2,11 +2,106 @@
 #define MULTIISOTOPEENRICHMENT_SRC_MULTI_ISOTOPE_ENRICH_H_
 
 #include <string>
+#include <vector>
 
 #include "cyclus.h"
 
+#include "enrichment_calculator.h"
+#include "multi_isotope_helper.h"
+
 namespace multiisotopeenrichment {
 
+class SwuConverter : public cyclus::Converter<cyclus::Material> {
+ public:
+  SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay) 
+      : feed_comp_(feed_comp),
+        tails_assay_(tails_assay) {}
+  
+  virtual ~SwuConverter() {}
+
+  virtual double convert(
+      cyclus::Material::Ptr m, cyclus::Arc const * a = NULL,
+      cyclus::ExchangeTranslationContext<cyclus::Material> 
+          const * ctx = NULL) const {
+    EnrichmentCalculator e;
+    
+    double product_qty = m->quantity();
+    double product_assay = MultiIsotopeAtomAssay(m);
+    e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
+               1e299);
+    double swu_used = e.SwuUsed();
+    
+    return swu_used;
+  }
+
+  virtual bool operator==(Converter& other) const {
+    SwuConverter* cast = dynamic_cast<SwuConverter*>(&other);
+    
+    // TODO make a class for the whole module with limits?
+    const double kEpsComp = 1e-10;
+
+    bool cast_not_null = cast != NULL;
+    bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(), 
+                                              cast->feed_comp_->atom(),
+                                              kEpsComp);
+    bool tails_eq = tails_assay_ == cast->tails_assay_;
+
+    return cast != NULL && feed_eq && tails_eq;
+  }
+
+ private:
+  cyclus::Composition::Ptr feed_comp_;
+  double tails_assay_;
+};
+
+class FeedConverter : public cyclus::Converter<cyclus::Material> {
+ public:
+  FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay)
+      : feed_comp_(feed_comp),
+        tails_assay_(tails_assay) {}
+
+  virtual ~FeedConverter() {}
+
+  virtual double convert(
+      cyclus::Material::Ptr m, cyclus::Arc const * a = NULL,
+      cyclus::ExchangeTranslationContext<cyclus::Material> 
+          const * ctx = NULL) const {
+    
+    double product_qty = m->quantity();
+    double product_assay = MultiIsotopeAtomAssay(m);
+    EnrichmentCalculator e;
+    e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
+               1e299);
+    double feed_used = e.FeedUsed();
+    
+    cyclus::toolkit::MatQuery mq(m);
+    std::vector<int> isotopes;
+    IsotopesNucID(isotopes);
+    std::set<int> nucs(isotopes.begin(), isotopes.end());
+    double feed_uranium_frac = mq.atom_frac(nucs);
+
+    return feed_used / feed_uranium_frac;
+  }
+  
+  virtual bool operator==(Converter& other) const {
+    FeedConverter* cast = dynamic_cast<FeedConverter*>(&other);
+    
+    // TODO make a class for the whole module with limits?
+    const double kEpsComp = 1e-10;
+
+    bool cast_not_null = cast != NULL;
+    bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(), 
+                                              cast->feed_comp_->atom(),
+                                              kEpsComp);
+    bool tails_eq = tails_assay_ == cast->tails_assay_;
+
+    return cast != NULL && feed_eq && tails_eq;
+  }
+
+ private:
+  cyclus::Composition::Ptr feed_comp_;
+  double tails_assay_;
+};
 /// @class MultiIsotopeEnrich
 ///
 /// This Facility is intended
@@ -40,11 +135,12 @@ class MultiIsotopeEnrich : public cyclus::Facility,
   /// The Prime Directive
   /// @warning The Prime Directive must have a space before it! (A fix will be
   /// in 2.0 ^TM)
-
   #pragma cyclus
 
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
+  
+  virtual ~MultiIsotopeEnrich();
 
   virtual std::string str();
   virtual void Build(cyclus::Agent* parent);
@@ -55,20 +151,21 @@ class MultiIsotopeEnrich : public cyclus::Facility,
   virtual std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr>
       GetMatlRequests();
 
-  virtual void AdjustMatlPrefs(cyclus::PrefMap<cyclus::Material>::type& prefs);
+  virtual void AdjustMatlPrefs(
+      cyclus::PrefMap<cyclus::Material>::type& prefs);
 
   virtual void AcceptMatlTrades(
-      const std::vector< std::pair<cyclus::Trade<cyclus::Material>,
-      cyclus::Material::Ptr> >& responses);
+      const std::vector<std::pair<cyclus::Trade<cyclus::Material>,
+                                  cyclus::Material::Ptr> >& responses);
 
   virtual std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
-    GetMatlBids(cyclus::CommodMap<cyclus::Material>::type&
-    commod_requests);
+      GetMatlBids(cyclus::CommodMap<cyclus::Material>::type& 
+                  commod_requests);
 
   virtual void GetMatlTrades(
-    const std::vector< cyclus::Trade<cyclus::Material> >& trades,
+    const std::vector<cyclus::Trade<cyclus::Material> >& trades,
     std::vector<std::pair<cyclus::Trade<cyclus::Material>,
-    cyclus::Material::Ptr> >& responses);
+                          cyclus::Material::Ptr> >& responses);
 
   bool ValidReq(const cyclus::Material::Ptr mat);
 
@@ -76,15 +173,19 @@ class MultiIsotopeEnrich : public cyclus::Facility,
   void AddMat_(cyclus::Material::Ptr mat);
 
   cyclus::Material::Ptr Request_();
-  
+
+  // The Offer function only considers U235 content that needs to be 
+  // achieved and it ignores the minor isotopes. This has the advantage 
+  // that the evolution of minor isotopes does not need to be taken into 
+  // account when performing requests to a MultiIsotopeEnrich facility.
   cyclus::Material::Ptr Offer_(cyclus::Material::Ptr req);
 
   cyclus::Material::Ptr Enrich_(cyclus::Material::Ptr mat, double qty);
 
-  double FeedAssay();
-
+  bool ValidReq_(const cyclus::Material::Ptr mat);
+  
   ///  @brief records and enrichment with the cyclus::Recorder
-  void RecordEnrichment_(double natural_u, double swu);
+  void RecordEnrichment_(double feed_qty, double swu, int feed_inv_idx);
 
   /// Records an agent's latitude and longitude to the output db
   void RecordPosition();
@@ -185,8 +286,41 @@ class MultiIsotopeEnrich : public cyclus::Facility,
            "facility (kgSWU/timestep) "                                     \
   }
   double swu_capacity;
+  double current_swu_capacity;
 
+  double intra_timestep_swu;
+  double intra_timestep_feed;
 
+  EnrichmentCalculator enrichment_calc;
+  
+  // TODO think about how to include these variables in preprocessor
+  //#pragma cyclus var {}
+  std::vector<cyclus::toolkit::ResBuf<cyclus::Material> > feed_inv;
+  //#pragma cyclus var {}
+  std::vector<cyclus::Composition::Ptr> feed_inv_comp;
+  //#pragma cyclus var {}
+  int feed_idx;
+  
+  //#pragma cyclus var {}
+  cyclus::toolkit::ResBuf<cyclus::Material> tails_inv;
+
+  #pragma cyclus var { \
+    "default": 0.0, \
+    "uilabel": "Geographical latitude in degrees as a double", \
+    "doc": "Latitude of the agent's geographical position. The value " \
+           " should be expressed in degrees as a double." \
+  } 
+  double latitude;
+  
+  #pragma cyclus var { \
+    "default": 0.0, \
+    "uilabel": "Geographical longitude in degrees as a double", \
+    "doc": "Longitude of the agent's geographical position. The value " \
+           " should be expressed in degrees as a double." \
+  } 
+  double longitude; 
+  
+  cyclus::toolkit::Position coordinates;
 };
 
 }  // namespace multiisotopeenrichment

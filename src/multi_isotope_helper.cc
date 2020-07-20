@@ -1,7 +1,9 @@
 #include "multi_isotope_helper.h"
 
 #include <algorithm>
+#include <iterator>
 
+#include "comp_math.h"
 #include "error.h"
 
 namespace multiisotopeenrichment {
@@ -37,6 +39,25 @@ int NucIDToIsotope(int nuc_id) {
     throw cyclus::ValueError("Invalid (non-uranium) isotope!");
   }
   return nuc_id/10000 - 92*1000;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int ResBufIdx(
+    const std::vector<cyclus::Composition::Ptr>& buf_compositions,
+    const cyclus::Composition::Ptr& in_comp) {
+  cyclus::CompMap in_compmap = in_comp->atom();
+  cyclus::compmath::Normalize(&in_compmap);
+
+  for (const cyclus::Composition::Ptr& buf_comp : buf_compositions) {
+    cyclus::CompMap buf_compmap = buf_comp->atom();
+    cyclus::compmath::Normalize(&buf_compmap);
+    
+    if (cyclus::compmath::AlmostEq(in_compmap, buf_compmap, eps_compmap)) {
+      int i = &buf_comp - &buf_compositions[0];
+      return i;
+    }
+  }
+  return buf_compositions.size();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
