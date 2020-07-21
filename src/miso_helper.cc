@@ -1,4 +1,4 @@
-#include "multi_isotope_helper.h"
+#include "miso_helper.h"
 
 #include <algorithm>
 #include <iterator>
@@ -6,7 +6,7 @@
 #include "comp_math.h"
 #include "error.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void IsotopesNucID(std::vector<int> &isotopes) {
@@ -61,48 +61,48 @@ int ResBufIdx(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeAtomAssay(cyclus::Composition::Ptr comp) {
-  return MultiIsotopeAtomFrac(comp, IsotopeToNucID(235));
+double MIsoAtomAssay(cyclus::Composition::Ptr comp) {
+  return MIsoAtomFrac(comp, IsotopeToNucID(235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeAtomAssay(cyclus::Material::Ptr rsrc) {
-  return MultiIsotopeAtomFrac(rsrc, IsotopeToNucID(235));
+double MIsoAtomAssay(cyclus::Material::Ptr rsrc) {
+  return MIsoAtomFrac(rsrc, IsotopeToNucID(235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeAtomAssay(std::map<int,double> compmap) {
-  return MultiIsotopeAtomFrac(compmap, IsotopeToNucID(235));
+double MIsoAtomAssay(std::map<int,double> compmap) {
+  return MIsoAtomFrac(compmap, IsotopeToNucID(235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeMassAssay(cyclus::Composition::Ptr comp) {
-  return MultiIsotopeMassFrac(comp, IsotopeToNucID(235));
+double MIsoMassAssay(cyclus::Composition::Ptr comp) {
+  return MIsoMassFrac(comp, IsotopeToNucID(235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeMassAssay(cyclus::Material::Ptr rsrc) {
-  return MultiIsotopeMassFrac(rsrc, IsotopeToNucID(235));
+double MIsoMassAssay(cyclus::Material::Ptr rsrc) {
+  return MIsoMassFrac(rsrc, IsotopeToNucID(235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeMassAssay(std::map<int,double> compmap) {
-  return MultiIsotopeMassFrac(compmap, IsotopeToNucID(235));
+double MIsoMassAssay(std::map<int,double> compmap) {
+  return MIsoMassFrac(compmap, IsotopeToNucID(235));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeAtomFrac(cyclus::Composition::Ptr composition, 
+double MIsoAtomFrac(cyclus::Composition::Ptr composition, 
                             int isotope) {
-  return MultiIsotopeAtomFrac(composition->atom(), isotope);
+  return MIsoAtomFrac(composition->atom(), isotope);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeAtomFrac(cyclus::Material::Ptr rsrc, int isotope) {
-  return MultiIsotopeAtomFrac(rsrc->comp(), isotope);
+double MIsoAtomFrac(cyclus::Material::Ptr rsrc, int isotope) {
+  return MIsoAtomFrac(rsrc->comp(), isotope);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeAtomFrac(cyclus::CompMap compmap, int isotope) {
+double MIsoAtomFrac(cyclus::CompMap compmap, int isotope) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   
@@ -124,18 +124,18 @@ double MultiIsotopeAtomFrac(cyclus::CompMap compmap, int isotope) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeMassFrac(cyclus::Composition::Ptr composition, 
+double MIsoMassFrac(cyclus::Composition::Ptr composition, 
                             int isotope) {
-  return MultiIsotopeMassFrac(composition->mass(), isotope);
+  return MIsoMassFrac(composition->mass(), isotope);
 }
   
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeMassFrac(cyclus::Material::Ptr rsrc, int isotope) {
-  return MultiIsotopeMassFrac(rsrc->comp(), isotope);
+double MIsoMassFrac(cyclus::Material::Ptr rsrc, int isotope) {
+  return MIsoMassFrac(rsrc->comp(), isotope);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MultiIsotopeMassFrac(std::map<int,double> compmap, int isotope) {
+double MIsoMassFrac(std::map<int,double> compmap, int isotope) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
 
@@ -172,4 +172,4 @@ std::map<int,double> CalculateSeparationFactor(double gamma_235) {
   return separation_factors;
 }
 
-} // namespace multiisotopeenrichment
+} // namespace misoenrichment

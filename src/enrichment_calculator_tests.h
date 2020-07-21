@@ -1,5 +1,5 @@
-#ifndef MULTIISOTOPEENRICHMENT_SRC_ENRICHMENT_CALCULATOR_TESTS_H_
-#define MULTIISOTOPEENRICHMENT_SRC_ENRICHMENT_CALCULATOR_TESTS_H_
+#ifndef MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_TESTS_H_
+#define MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_TESTS_H_
 
 #include <gtest/gtest.h>
 
@@ -14,7 +14,7 @@
 #include "composition.h"
 #include "enrichment_calculator.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 class EnrichmentCalculatorTest : public ::testing::Test {
  protected:
@@ -45,6 +45,6 @@ class EnrichmentCalculatorTest : public ::testing::Test {
 
 };
 
-}  // namespace multiisotopeenrichment
+}  // namespace misoenrichment
 
-#endif  // MULTIISOTOPEENRICHMENT_SRC_ENRICHMENT_CALCULATOR_TESTS_H_
+#endif  // MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_TESTS_H_

@@ -1,4 +1,4 @@
-# DO NOT DELETE THIS LINE:: :multiisotopeenrichment:MultiIsotopeEnrich
+# DO NOT DELETE THIS LINE:: :misoenrichment:MIsoEnrich
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 # taken from http://geant4.cern.ch/support/source/geant4/CMakeLists.txt
@@ -12,7 +12,7 @@ IF(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "in-source build detected")
 ENDIF()
 
-PROJECT(multiisotopeenrichment)
+PROJECT(misoenrichment)
 
 # check for and enable c++11 support
 INCLUDE(CheckCXXCompilerFlag)

@@ -7,9 +7,9 @@
 #include "cyc_limits.h"
 #include "error.h"
 
-#include "multi_isotope_helper.h"
+#include "miso_helper.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
@@ -186,7 +186,7 @@ void EnrichmentCalculator::CalculateFlows_() {
   for (int i : isotopes) {
     double e;
     double s;  
-    double atom_frac = MultiIsotopeAtomFrac(feed_composition, i);
+    double atom_frac = MIsoAtomFrac(feed_composition, i);
 
     // Eq. (37)
     e = 1. / alpha_star[i] / (1-std::pow(alpha_star[i],-n_enriching));
@@ -274,14 +274,14 @@ double EnrichmentCalculator::CalculateConcentrations_() {
     s[i] = 1. / alpha_star[i] 
            / (std::pow(alpha_star[i], n_stripping+1)-1);
 
-    atom_frac = MultiIsotopeAtomFrac(feed_composition, i);
+    atom_frac = MIsoAtomFrac(feed_composition, i);
     e_sum += e[i] * atom_frac / (e[i]+s[i]);  // Eq. (48) denominator
     s_sum += s[i] * atom_frac / (e[i]+s[i]);  // Eq. (51) denominator
   }
   
   // Calculate the compositions of product and tails.
   for (int i : isotopes) {
-    atom_frac = MultiIsotopeAtomFrac(feed_composition, i);
+    atom_frac = MIsoAtomFrac(feed_composition, i);
     product_composition[i] = e[i] * atom_frac / (e[i]+s[i]) / e_sum;
     tails_composition[i] = s[i] * atom_frac / (e[i]+s[i]) / s_sum;
   }
@@ -305,4 +305,4 @@ double EnrichmentCalculator::ConcentrationDifference_() {
   return delta;
 }
 
-}  // namespace multiisotopeenrichment
+}  // namespace misoenrichment

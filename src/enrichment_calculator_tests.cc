@@ -8,9 +8,9 @@
 #include "cyc_limits.h"
 #include "comp_math.h"
 
-#include "multi_isotope_helper.h"
+#include "miso_helper.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Composition::Ptr compPtr_nat_U() {
@@ -171,7 +171,7 @@ TEST_F(EnrichmentCalculatorTest, NumberStages) {
       double& feed_used, double& swu_used, double& product_produced, 
  */
 
-}  // namespace multiisotopeenrichment
+}  // namespace misoenrichment
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

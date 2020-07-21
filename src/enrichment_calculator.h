@@ -1,5 +1,5 @@
-#ifndef MULTIISOTOPEENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
-#define MULTIISOTOPEENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
+#ifndef MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
+#define MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
 
 #include <map>
 #include <vector>
@@ -8,7 +8,7 @@
 
 #include "composition.h"
 
-namespace multiisotopeenrichment {
+namespace misoenrichment {
 
 class EnrichmentCalculator {
  public:
@@ -88,7 +88,7 @@ class EnrichmentCalculator {
   double ValueFunction_(const cyclus::CompMap& composition);
 };
 
-}  // namespace multiisotopeenrichment
+}  // namespace misoenrichment
 
-#endif  // MULTIISOTOPEENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
+#endif  // MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
 
