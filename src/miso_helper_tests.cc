@@ -40,14 +40,14 @@ cyclus::Material::Ptr mat_natU() {
 TEST(MIsoHelperTest, ChooseCorrectResBuf) {
   using cyclus::Composition;
   std::vector<Composition::Ptr> comp_vec;
-  comp_vec.push_back(MIsohelpertest::comp_natU());
-  comp_vec.push_back(MIsohelpertest::comp_weapons_grade_U());
+  comp_vec.push_back(misohelpertest::comp_natU());
+  comp_vec.push_back(misohelpertest::comp_weapons_grade_U());
   
   cyclus::CompMap plutonium_cm;
   plutonium_cm[942390000] = 1.;
   Composition::Ptr plutonium = Composition::CreateFromAtom(plutonium_cm);
 
-  EXPECT_EQ(ResBufIdx(comp_vec, MIsohelpertest::comp_natU()), 0);
+  EXPECT_EQ(ResBufIdx(comp_vec, misohelpertest::comp_natU()), 0);
   EXPECT_EQ(ResBufIdx(comp_vec, plutonium), 2);
 }
 
@@ -70,7 +70,7 @@ TEST(MIsoHelperTest, CheckFractionsComposition) {
                                + 0.00711/pyne::atomic_mass(922350000)
                                + 0.992835/pyne::atomic_mass(922380000));
 
-  cyclus::Composition::Ptr comp = MIsohelpertest::comp_natU();
+  cyclus::Composition::Ptr comp = misohelpertest::comp_natU();
   EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomAssay(comp), 
                                expected_atom235));
   EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomFrac(comp, 922350000),
@@ -89,7 +89,7 @@ TEST(MIsoHelperTest, CheckFractionsMaterial) {
                                + 0.00711/pyne::atomic_mass(922350000)
                                + 0.992835/pyne::atomic_mass(922380000));
 
-  cyclus::Material::Ptr mat = MIsohelpertest::mat_natU();
+  cyclus::Material::Ptr mat = misohelpertest::mat_natU();
   EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomAssay(mat), 
                                expected_atom235));
   EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomFrac(mat, 922350000),

@@ -6,7 +6,7 @@
 #include <sstream> 
 #include <vector>
 
-#include "misotope_helper.h"
+#include "miso_helper.h"
 
 namespace misoenrichment {
 
@@ -167,7 +167,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
       Request<Material>* req = *it;
       Material::Ptr mat = req->target();
       double request_enrich = MIsoAtomAssay(mat);
-      if (ValidReq(req->target()) 
+      if (ValidReq_(req->target()) 
           && ((request_enrich < max_enrich) 
               || (cyclus::AlmostEq(request_enrich, max_enrich)))) {
         Material::Ptr offer = Offer_(req->target());
