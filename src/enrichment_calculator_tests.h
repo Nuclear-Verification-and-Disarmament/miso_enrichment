@@ -19,7 +19,6 @@ namespace misoenrichment {
 class EnrichmentCalculatorTest : public ::testing::Test {
  protected:
   EnrichmentCalculatorTest();
-  bool expect_true_compmap(cyclus::CompMap cm1, cyclus::CompMap cm2);
 
   const double eps_comp = 1e-5;
 

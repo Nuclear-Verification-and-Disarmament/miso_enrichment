@@ -56,37 +56,6 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool EnrichmentCalculatorTest::expect_true_compmap(cyclus::CompMap cm1,
-                                                   cyclus::CompMap cm2) {
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
-  std::vector<int>::iterator it;
-  for (it = isotopes.begin(); it != isotopes.end(); it++) {
-    cm1[*it] += 1e-299;
-    cm2[*it] += 1e-299;
-  }  // The code snippet above has been added to ensure that the all of the
-     // uranium keys are present in both compmaps, else the comparison 
-     // fails.
-
-  bool result = cyclus::compmath::AlmostEq(cm1, cm2, eps_comp); 
-  EXPECT_TRUE(result);
-  if (!result) {
-    std::cout << "Value of: cm1\n"
-              << "Actual:\n";
-    cyclus::CompMap::iterator it;
-    for (it = cm1.begin(); it!= cm1.end(); it++) {
-      std::cout << "          " << it->first << ": " << it->second << "\n";
-    }
-    std::cout << "Expected: \n";
-    for (it = cm2.begin(); it!= cm2.end(); it++) {
-      std::cout << "          " << it->first << ": " << it->second << "\n";
-    }
-    std::cout << "\n";
-  }
-  return result;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   using cyclus::Composition;
