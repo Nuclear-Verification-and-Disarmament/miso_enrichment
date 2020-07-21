@@ -84,8 +84,8 @@ TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   // assignment operator, but it does check the results. It is expected
   // that if the assignment should not have worked correctly then the 
   // results would be wrong as well.
-  expect_true_compmap(product_comp2, product_comp1);
-  expect_true_compmap(tails_comp2, tails_comp1);
+  EXPECT_TRUE(misotest::compare_compmap(product_comp2, product_comp1));
+  EXPECT_TRUE(misotest::compare_compmap(tails_comp2, tails_comp1));
   EXPECT_DOUBLE_EQ(feed_qty2, feed_qty1);
   EXPECT_DOUBLE_EQ(product_qty2, product_qty1);
   EXPECT_DOUBLE_EQ(tails_qty2, tails_qty1);
@@ -102,8 +102,8 @@ TEST_F(EnrichmentCalculatorTest, Concentrations) {
   e.EnrichmentOutput(product_comp, tails_comp, dummy_double, dummy_double,
                      dummy_double, dummy_double, dummy_int, dummy_int);
 
-  expect_true_compmap(expect_product_comp, product_comp);
-  expect_true_compmap(expect_tails_comp, tails_comp);
+  EXPECT_TRUE(misotest::compare_compmap(expect_product_comp, product_comp));
+  EXPECT_TRUE(misotest::compare_compmap(expect_tails_comp, tails_comp));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

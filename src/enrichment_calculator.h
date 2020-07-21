@@ -48,8 +48,6 @@ class EnrichmentCalculator {
   FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
 
  private:
-  // epsilon used for checking the equality of compositions
-  const double kEpsComp = 1e-10;  
 
   cyclus::CompMap feed_composition;
   cyclus::CompMap product_composition;

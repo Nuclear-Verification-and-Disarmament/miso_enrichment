@@ -11,13 +11,12 @@ namespace misoenrichment {
 
 namespace misotest {
 
-bool EXPECT_TRUE_compmap(const cyclus::CompMap& cm1, 
-                         const cyclus::CompMap& cm2, 
-                         const double kEpsComp);
+bool compare_compmap(cyclus::CompMap cm1, cyclus::CompMap cm2);
 
 }   // namespace misotest
 
-const double eps_compmap = 1e-10;
+const double kEpsCompMap = 1e-10;
+const int kIterMax = 200;
 
 void IsotopesNucID(std::vector<int>& isotopes);
 int IsotopeToNucID(int isotope);
@@ -58,6 +57,6 @@ double MIsoMassFrac(std::map<int,double> compmap, int isotope);
 // DOI: 10.1080/08929880802361796
 std::map<int,double> CalculateSeparationFactor(double gamma_235);
 
-} // namespace misoenrichment
+}  // namespace misoenrichment
 
 #endif  // MISOENRICHMENT_SRC_MISO_HELPER_H_

@@ -88,7 +88,8 @@ void EnrichmentCalculator::SetInput(
 
   // If any of the concentrations change, then redesign the cascade from
   // scratch.
-  if (!cyclus::compmath::AlmostEq(new_compmap, feed_composition, kEpsComp)
+  if (!cyclus::compmath::AlmostEq(new_compmap, feed_composition, 
+                                  kEpsCompMap)
       || !cyclus::AlmostEq(new_target_product_assay, target_product_assay)
       || !cyclus::AlmostEq(new_target_tails_assay, target_tails_assay)) {
     feed_composition = new_compmap;
@@ -148,8 +149,6 @@ void EnrichmentCalculator::BuildMatchedAbundanceRatioCascade() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::CalculateNStages_(double &n_stages) {
-  const double kIterMax = 200;
-  const double kEps = 1e-4;
   double delta = 1e299;
   double previous_delta;
   
@@ -164,6 +163,7 @@ void EnrichmentCalculator::CalculateNStages_(double &n_stages) {
     throw cyclus::Error("Unable to determine the number of stages!");
   }
 
+  const double kEps = 1e-4;
   n_stages = n_stages - (1+kEps);
   n_stages = previous_delta > CalculateConcentrations_()
              ? n_stages + kEps : n_stages + (1+kEps);

@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <iterator>
 
-#include <gtest/gtest.h>
-
 #include "comp_math.h"
 #include "error.h"
 
@@ -13,9 +11,7 @@ namespace misoenrichment {
 namespace misotest {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool EXPECT_TRUE_compmap(const cyclus::CompMap& cm1, 
-                         const cyclus::CompMap& cm2, 
-                         const double kEpsComp) {
+bool compare_compmap(cyclus::CompMap cm1, cyclus::CompMap cm2) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   std::vector<int>::iterator it;
@@ -26,8 +22,7 @@ bool EXPECT_TRUE_compmap(const cyclus::CompMap& cm1,
     cm2[*it] += 1e-299;
   }  
 
-  bool result = cyclus::compmath::AlmostEq(cm1, cm2, kEpsComp); 
-  EXPECT_TRUE(result);
+  bool result = cyclus::compmath::AlmostEq(cm1, cm2, kEpsCompMap); 
   if (!result) {
     std::cout << "Value of: cm1\n"
               << "Actual:\n";
@@ -90,7 +85,7 @@ int ResBufIdx(
     cyclus::CompMap buf_compmap = buf_comp->atom();
     cyclus::compmath::Normalize(&buf_compmap);
     
-    if (cyclus::compmath::AlmostEq(in_compmap, buf_compmap, eps_compmap)) {
+    if (cyclus::compmath::AlmostEq(in_compmap, buf_compmap, kEpsCompMap)) {
       int i = &buf_comp - &buf_compositions[0];
       return i;
     }
