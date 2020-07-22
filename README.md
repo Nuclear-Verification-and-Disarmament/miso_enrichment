@@ -4,7 +4,7 @@
 (Cyclus)[fuelcycle.org]. It provides a Cyclus facility that enriches 
 uranium streams composed of two or more isotopes taking into account the 
 different enrichment behaviour of minor isotopes such as <sup>234</sup>U (present in
-natural as well as in reprocessed uranium) or <sup>236</sup> (present in 
+natural as well as in reprocessed uranium) or <sup>236</sup>U (present in 
 reprocessed uranium from spent nuclear fuel). The tracking of minor
 isotopes makes this module suitable for nuclear archaeology, see, e.g., [3].
 
