@@ -1,7 +1,7 @@
 # misoenrichment: a Cyclus multi component isotope enrichment module
 
 `misoenrichment` is a module developed for the nuclear fuel cycle simulator
-(Cyclus)[fuelcycle.org]. It provides a Cyclus facility that enriches 
+[Cyclus](fuelcycle.org). It provides a Cyclus facility that enriches 
 uranium streams composed of two or more isotopes taking into account the 
 different enrichment behaviour of minor isotopes such as <sup>234</sup>U (present in
 natural as well as in reprocessed uranium) or <sup>236</sup>U (present in 
