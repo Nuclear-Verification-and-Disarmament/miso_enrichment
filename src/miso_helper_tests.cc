@@ -16,7 +16,7 @@ cyclus::Composition::Ptr comp_natU() {
   comp[922380000] = 99.2835;
   comp[10010000] = 10;  // insert hydrogen to check if it is filtered out
   
-  return cyclus::Composition::CreateFromAtom(comp);
+  return cyclus::Composition::CreateFromMass(comp);
 };
 
 cyclus::Composition::Ptr comp_weapons_grade_U() {
@@ -71,14 +71,10 @@ TEST(MIsoHelperTest, CheckFractionsComposition) {
                                + 0.992835/pyne::atomic_mass(922380000));
 
   cyclus::Composition::Ptr comp = misohelpertest::comp_natU();
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomAssay(comp), 
-                               expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomFrac(comp, 922350000),
-                               expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassAssay(comp), 
-                               expected_mass235));
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassFrac(comp, 922350000), 
-                               expected_mass235));
+  EXPECT_DOUBLE_EQ(MIsoAtomAssay(comp), expected_atom235);
+  EXPECT_DOUBLE_EQ(MIsoAtomFrac(comp, 922350000), expected_atom235);
+  EXPECT_DOUBLE_EQ(MIsoMassAssay(comp), expected_mass235);
+  EXPECT_DOUBLE_EQ(MIsoMassFrac(comp, 922350000), expected_mass235);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -90,14 +86,10 @@ TEST(MIsoHelperTest, CheckFractionsMaterial) {
                                + 0.992835/pyne::atomic_mass(922380000));
 
   cyclus::Material::Ptr mat = misohelpertest::mat_natU();
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomAssay(mat), 
-                               expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoAtomFrac(mat, 922350000),
-                               expected_atom235));
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassAssay(mat), 
-                               expected_mass235));
-  EXPECT_TRUE(cyclus::AlmostEq(MIsoMassFrac(mat, 922350000), 
-                               expected_mass235));
+  EXPECT_DOUBLE_EQ(MIsoAtomAssay(mat), expected_atom235);
+  EXPECT_DOUBLE_EQ(MIsoAtomFrac(mat, 922350000), expected_atom235);
+  EXPECT_DOUBLE_EQ(MIsoMassAssay(mat), expected_mass235);
+  EXPECT_DOUBLE_EQ(MIsoMassFrac(mat, 922350000), expected_mass235);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -118,7 +110,7 @@ TEST(MIsoHelperTest, SeparationFactor) {
   expected[922380000] = 1.0;
   
   for (int i : isotopes) {
-    EXPECT_TRUE(cyclus::AlmostEq(separation_factor[i], expected[i]));
+    EXPECT_DOUBLE_EQ(separation_factor[i], expected[i]);
   }
 }
 
@@ -126,27 +118,9 @@ TEST(MIsoHelperTest, SeparationFactor) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#ifndef CYCLUS_AGENT_TESTS_CONNECTED
-int ConnectAgentTests();
-static int cyclus_agent_tests_connected = ConnectAgentTests();
-#define CYCLUS_AGENT_TESTS_CONNECTED cyclus_agent_tests_connected
-#endif  // CYCLUS_AGENT_TESTS_CONNECTED
-
-/*
-cyclus::Agent* EnrichmentConstructor(cyclus::Context* ctx) {
-  return new cycamore::Enrichment(ctx);
-}
-
 // required to get functionality in cyclus agent unit tests library
 #ifndef CYCLUS_AGENT_TESTS_CONNECTED
 int ConnectAgentTests();
 static int cyclus_agent_tests_connected = ConnectAgentTests();
 #define CYCLUS_AGENT_TESTS_CONNECTED cyclus_agent_tests_connected
 #endif  // CYCLUS_AGENT_TESTS_CONNECTED
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-INSTANTIATE_TEST_CASE_P(EnrichmentFac, FacilityTests,
-                        Values(&EnrichmentConstructor));
-INSTANTIATE_TEST_CASE_P(EnrichmentFac, AgentTests,
-                        Values(&EnrichmentConstructor));
-*/
