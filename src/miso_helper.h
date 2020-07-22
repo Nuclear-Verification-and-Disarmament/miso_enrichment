@@ -15,7 +15,7 @@ bool compare_compmap(cyclus::CompMap cm1, cyclus::CompMap cm2);
 
 }   // namespace misotest
 
-const double kEpsCompMap = 1e-10;
+const double kEpsCompMap = 1e-5;
 const int kIterMax = 200;
 
 void IsotopesNucID(std::vector<int>& isotopes);

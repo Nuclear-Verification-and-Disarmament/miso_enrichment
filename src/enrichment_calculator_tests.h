@@ -20,28 +20,24 @@ class EnrichmentCalculatorTest : public ::testing::Test {
  protected:
   EnrichmentCalculatorTest();
 
-  const double eps_comp = 1e-5;
-
   EnrichmentCalculator e;
+  
+  // Values to be calculated by EnrichmentCalculator
+  cyclus::CompMap product_comp, tails_comp;
+  double feed_qty, product_qty, tails_qty, swu_used;
+  int n_enriching, n_stripping;
 
   const cyclus::CompMap expect_product_comp;
   const cyclus::CompMap expect_tails_comp;
-  //const int expect_n_enrich;
-  //const int expect_n_strip;
   
   const int expect_n_enriching;
   const int expect_n_stripping;
-
+  
+  const double expect_feed_qty;
   const double expect_product_qty;
   const double expect_tails_qty;
   const double expect_swu_used;
   
-  /*
-  void EnrichmentOutput(cyclus::CompMap& product_comp, 
-                        cyclus::CompMap& tails_comp, int& n_enrich, 
-                        int& n_strip);
-  */
-
 };
 
 }  // namespace misoenrichment

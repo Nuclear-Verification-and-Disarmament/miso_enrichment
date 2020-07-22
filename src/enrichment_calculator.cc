@@ -248,7 +248,7 @@ double EnrichmentCalculator::ValueFunction_(
     const cyclus::CompMap& composition) {
   double value = 0;
   
-  std::string msg("MIsoEn: Value Function not yet implemented\n");
+  std::string msg("MIsoEn: Value Function not yet implemented");
   cyclus::Warn<cyclus::Warnings::VALIDATION_WARNING>(msg);
 
   /*
