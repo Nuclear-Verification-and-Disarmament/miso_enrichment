@@ -3,8 +3,8 @@
 `misoenrichment` is a module developed for the nuclear fuel cycle simulator
 (Cyclus)[fuelcycle.org]. It provides a Cyclus facility that enriches 
 uranium streams composed of two or more isotopes taking into account the 
-different enrichment behaviour of minor isotopes such as ^234^U (present in
-natural as well as in reprocessed uranium) or ^236^U (present in 
+different enrichment behaviour of minor isotopes such as <sup>234</sup>U (present in
+natural as well as in reprocessed uranium) or <sup>236^</sup> (present in 
 reprocessed uranium from spent nuclear fuel). The tracking of minor
 isotopes makes this module suitable for nuclear archaeology, see, e.g., [3].
 
