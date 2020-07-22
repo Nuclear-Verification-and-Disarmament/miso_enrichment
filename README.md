@@ -6,20 +6,19 @@ uranium streams composed of two or more isotopes taking into account the
 different enrichment behaviour of minor isotopes such as ^234^U (present in
 natural as well as in reprocessed uranium) or ^236^U (present in 
 reprocessed uranium from spent nuclear fuel). The tracking of minor
-isotopes makes this module suitable for nuclear archaeology, see, e.g., [3]. 
-(Fetter, Science & Global Security 1993)[http://scienceandglobalsecurity.org/archive/sgs03fetter.pdf].
+isotopes makes this module suitable for nuclear archaeology, see, e.g., [3].
 
 Table of Contents
-- (Getting Started)[#getting-started]
-- (Theoretical background)[#theoretical-background]
-- (References)[#references]
+- [Getting Started](#getting-started)
+- [Theoretical background](#theoretical-background)
+- [References](#references)
 
 ## Getting started
 
 ## Theoretical background
 The implementation of the facility itself and the interaction with Cyclus'
 Dynamic Resource Exchange is based on the binary enrichment facility from 
-the (Cycamore)[https://github.com/cyclus/cycamore] package.
+the [Cycamore](https://github.com/cyclus/cycamore) package.
 
 The multi-component isotope calculations are based on mainly on 1. and 2. .
 1. derives the mathematical formalism of a matched abundance ratio cascade
