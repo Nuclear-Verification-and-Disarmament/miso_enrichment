@@ -1,6 +1,8 @@
 #include "enrichment_calculator.h"
 
 #include <cmath>
+#include <iomanip>
+#include <iostream>
 #include <string>
 
 #include "comp_math.h"
@@ -21,8 +23,8 @@ EnrichmentCalculator::EnrichmentCalculator(
       target_product_assay(target_product_assay),
       target_tails_assay(target_tails_assay),
       gamma_235(gamma_235), 
-      feed_qty(feed_qty),
-      product_qty(product_qty),
+      target_feed_qty(feed_qty),
+      target_product_qty(product_qty),
       max_swu(max_swu) {
   if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be 
@@ -50,13 +52,10 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
   tails_composition = e.tails_composition;
 
   target_product_assay = e.target_product_assay;
-  target_tails_assay = e.target_tails_assay;
-  
-  feed_qty = e.feed_qty;
-  product_qty = e.product_qty;
-  tails_qty = e.tails_qty;
+  target_tails_assay = e.target_tails_assay;  
+  target_feed_qty = e.target_feed_qty;
+  target_product_qty = e.target_product_qty;
   max_swu = e.max_swu;  // in kg SWU month^-1
-  swu = e.swu;
   
   IsotopesNucID(isotopes);
   gamma_235 = e.gamma_235;
@@ -71,6 +70,33 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
   BuildMatchedAbundanceRatioCascade();
 
   return *this;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EnrichmentCalculator::PPrint() {
+  std::cout.precision(4);
+
+  std::cout << "- - - - - - - - - - - - - - - - - - - - - -\n"
+            << "MIso Enrichment Calculator with parameters:\n"
+            << "  Target product assay   " << target_product_assay << "\n"
+            << "  Target tails assay     " << target_tails_assay << "\n"
+            << "  Maximum SWU            " << max_swu << "\n\n"
+            << "  Feed quantity          " << feed_qty << "\n"
+            << "  Product quantity       " << product_qty << "\n"
+            << "  Tails quantity         " << tails_qty << "\n"
+            << "  Separative work used   " << swu << "\n\n"
+            << "  n(enriching)           " << n_enriching << "\n"
+            << "  n(stripping)           " << n_stripping << "\n"
+            << "  Compositions\n"
+            << "  Isotope        Feed\t     Product\t      Tails\n"
+            << std::scientific;
+  for (int nuc : isotopes) {
+    std::cout << "      " << NucIDToIsotope(nuc) 
+              << "  " << feed_composition[nuc]
+              << "\t " << product_composition[nuc]
+              << "\t " << tails_composition[nuc] << "\n";
+  }
+  std::cout << std::defaultfloat;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -100,11 +126,11 @@ void EnrichmentCalculator::SetInput(
   }
   // If any of the flows change, then recalculate the flows. The
   // concentrations remain unaffected of this change.
-  if (!cyclus::AlmostEq(new_feed_qty, feed_qty) 
-      || !cyclus::AlmostEq(new_product_qty, product_qty)
+  if (!cyclus::AlmostEq(new_feed_qty, target_feed_qty) 
+      || !cyclus::AlmostEq(new_product_qty, target_product_qty)
       || !cyclus::AlmostEq(new_max_swu, max_swu)) {
-    feed_qty = new_feed_qty;
-    product_qty = new_product_qty;
+    target_feed_qty = new_feed_qty;
+    target_product_qty = new_product_qty;
     
     if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
       // TODO think about whether one or two of these variables have to be
@@ -127,59 +153,42 @@ void EnrichmentCalculator::EnrichmentOutput(
   swu_used = swu;
   product_produced = product_qty;
   tails_produced = tails_qty;
-
-  // Verify again that the numbers of stages are whole numbers.
-  if (std::fmod(n_enriching, 1.) > 1e-9) {
-    throw cyclus::ValueError("n_enriching is not a whole number!");
-  }
-  n_enrich = (int) n_enriching;
-  if (std::fmod(n_stripping, 1.) > 1e-9) {
-    throw cyclus::ValueError("n_stripping is not a whole number!");
-  }
-  n_strip = (int) n_stripping;
+  
+  n_enrich = n_enriching;
+  n_strip = n_stripping;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::BuildMatchedAbundanceRatioCascade() {
-  CalculateNStages_(n_enriching);
-  CalculateNStages_(n_stripping);
-
+  CalculateNStages_();
   CalculateFlows_();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void EnrichmentCalculator::CalculateNStages_(double &n_stages) {
-  double delta = 1e299;
-  double previous_delta;
-  
-  n_stages = 0;
+void EnrichmentCalculator::CalculateNStages_() {
+  // The target concentrations should always be reached or exceeded (i.e.,
+  // at least equal U235 concentration in product, at most equal 
+  // U235 concentration in tails).
+  n_enriching = 0;
+  n_stripping = 0; 
   do {
-    n_stages++;
-    previous_delta = delta;
-    delta = CalculateConcentrations_();
-  } while (delta < previous_delta && n_stages != kIterMax);
-  
-  if (n_stages == kIterMax) {
+    n_enriching++;
+    CalculateConcentrations_();
+  } while (MIsoAtomAssay(product_composition) < target_product_assay
+           && n_enriching <= kIterMax);
+  do {
+    n_stripping++;
+    CalculateConcentrations_();
+  } while (MIsoAtomAssay(tails_composition) > target_tails_assay
+           && n_stripping <= kIterMax);
+
+  if ((n_enriching == kIterMax) || (n_stripping == kIterMax)) {
     throw cyclus::Error("Unable to determine the number of stages!");
   }
-
-  const double kEps = 1e-4;
-  n_stages = n_stages - (1+kEps);
-  n_stages = previous_delta > CalculateConcentrations_()
-             ? n_stages + kEps : n_stages + (1+kEps);
-
-  // ensure that the number of stages is an integer (stored as double)
-  if (std::fmod(n_stages, 1.) > 1e-9) {
-    throw cyclus::ValueError("n_stages is not a whole number!");
-  }
-  CalculateConcentrations_();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::CalculateFlows_() {
-  double real_feed;
-  double real_product;
-  double real_swu;
   double sum_e = 0;
   double sum_s = 0;
 
@@ -197,17 +206,16 @@ void EnrichmentCalculator::CalculateFlows_() {
   }
 
   // In the following, it is determined if the feed or the product quantity
-  // available is a constraint. The feed used to produce `product_qty` of 
-  // product is calculatedas well as the product produced by using 
-  // `feed_qty` of feed. In order to differentiate, the names of these 
-  // hypothetical quantities are preceded by `real_`.
-  real_feed = product_qty / sum_e;  // Eq. (47)
-  real_product = feed_qty * sum_e;  // Eq. (47)
+  // available is a constraint. For this, the target feed and product 
+  // quantities are used and then it is compared which of both streams is
+  // the constraining factor.
+  feed_qty = target_product_qty / sum_e;  // Eq. (47)
+  product_qty = target_feed_qty * sum_e;  // Eq. (47)
   
   // If we produce less product than desired then the feed is contraining.
-  bool feed_is_constraint = real_product < product_qty;
-  product_qty = feed_is_constraint ? real_product : product_qty;
-  feed_qty = feed_is_constraint ? feed_qty : real_feed;
+  bool feed_is_constraint = product_qty < target_product_qty;
+  product_qty = feed_is_constraint ? product_qty : target_product_qty;
+  feed_qty = feed_is_constraint ? target_feed_qty : feed_qty;
   tails_qty = feed_qty * sum_s;  // Eq. (50)
   
   // Having determined the enrichment flows, calculate the separative work
@@ -253,7 +261,7 @@ double EnrichmentCalculator::ValueFunction_(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double EnrichmentCalculator::CalculateConcentrations_() {
+void EnrichmentCalculator::CalculateConcentrations_() {
   // Variable naming follows E. von Halle, the equation numbers also refer
   // to his article.
   std::map<int,double> e;
@@ -269,10 +277,10 @@ double EnrichmentCalculator::CalculateConcentrations_() {
   for (int i : isotopes) {
     // Eq. (37)
     e[i] = 1. / alpha_star[i] 
-           / (1-std::pow(alpha_star[i],-n_enriching));
+           / (1.-std::pow(alpha_star[i],-n_enriching));
     // Eq. (39)
     s[i] = 1. / alpha_star[i] 
-           / (std::pow(alpha_star[i], n_stripping+1)-1);
+           / (std::pow(alpha_star[i], n_stripping+1.)-1.);
 
     atom_frac = MIsoAtomFrac(feed_composition, i);
     e_sum += e[i] * atom_frac / (e[i]+s[i]);  // Eq. (48) denominator
@@ -285,24 +293,6 @@ double EnrichmentCalculator::CalculateConcentrations_() {
     product_composition[i] = e[i] * atom_frac / (e[i]+s[i]) / e_sum;
     tails_composition[i] = s[i] * atom_frac / (e[i]+s[i]) / s_sum;
   }
-
-  delta_concentration = ConcentrationDifference_();
-  return delta_concentration;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double EnrichmentCalculator::ConcentrationDifference_() {
-  int nuc_id235 = IsotopeToNucID(235);
-  double product_assay = product_composition[nuc_id235];
-  double tails_assay = tails_composition[nuc_id235];
-
-  double delta_product = (product_assay-target_product_assay)
-                         / target_product_assay;
-  double delta_tails = (tails_assay-target_tails_assay) 
-                       / target_tails_assay;
-  double delta = std::sqrt(std::pow(delta_product, 2.) 
-                           + std::pow(delta_tails, 2.));
-  return delta;
 }
 
 }  // namespace misoenrichment
