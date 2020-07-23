@@ -37,13 +37,10 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
   virtual bool operator==(Converter& other) const {
     SwuConverter* cast = dynamic_cast<SwuConverter*>(&other);
     
-    // TODO make a class for the whole module with limits?
-    const double kEpsComp = 1e-10;
-
     bool cast_not_null = cast != NULL;
     bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(), 
                                               cast->feed_comp_->atom(),
-                                              kEpsComp);
+                                              kEpsCompMap);
     bool tails_eq = tails_assay_ == cast->tails_assay_;
 
     return cast != NULL && feed_eq && tails_eq;
@@ -86,13 +83,10 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
   virtual bool operator==(Converter& other) const {
     FeedConverter* cast = dynamic_cast<FeedConverter*>(&other);
     
-    // TODO make a class for the whole module with limits?
-    const double kEpsComp = 1e-10;
-
     bool cast_not_null = cast != NULL;
     bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(), 
                                               cast->feed_comp_->atom(),
-                                              kEpsComp);
+                                              kEpsCompMap);
     bool tails_eq = tails_assay_ == cast->tails_assay_;
 
     return cast != NULL && feed_eq && tails_eq;
@@ -146,6 +140,7 @@ class MIsoEnrich : public cyclus::Facility,
   std::string str();
 
  private:
+  friend class MIsoEnrichTest;
   void AddMat_(cyclus::Material::Ptr mat);
 
   cyclus::Material::Ptr Request_();

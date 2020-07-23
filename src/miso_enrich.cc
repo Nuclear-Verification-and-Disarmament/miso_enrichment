@@ -165,12 +165,9 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
     std::vector<Request<Material>*>::iterator it;
     for (it = commod_requests.begin(); it != commod_requests.end(); it++) {
       Request<Material>* req = *it;
-      Material::Ptr mat = req->target();
-      double request_enrich = MIsoAtomAssay(mat);
-      if (ValidReq_(req->target()) 
-          && ((request_enrich < max_enrich) 
-              || (cyclus::AlmostEq(request_enrich, max_enrich)))) {
-        Material::Ptr offer = Offer_(req->target());
+      Material::Ptr req_mat = req->target(); 
+      if (ValidReq_(req_mat)) {
+        Material::Ptr offer = Offer_(req_mat);
         commod_port->AddBid(req, offer, this);
       }
     }
@@ -210,14 +207,16 @@ cyclus::Material::Ptr MIsoEnrich::Offer_(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool MIsoEnrich::ValidReq_(const cyclus::Material::Ptr mat) {
-  double u_235 = MIsoAtomAssay(mat);
-  double u_238 = MIsoAtomFrac(mat, 238);
+bool MIsoEnrich::ValidReq_(const cyclus::Material::Ptr req_mat) {
+  double u_235 = MIsoAtomAssay(req_mat);
+  double u_238 = MIsoAtomFrac(req_mat, 238);
 
   bool u_238_present = u_238 > 0;
   bool not_depleted = u_235 / (u_235+u_238) > tails_assay;
+  bool possible_enrichment = u_235 < max_enrich
+                             || cyclus::AlmostEq(u_235, max_enrich);
   
-  return u_238_present && not_depleted;
+  return u_238_present && not_depleted && possible_enrichment;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
