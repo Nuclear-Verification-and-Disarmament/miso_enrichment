@@ -1,6 +1,6 @@
 # misoenrichment: a Cyclus multi component isotope enrichment module
 
-`misoenrichment` is a module developed for the nuclear fuel cycle simulator
+`misoenrichment` is a module developed at the [Nuclear Verification and Disarmament Group](https://www.nvd.rwth-aachen.de/) at RWTH Aachen University for the nuclear fuel cycle simulator
 [Cyclus](fuelcycle.org). It provides a Cyclus facility that enriches 
 uranium streams composed of two or more isotopes taking into account the 
 different enrichment behaviour of minor isotopes such as <sup>234</sup>U (present in
