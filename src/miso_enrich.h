@@ -139,6 +139,8 @@ class MIsoEnrich : public cyclus::Facility,
       GetMatlRequests();
   std::string str();
 
+  friend class MIsoEnrichTest;
+
  private:
   void AddMat_(cyclus::Material::Ptr mat);
 
