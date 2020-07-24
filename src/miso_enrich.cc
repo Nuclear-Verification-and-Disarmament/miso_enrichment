@@ -41,20 +41,71 @@ std::string MIsoEnrich::str() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void MIsoEnrich::Build(cyclus::Agent* parent) {
+  using cyclus::Material;
+
   cyclus::Facility::Build(parent);
 
   if (initial_feed > 0) {
-    cyclus::Composition::Ptr initial_feed_comp = context()->GetRecipe(
-      feed_recipe);
-    int inventory_idx = ResBufIdx(feed_inv_comp, initial_feed_comp);
-    feed_inv[inventory_idx].Push(cyclus::Material::Create(this, 
-        initial_feed, initial_feed_comp));
+    Material::Ptr mat = Material::Create(
+        this, initial_feed, context()->GetRecipe(feed_recipe));
+    AddFeedMat_(mat);
+  } else {
+    feed_inv.push_back(cyclus::toolkit::ResBuf<cyclus::Material>());
+    feed_inv_comp.push_back(context()->GetRecipe(feed_recipe));
   }
+  feed_idx = 0;  // set current feed idx to the only existing inventory
 
   LOG(cyclus::LEV_DEBUG2, "MIsoEn") << "Multi-Isotope Enrichment Facility "
                                     << "entering the simulation: ";
   LOG(cyclus::LEV_DEBUG2, "MIsoEn") << str();
   RecordPosition();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void MIsoEnrich::AddFeedMat_(cyclus::Material::Ptr mat) {
+  cyclus::Composition::Ptr comp = mat->comp();
+  int push_idx = ResBufIdx(feed_inv_comp, comp);
+  
+  // Either directly try pushing material to the right feed inventory or 
+  // create a corresponding feed inventory and add it to the vector.
+  if (push_idx != -1) {
+    LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() 
+                                     << " is initially holding "
+                                     << feed_inv[push_idx].quantity() 
+                                     << " of feed in inventory no. "
+                                     << push_idx << ".";
+    try {  
+      feed_inv[push_idx].Push(mat);
+    } catch (cyclus::Error& e) {
+      e.msg(Agent::InformErrorMsg(e.msg()));
+    throw e;
+    }
+    LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() << " added " 
+                                     << mat->quantity() << " of " 
+                                     << feed_commod 
+                                     << " to its inventory no. " << push_idx
+                                     << " which is now holding " 
+                                     << feed_inv[push_idx].quantity();
+  } else {
+    LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() << " is initially"
+                                     << " holding no feed of this"
+                                     << " composition and creates a new"
+                                     << " inventory.";
+
+    feed_inv.push_back(cyclus::toolkit::ResBuf<cyclus::Material>());
+    try {
+      feed_inv.back().Push(mat);
+    } catch (cyclus::Error& e) {
+      e.msg(Agent::InformErrorMsg(e.msg()));
+    }
+    feed_inv_comp.push_back(comp);
+    LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() << " added " 
+                                     << mat->quantity() << " of " 
+                                     << feed_commod 
+                                     << " to its new inventory which is"
+                                     << "now holding " 
+                                     << feed_inv[push_idx].quantity();  
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -349,27 +400,9 @@ void MIsoEnrich::AddMat_(cyclus::Material::Ptr mat) {
     cyclus::Warn<cyclus::VALUE_WARNING>("Non-uranium elements are sent "
                                         "directly to tails.");
   }
-  
-  LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() 
-                                   << " is initially holding "
-                                   << feed_inv[feed_idx].quantity() 
-                                   << " total.";
- 
-  int push_idx = ResBufIdx(feed_inv_comp, mat->comp());
-  try {  
-    feed_inv[push_idx].Push(mat);
-  } catch (cyclus::Error& e) {
-    e.msg(Agent::InformErrorMsg(e.msg()));
-    throw e;
-  }
+  AddFeedMat_(mat);
 
-  LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() << " added " 
-                                   << mat->quantity() << " of " 
-                                   << feed_commod 
-                                   << " to its inventory, which is holding " 
-                                   << feed_inv[feed_idx].quantity()
-                                   << " total.";
-}
+  }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Material::Ptr MIsoEnrich::Enrich_(

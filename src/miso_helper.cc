@@ -90,7 +90,7 @@ int ResBufIdx(
       return i;
     }
   }
-  return buf_compositions.size();
+  return -1;  // if element is not in buf_compositions
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
