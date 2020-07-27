@@ -114,6 +114,8 @@ class MIsoEnrich : public cyclus::Facility,
   explicit MIsoEnrich(cyclus::Context* ctx);
 
   ~MIsoEnrich();
+  
+  friend class MIsoEnrichTest;
 
   #pragma cyclus
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
@@ -138,8 +140,6 @@ class MIsoEnrich : public cyclus::Facility,
   std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr> 
       GetMatlRequests();
   std::string str();
-
-  friend class MIsoEnrichTest;
 
  private:
   void AddMat_(cyclus::Material::Ptr mat);
