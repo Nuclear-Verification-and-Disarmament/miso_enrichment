@@ -48,7 +48,7 @@ TEST(MIsoHelperTest, ChooseCorrectResBuf) {
   Composition::Ptr plutonium = Composition::CreateFromAtom(plutonium_cm);
 
   EXPECT_EQ(ResBufIdx(comp_vec, misohelpertest::comp_natU()), 0);
-  EXPECT_EQ(ResBufIdx(comp_vec, plutonium), 2);
+  EXPECT_EQ(ResBufIdx(comp_vec, plutonium), -1);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

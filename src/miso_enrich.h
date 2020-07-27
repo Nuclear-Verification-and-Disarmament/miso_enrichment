@@ -143,6 +143,8 @@ class MIsoEnrich : public cyclus::Facility,
 
  private:
   void AddMat_(cyclus::Material::Ptr mat);
+  
+  void AddFeedMat_(cyclus::Material::Ptr mat);
 
   cyclus::Material::Ptr Request_();
 
