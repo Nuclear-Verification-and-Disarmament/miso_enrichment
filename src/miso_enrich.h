@@ -156,7 +156,7 @@ class MIsoEnrich : public cyclus::Facility,
 
   cyclus::Material::Ptr Enrich_(cyclus::Material::Ptr mat, double qty);
 
-  bool ValidReq_(const cyclus::Material::Ptr mat);
+  bool ValidReq_(const cyclus::Material::Ptr& mat);
   
   ///  @brief records and enrichment with the cyclus::Recorder
   void RecordEnrichment_(double feed_qty, double swu, int feed_inv_idx);

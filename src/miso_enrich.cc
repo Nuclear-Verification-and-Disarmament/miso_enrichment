@@ -17,6 +17,7 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       swu_capacity(0),
       max_enrich(1),
       initial_feed(0),
+      max_feed_inventory(1e299),
       feed_commod(""),
       feed_recipe(""),
       product_commod(""),
@@ -93,6 +94,7 @@ void MIsoEnrich::AddFeedMat_(cyclus::Material::Ptr mat) {
                                      << " inventory.";
 
     feed_inv.push_back(cyclus::toolkit::ResBuf<cyclus::Material>());
+    feed_inv.back().capacity(max_feed_inventory);
     try {
       feed_inv.back().Push(mat);
     } catch (cyclus::Error& e) {
@@ -152,6 +154,7 @@ MIsoEnrich::GetMatlRequests() {
 cyclus::Material::Ptr MIsoEnrich::Request_() {
   double qty = std::max(0.0, feed_inv[feed_idx].capacity()
                              - feed_inv[feed_idx].quantity());
+  cyclus::Composition::Ptr comp = feed_inv_comp[feed_idx];
   return cyclus::Material::CreateUntracked(qty, feed_inv_comp[feed_idx]);
 }
 
@@ -249,16 +252,23 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Material::Ptr MIsoEnrich::Offer_(
     cyclus::Material::Ptr mat) {
-  cyclus::CompMap comp;
-  comp[IsotopeToNucID(235)] = MIsoAtomAssay(mat);
-  comp[IsotopeToNucID(238)] = MIsoAtomFrac(mat, 238);
+  cyclus::CompMap product_comp, dummy_comp;
+  double dummy_double, product_qty;
+  int dummy_int;
+  
+  enrichment_calc.SetInput(feed_inv_comp[feed_idx], MIsoAtomAssay(mat), 
+                           tails_assay, feed_inv[feed_idx].quantity(), 
+                           mat->quantity(), swu_capacity);
+  enrichment_calc.EnrichmentOutput(product_comp, dummy_comp, dummy_double,
+                                   dummy_double, product_qty, dummy_double,
+                                   dummy_int, dummy_int);
 
   return cyclus::Material::CreateUntracked(
-      mat->quantity(), cyclus::Composition::CreateFromAtom(comp)); 
+      product_qty, cyclus::Composition::CreateFromAtom(product_comp)); 
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool MIsoEnrich::ValidReq_(const cyclus::Material::Ptr req_mat) {
+bool MIsoEnrich::ValidReq_(const cyclus::Material::Ptr& req_mat) {
   double u_235 = MIsoAtomAssay(req_mat);
   double u_238 = MIsoAtomFrac(req_mat, 238);
 
