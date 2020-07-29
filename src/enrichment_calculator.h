@@ -12,8 +12,8 @@ namespace misoenrichment {
 
 class EnrichmentCalculator {
  public:
-  // TODO to delete or not to delete default constructor?
-  EnrichmentCalculator() {};
+  EnrichmentCalculator();
+  EnrichmentCalculator(double gamma_235);
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
@@ -36,7 +36,8 @@ class EnrichmentCalculator {
   */
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
       double new_target_product_assay, double new_target_tails_assay, 
-      double new_feed_qty, double new_product_qty, double new_max_swu); 
+      double new_feed_qty, double new_product_qty, double new_max_swu,
+      double gamma_235); 
 
   void EnrichmentOutput(
       cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
@@ -80,6 +81,7 @@ class EnrichmentCalculator {
   
   double gamma_235;  // The overall separation factor for U-235
   
+  void CalculateGammaAlphaStar_();
   void CalculateNStages_();
   void CalculateFlows_();
   void CalculateSwu_();

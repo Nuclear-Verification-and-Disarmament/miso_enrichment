@@ -1,7 +1,6 @@
 #include "enrichment_calculator.h"
 
 #include <cmath>
-#include <iomanip>
 #include <iostream>
 #include <string>
 
@@ -12,6 +11,18 @@
 #include "miso_helper.h"
 
 namespace misoenrichment {
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EnrichmentCalculator::EnrichmentCalculator() {
+  IsotopesNucID(isotopes);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
+    gamma_235(gamma_235) {
+  IsotopesNucID(isotopes);
+  CalculateGammaAlphaStar_();
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
@@ -33,14 +44,18 @@ EnrichmentCalculator::EnrichmentCalculator(
   cyclus::compmath::Normalize(&this->feed_composition);
 
   IsotopesNucID(isotopes);
+  CalculateGammaAlphaStar_();
+  BuildMatchedAbundanceRatioCascade();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EnrichmentCalculator::CalculateGammaAlphaStar_() {
   separation_factors = CalculateSeparationFactor(gamma_235);
   for (int i : isotopes) {
     // E. von Halle Eq. (15)
     alpha_star[i] = separation_factors[i]
                     / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
   }
-   
-  BuildMatchedAbundanceRatioCascade();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -74,8 +89,6 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::PPrint() {
-  std::cout.precision(4);
-
   std::cout << "- - - - - - - - - - - - - - - - - - - - - -\n"
             << "MIso Enrichment Calculator with parameters:\n"
             << "  Target product assay   " << target_product_assay << "\n"
@@ -87,23 +100,26 @@ void EnrichmentCalculator::PPrint() {
             << "  Separative work used   " << swu << "\n\n"
             << "  n(enriching)           " << n_enriching << "\n"
             << "  n(stripping)           " << n_stripping << "\n"
-            << "  Compositions\n"
-            << "  Isotope        Feed\t     Product\t      Tails\n"
-            << std::scientific;
+            << "  Separation factors         232     233      234      235"
+            << "      236      238\n                         ";
   for (int nuc : isotopes) {
-    std::cout << "      " << NucIDToIsotope(nuc) 
-              << "  " << feed_composition[nuc]
-              << "\t " << product_composition[nuc]
-              << "\t " << tails_composition[nuc] << "\n";
+    printf("%6.4f   ", separation_factors[nuc]);
   }
-  std::cout << std::defaultfloat;
+  std::cout << "\n  Compositions\n"
+            << "  Isotope         Feed     Product       Tails\n";
+  for (int nuc : isotopes) {
+    printf("      %3d   %10.4e  %10.4e  %10.4e\n", NucIDToIsotope(nuc),
+        feed_composition[nuc], product_composition[nuc], 
+        tails_composition[nuc]);
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::SetInput(
     cyclus::Composition::Ptr new_feed_composition,
     double new_target_product_assay, double new_target_tails_assay, 
-    double new_feed_qty, double new_product_qty, double new_max_swu) {
+    double new_feed_qty, double new_product_qty, double new_max_swu,
+    double new_gamma_235) {
   
   // This temporary variable is needed because feed_comp->atom() returns
   // a const cyclus::CompMap object and hence it cannot be normalised.
@@ -111,7 +127,22 @@ void EnrichmentCalculator::SetInput(
   // current feed_composition
   cyclus::CompMap new_compmap = new_feed_composition->atom();
   cyclus::compmath::Normalize(&new_compmap);
+  
+  if (new_gamma_235 != gamma_235) {
+    gamma_235 = new_gamma_235;
+    CalculateGammaAlphaStar_();
+  }
+  feed_composition = new_compmap;
+  target_product_assay = new_target_product_assay;
+  target_tails_assay = new_target_tails_assay;
 
+  target_feed_qty = new_feed_qty;
+  target_product_qty = new_product_qty;
+  max_swu = new_max_swu;
+  
+  // TODO Think about reimplementing this part to ensure that only the bare
+  // minimum of update calculations are performed
+  /*
   // If any of the concentrations change, then redesign the cascade from
   // scratch.
   if (!cyclus::compmath::AlmostEq(new_compmap, feed_composition, 
@@ -122,15 +153,17 @@ void EnrichmentCalculator::SetInput(
     target_product_assay = new_target_product_assay;
     target_tails_assay = new_target_tails_assay;
 
+    target_feed_qty = new_feed_qty;
+    target_product_qty = new_product_qty;
+    max_swu = new_max_swu;
+    
     BuildMatchedAbundanceRatioCascade();
-  }
-  // If any of the flows change, then recalculate the flows. The
-  // concentrations remain unaffected of this change.
-  if (!cyclus::AlmostEq(new_feed_qty, target_feed_qty) 
+  } else if (!cyclus::AlmostEq(new_feed_qty, target_feed_qty) 
       || !cyclus::AlmostEq(new_product_qty, target_product_qty)
       || !cyclus::AlmostEq(new_max_swu, max_swu)) {
     target_feed_qty = new_feed_qty;
     target_product_qty = new_product_qty;
+    max_swu = new_max_swu;
     
     if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
       // TODO think about whether one or two of these variables have to be
@@ -138,6 +171,8 @@ void EnrichmentCalculator::SetInput(
     }
     CalculateFlows_();
   }
+  */
+  BuildMatchedAbundanceRatioCascade();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
