@@ -9,9 +9,20 @@
 
 namespace misoenrichment {
 
-const double eps_compmap = 1e-10;
+namespace misotest {
 
-void IsotopesNucID(std::vector<int> &isotopes);
+bool CompareCompMap(cyclus::CompMap cm1, cyclus::CompMap cm2);
+cyclus::Composition::Ptr comp_depletedU();
+cyclus::Composition::Ptr comp_natU();
+cyclus::Composition::Ptr comp_weapongradeU();
+cyclus::Material::Ptr mat_natU();
+
+}   // namespace misotest
+
+const double kEpsCompMap = 1e-5;
+const int kIterMax = 200;
+
+void IsotopesNucID(std::vector<int>& isotopes);
 int IsotopeToNucID(int isotope);
 int NucIDToIsotope(int nuc_id);
 int ResBufIdx(
@@ -50,6 +61,6 @@ double MIsoMassFrac(std::map<int,double> compmap, int isotope);
 // DOI: 10.1080/08929880802361796
 std::map<int,double> CalculateSeparationFactor(double gamma_235);
 
-} // namespace misoenrichment
+}  // namespace misoenrichment
 
 #endif  // MISOENRICHMENT_SRC_MISO_HELPER_H_

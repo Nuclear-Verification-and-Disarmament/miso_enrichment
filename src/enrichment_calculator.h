@@ -12,8 +12,8 @@ namespace misoenrichment {
 
 class EnrichmentCalculator {
  public:
-  // TODO to delete or not to delete default constructor?
-  EnrichmentCalculator() {};
+  EnrichmentCalculator();
+  EnrichmentCalculator(double gamma_235);
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
@@ -23,7 +23,8 @@ class EnrichmentCalculator {
   // default arguments for feed_qty and for product_qty. This will be
   // determined in later steps of the implementation.
   EnrichmentCalculator& operator= (const EnrichmentCalculator& e);
-
+  
+  void PPrint();
 
   void BuildMatchedAbundanceRatioCascade();
   /*
@@ -35,7 +36,8 @@ class EnrichmentCalculator {
   */
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
       double new_target_product_assay, double new_target_tails_assay, 
-      double new_feed_qty, double new_product_qty, double new_max_swu); 
+      double new_feed_qty, double new_product_qty, double new_max_swu,
+      double gamma_235); 
 
   void EnrichmentOutput(
       cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
@@ -48,8 +50,6 @@ class EnrichmentCalculator {
   FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
 
  private:
-  // epsilon used for checking the equality of compositions
-  const double kEpsComp = 1e-10;  
 
   cyclus::CompMap feed_composition;
   cyclus::CompMap product_composition;
@@ -57,8 +57,9 @@ class EnrichmentCalculator {
 
   double target_product_assay;
   double target_tails_assay;
-  
   // Units of all of the streams are kg/month
+  double target_feed_qty;
+  double target_product_qty;
   double feed_qty;
   double product_qty;
   double tails_qty;
@@ -75,16 +76,16 @@ class EnrichmentCalculator {
   // Number of stages in the enriching and in the stripping section, 
   // respectively. They are stored as double to facilitate calculations, 
   // however the values will also be whole numbers.
-  double n_enriching;
-  double n_stripping;
+  int n_enriching;
+  int n_stripping;
   
   double gamma_235;  // The overall separation factor for U-235
   
-  void CalculateNStages_(double& n_stages);
+  void CalculateGammaAlphaStar_();
+  void CalculateNStages_();
   void CalculateFlows_();
   void CalculateSwu_();
-  double CalculateConcentrations_();
-  double ConcentrationDifference_();
+  void CalculateConcentrations_();
   double ValueFunction_(const cyclus::CompMap& composition);
 };
 
