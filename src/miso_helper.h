@@ -11,7 +11,11 @@ namespace misoenrichment {
 
 namespace misotest {
 
-bool compare_compmap(cyclus::CompMap cm1, cyclus::CompMap cm2);
+bool CompareCompMap(cyclus::CompMap cm1, cyclus::CompMap cm2);
+cyclus::Composition::Ptr comp_depletedU();
+cyclus::Composition::Ptr comp_natU();
+cyclus::Composition::Ptr comp_weapongradeU();
+cyclus::Material::Ptr mat_natU();
 
 }   // namespace misotest
 

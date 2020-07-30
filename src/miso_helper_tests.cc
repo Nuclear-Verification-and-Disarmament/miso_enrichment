@@ -1,53 +1,25 @@
-
 #include <gtest/gtest.h>
-#include "miso_helper.h"
 
-#include "cyc_limits.h"
+#include "composition.h"
+#include "material.h"
 #include "pyne.h"
 
+#include "miso_helper.h"
+
 namespace misoenrichment {
-
-namespace misohelpertest {
-
-cyclus::Composition::Ptr comp_natU() {
-  cyclus::CompMap comp;
-  comp[922340000] = 5.5e-3;
-  comp[922350000] = 0.711;
-  comp[922380000] = 99.2835;
-  comp[10010000] = 10;  // insert hydrogen to check if it is filtered out
-  
-  return cyclus::Composition::CreateFromMass(comp);
-};
-
-cyclus::Composition::Ptr comp_weapons_grade_U() {
-  cyclus::CompMap comp;
-  comp[922340000] = 0.00780791;
-  comp[922350000] = 0.91020719;
-  comp[922380000] = 0.08198490;
-
-  return cyclus::Composition::CreateFromAtom(comp);
-};
-
-cyclus::Material::Ptr mat_natU() {
-  cyclus::Composition::Ptr comp = comp_natU();
-  double qty = 1.;
-  return cyclus::Material::CreateUntracked(qty, comp);
-};
-
-} // namespace misohelpertest
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST(MIsoHelperTest, ChooseCorrectResBuf) {
   using cyclus::Composition;
   std::vector<Composition::Ptr> comp_vec;
-  comp_vec.push_back(misohelpertest::comp_natU());
-  comp_vec.push_back(misohelpertest::comp_weapons_grade_U());
+  comp_vec.push_back(misotest::comp_natU());
+  comp_vec.push_back(misotest::comp_weapongradeU());
   
   cyclus::CompMap plutonium_cm;
   plutonium_cm[942390000] = 1.;
   Composition::Ptr plutonium = Composition::CreateFromAtom(plutonium_cm);
 
-  EXPECT_EQ(ResBufIdx(comp_vec, misohelpertest::comp_natU()), 0);
+  EXPECT_EQ(ResBufIdx(comp_vec, misotest::comp_natU()), 0);
   EXPECT_EQ(ResBufIdx(comp_vec, plutonium), -1);
 }
 
@@ -70,7 +42,7 @@ TEST(MIsoHelperTest, CheckFractionsComposition) {
                                + 0.00711/pyne::atomic_mass(922350000)
                                + 0.992835/pyne::atomic_mass(922380000));
 
-  cyclus::Composition::Ptr comp = misohelpertest::comp_natU();
+  cyclus::Composition::Ptr comp = misotest::comp_natU();
   EXPECT_DOUBLE_EQ(MIsoAtomAssay(comp), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoAtomFrac(comp, 922350000), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoMassAssay(comp), expected_mass235);
@@ -85,7 +57,7 @@ TEST(MIsoHelperTest, CheckFractionsMaterial) {
                                + 0.00711/pyne::atomic_mass(922350000)
                                + 0.992835/pyne::atomic_mass(922380000));
 
-  cyclus::Material::Ptr mat = misohelpertest::mat_natU();
+  cyclus::Material::Ptr mat = misotest::mat_natU();
   EXPECT_DOUBLE_EQ(MIsoAtomAssay(mat), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoAtomFrac(mat, 922350000), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoMassAssay(mat), expected_mass235);

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <sstream>
 
 #include "comp_math.h"
 #include "error.h"
@@ -11,7 +12,7 @@ namespace misoenrichment {
 namespace misotest {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-bool compare_compmap(cyclus::CompMap cm1, cyclus::CompMap cm2) {
+bool CompareCompMap(cyclus::CompMap cm1, cyclus::CompMap cm2) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   std::vector<int>::iterator it;
@@ -38,6 +39,44 @@ bool compare_compmap(cyclus::CompMap cm1, cyclus::CompMap cm2) {
   }
   return result;
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cyclus::Composition::Ptr comp_depletedU() {
+  cyclus::CompMap comp;
+  comp[922350000] = 0.1;
+  comp[922380000] = 99.9;
+
+  return cyclus::Composition::CreateFromMass(comp);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cyclus::Composition::Ptr comp_natU() {
+  // TODO check where this is used and if the hydrogen could be removed
+  cyclus::CompMap comp;
+  comp[922340000] = 5.5e-3;
+  comp[922350000] = 0.711;
+  comp[922380000] = 99.2835;
+  comp[10010000] = 10;  // insert hydrogen to check if it is filtered out
+  
+  return cyclus::Composition::CreateFromMass(comp);
+};
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cyclus::Composition::Ptr comp_weapongradeU() {
+  cyclus::CompMap comp;
+  comp[922340000] = 0.00780791;
+  comp[922350000] = 0.91020719;
+  comp[922380000] = 0.08198490;
+
+  return cyclus::Composition::CreateFromMass(comp);
+};
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cyclus::Material::Ptr mat_natU() {
+  cyclus::Composition::Ptr comp = comp_natU();
+  double qty = 1.;
+  return cyclus::Material::CreateUntracked(qty, comp);
+};
 
 }  // namespace misotest
 
@@ -139,9 +178,14 @@ double MIsoAtomFrac(cyclus::CompMap compmap, int isotope) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   
-  double isotope_assay;
+  double isotope_assay = 0;
   double uranium_atom_frac = 0;
-
+  
+  if (isotope < 10010000) {
+    std::stringstream ss;
+    ss << "Isotope id '" << isotope << "'is not a valid NucID!";
+    throw cyclus::ValueError(ss.str());
+  }
   // Get total uranium mole fraction, all non-uranium elements are not 
   // considered here as they are directly sent to the tails.
   for (int i : isotopes) {
@@ -175,6 +219,11 @@ double MIsoMassFrac(std::map<int,double> compmap, int isotope) {
   double isotope_assay;
   double uranium_mass_frac = 0;
 
+  if (isotope < 10010000) {
+    std::stringstream ss;
+    ss << "Isotope id '" << isotope << "'is not a valid NucID!";
+    throw cyclus::ValueError(ss.str());
+  }
   // Get total uranium mass fraction, all non-uranium elements are not 
   // considered here as they are directly sent to the tails.
   for (int i : isotopes) {
