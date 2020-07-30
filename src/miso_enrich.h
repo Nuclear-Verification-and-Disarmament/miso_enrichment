@@ -11,10 +11,13 @@
 
 namespace misoenrichment {
 
+// TODO think about passing a pointer to MIsoEnrich's EnrichmentCalculator
+// object? Think about how this works with possibly uninitialised gamma_235
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
-  SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay) 
-      : feed_comp_(feed_comp),
+  SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
+               double gamma_235) 
+      : feed_comp_(feed_comp), gamma_235_(gamma_235),
         tails_assay_(tails_assay) {}
   
   virtual ~SwuConverter() {}
@@ -28,7 +31,7 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299);
+               1e299, gamma_235_);
     double swu_used = e.SwuUsed();
     
     return swu_used;
@@ -48,13 +51,17 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
 
  private:
   cyclus::Composition::Ptr feed_comp_;
+  double gamma_235_;
   double tails_assay_;
 };
 
+// TODO think about passing a pointer to MIsoEnrich's EnrichmentCalculator
+// object? Think about how this works with possibly uninitialised gamma_235
 class FeedConverter : public cyclus::Converter<cyclus::Material> {
  public:
-  FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay)
-      : feed_comp_(feed_comp),
+  FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
+                double gamma_235)
+      : feed_comp_(feed_comp), gamma_235_(gamma_235), 
         tails_assay_(tails_assay) {}
 
   virtual ~FeedConverter() {}
@@ -68,7 +75,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e;
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299);
+               1e299, gamma_235_);
     double feed_used = e.FeedUsed();
     
     cyclus::toolkit::MatQuery mq(m);
@@ -94,6 +101,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
 
  private:
   cyclus::Composition::Ptr feed_comp_;
+  double gamma_235_;
   double tails_assay_;
 };
 
@@ -121,7 +129,8 @@ class MIsoEnrich : public cyclus::Facility,
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
   
-  void Build(cyclus::Agent* parent);
+  void EnterNotify();
+  //  void Build(cyclus::Agent* parent);
   void Tick();
   void Tock();
   void AdjustMatlPrefs(cyclus::PrefMap<cyclus::Material>::type& prefs);
@@ -251,6 +260,14 @@ class MIsoEnrich : public cyclus::Facility,
   bool order_prefs;
 
   #pragma cyclus var { \
+    "default": 1.4, \
+    "tooltip": "Separation factor U235", \
+    "uilabel": "Separation factor for U235", \
+    "doc": "overall stage separation factor for U235" \
+  }
+  double gamma_235;
+
+  #pragma cyclus var { \
     "default": 1e299,	\
     "tooltip": "SWU capacity (kgSWU/month)", \
     "uilabel": "SWU Capacity", \
@@ -272,7 +289,7 @@ class MIsoEnrich : public cyclus::Facility,
   std::vector<cyclus::toolkit::ResBuf<cyclus::Material> > feed_inv;
   //#pragma cyclus var {}
   std::vector<cyclus::Composition::Ptr> feed_inv_comp;
-  #pragma cyclus var {}
+
   int feed_idx;
   
   #pragma cyclus var {}

@@ -6,6 +6,8 @@
 #include <sstream> 
 #include <vector>
 
+#include "toolkit/timeseries.h"
+
 #include "miso_helper.h"
 
 namespace misoenrichment {
@@ -13,9 +15,8 @@ namespace misoenrichment {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
     : cyclus::Facility(ctx),
-      tails_assay(0),
-      swu_capacity(0),
-      max_enrich(1),
+      tails_assay(0.003),
+      max_enrich(0.95),
       initial_feed(0),
       max_feed_inventory(1e299),
       feed_commod(""),
@@ -23,10 +24,15 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       product_commod(""),
       tails_commod(""),
       order_prefs(true),
-      enrichment_calc(),
+      swu_capacity(1e299),
+      intra_timestep_swu(0),
+      intra_timestep_feed(0),
       latitude(0.0),
       longitude(0.0),
-      coordinates(latitude, longitude) {}
+      coordinates(latitude, longitude) {
+
+  enrichment_calc = EnrichmentCalculator(gamma_235);
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 MIsoEnrich::~MIsoEnrich() {}
@@ -41,17 +47,24 @@ std::string MIsoEnrich::str() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/*
 void MIsoEnrich::Build(cyclus::Agent* parent) {
   using cyclus::Material;
 
   cyclus::Facility::Build(parent);
+*/
+void MIsoEnrich::EnterNotify() {
+  using cyclus::Material;
 
+  cyclus::Facility::EnterNotify();
+  
   if (initial_feed > 0) {
     Material::Ptr mat = Material::Create(
         this, initial_feed, context()->GetRecipe(feed_recipe));
     AddFeedMat_(mat);
   } else {
     feed_inv.push_back(cyclus::toolkit::ResBuf<cyclus::Material>());
+    feed_inv.back().capacity(max_feed_inventory);
     feed_inv_comp.push_back(context()->GetRecipe(feed_recipe));
   }
   feed_idx = 0;  // set current feed idx to the only existing inventory
@@ -92,7 +105,7 @@ void MIsoEnrich::AddFeedMat_(cyclus::Material::Ptr mat) {
                                      << " holding no feed of this"
                                      << " composition and creates a new"
                                      << " inventory.";
-
+  
     feed_inv.push_back(cyclus::toolkit::ResBuf<cyclus::Material>());
     feed_inv.back().capacity(max_feed_inventory);
     try {
@@ -137,7 +150,7 @@ MIsoEnrich::GetMatlRequests() {
   using cyclus::Material;
   using cyclus::RequestPortfolio;
   using cyclus::Request;
-
+  
   std::set<RequestPortfolio<Material>::Ptr> ports;
   RequestPortfolio<Material>::Ptr port(new RequestPortfolio<Material>());
   Material::Ptr mat = Request_();
@@ -228,9 +241,9 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
   
     cyclus::Composition::Ptr feed_comp = feed_inv_comp[feed_idx];
     cyclus::Converter<Material>::Ptr swu_converter(
-        new SwuConverter(feed_comp, tails_assay));
+        new SwuConverter(feed_comp, tails_assay, gamma_235));
     cyclus::Converter<Material>::Ptr feed_converter(
-        new FeedConverter(feed_comp, tails_assay));
+        new FeedConverter(feed_comp, tails_assay, gamma_235));
     CapacityConstraint<Material> swu_constraint(swu_capacity, 
                                                 swu_converter);
     CapacityConstraint<Material> feed_constraint(
@@ -253,16 +266,18 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
 cyclus::Material::Ptr MIsoEnrich::Offer_(
     cyclus::Material::Ptr mat) {
   cyclus::CompMap product_comp, dummy_comp;
-  double dummy_double, product_qty;
+  double dummy_double;
+  double feed_qty = feed_inv[feed_idx].quantity();
+  double product_qty = mat->quantity();
   int dummy_int;
   
   enrichment_calc.SetInput(feed_inv_comp[feed_idx], MIsoAtomAssay(mat), 
-                           tails_assay, feed_inv[feed_idx].quantity(), 
-                           mat->quantity(), swu_capacity);
+                           tails_assay, feed_qty, product_qty, 
+                           swu_capacity, gamma_235);
   enrichment_calc.EnrichmentOutput(product_comp, dummy_comp, dummy_double,
                                    dummy_double, product_qty, dummy_double,
                                    dummy_int, dummy_int);
-
+  
   return cyclus::Material::CreateUntracked(
       product_qty, cyclus::Composition::CreateFromAtom(product_comp)); 
 }
@@ -270,12 +285,12 @@ cyclus::Material::Ptr MIsoEnrich::Offer_(
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool MIsoEnrich::ValidReq_(const cyclus::Material::Ptr& req_mat) {
   double u_235 = MIsoAtomAssay(req_mat);
-  double u_238 = MIsoAtomFrac(req_mat, 238);
+  double u_238 = MIsoAtomFrac(req_mat, IsotopeToNucID(238));
 
+// bool u_238_present = u_238 > 0 && !cyclus::AlmostEq(u_238, 0);
   bool u_238_present = u_238 > 0;
-  bool not_depleted = u_235 / (u_235+u_238) > tails_assay;
-  bool possible_enrichment = u_235 < max_enrich
-                             || cyclus::AlmostEq(u_235, max_enrich);
+  bool not_depleted = u_235 > tails_assay;
+  bool possible_enrichment = u_235 < max_enrich;
   
   return u_238_present && not_depleted && possible_enrichment;
 }
@@ -428,8 +443,8 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
   // In the following line, the enrichment is calculated but it is not yet
   // performed!
   enrichment_calc.SetInput(feed_inv_comp[feed_idx], product_assay,
-                            tails_assay, feed_inv[feed_idx].quantity(), 
-                            qty, current_swu_capacity);
+                           tails_assay, feed_inv[feed_idx].quantity(), 
+                           qty, current_swu_capacity, gamma_235);
   enrichment_calc.EnrichmentOutput(product_comp, tails_comp, feed_required,
                                    swu_required, product_qty, tails_qty,
                                    n_enriching, n_stripping);
