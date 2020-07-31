@@ -2,3 +2,4 @@ build
 misc
 commit_msg
 __pycache__
+*.swp
