@@ -14,6 +14,17 @@ Table of Contents
 - [References](#references)
 
 ## Getting started
+An example input file is found in `input/main.py` featuring a
+`cycamore::Source` source agent, a `MIsoEnrich` enrichment facility and two
+`cycamore::Sink` agents, one for enriched and one for depleted uranium. 
+Note that the sink requests a binary composition of enriched uranium (90% 
+<sup>235</sup>U, 10% <sup>238</sup> U) and that the enrichment facility
+enriches to a level at least equal to the requested one while keeping track
+ of the minor isotopes. This implies that one does _not_ need to know the 
+final composition of enriched uranium beforehand (its desired assay is 
+sufficient). In fact, one cannot request a material with a certain 
+concentration in minor isotopes or with a constraint on the minor isotopes
+concentration (e.g., to make it ASTM compliant, see Reference 4.).
 
 ## Theoretical background
 The implementation of the facility itself and the interaction with Cyclus'
@@ -36,3 +47,6 @@ physically founded approach to calculating said separation factors.
 3. Steve Fetter, _Nuclear Archaeology: Verifying Declarations of 
   Fissile-material Production_. Science and Global Security, 3:237-261
   (1993).
+4. ASTM International. _C787-20 Standard Specification for Uranium 
+  Hexafluoride for Enrichment_. West Conshohocken, PA; ASTM International, 
+  2020. DOI: [10.1520/C0787-20](https://doi.org/10.1520/C0787-20).
