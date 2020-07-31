@@ -48,5 +48,5 @@ physically founded approach to calculating said separation factors.
   Fissile-material Production_. Science and Global Security, 3:237-261
   (1993).
 4. ASTM International. _C787-20 Standard Specification for Uranium 
-  Hexafluoride for Enrichment_. West Conshohocken, PA; ASTM International, 
-  2020. DOI: [10.1520/C0787-20](https://doi.org/10.1520/C0787-20).
+  Hexafluoride for Enrichment_. West Conshohocken, PA; ASTM International, 2020. 
+  DOI: [10.1520/C0787-20](https://doi.org/10.1520/C0787-20).
