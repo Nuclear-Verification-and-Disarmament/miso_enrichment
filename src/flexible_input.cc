@@ -14,6 +14,11 @@ FlexibleInput<T>::FlexibleInput(cyclus::Facility* fac,
   CheckInput(value);
   value_ = value;
   fac_ = fac;
+  
+  time_.reserve(value.size());
+  for (int i = 0; i < value.size(), i++) {
+    time_[i] = i;
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -33,7 +38,7 @@ FlexibleInput<T>::~FlexibleInput() {
   delete fac_;
 }
 
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 template <class T>
 T FlexibleInput<T>::UpdateValue() {
   // Get current time with t = 0 being the entrance of fac_ in the simulation
