@@ -16,9 +16,12 @@ FlexibleInput<T>::FlexibleInput() {;}
 template <class T>
 FlexibleInput<T>::FlexibleInput(cyclus::Agent* parent, 
                                 std::vector<T> value) {
-  CheckInput_(value);
-  value_ = value;
+  // parent_ has to be set before calling CheckInput_ otherwise one gets a
+  // segfault!
   parent_ = parent;
+  value_ = value;
+
+  CheckInput_(value);
   
   time_.reserve(value.size());
   for (int i = 0; i < value.size(); i++) {
@@ -31,10 +34,13 @@ template <class T>
 FlexibleInput<T>::FlexibleInput(cyclus::Agent* parent,
                                 std::vector<T> value, 
                                 std::vector<int> time) {
-  CheckInput_(value, time);
+  // parent_ has to be set before calling CheckInput_ otherwise one gets a
+  // segfault!
   value_ = value;
   time_ = time;
   parent_ = parent;
+
+  CheckInput_(value, time);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -52,7 +58,7 @@ T FlexibleInput<T>::UpdateValue() {
     std::stringstream ss;
     ss << "Agent '" << parent_->prototype()  << "' of spec '" << parent_->spec() 
        << "' with enter_time '" << parent_->enter_time() 
-       << "' has passed the invalid timestamp '" << t << "' at time'" 
+       << "' has passed the invalid timestamp '" << t << "' at time '" 
        << parent_->context()->time() << "' to a FlexibleInput variable.\n";
     
     throw cyclus::ValueError(ss.str());
@@ -82,19 +88,20 @@ void FlexibleInput<T>::CheckInput_(const std::vector<T>& value) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 template <class T>
 void FlexibleInput<T>::CheckInput_(const std::vector<T>& value,
-                              const std::vector<int>& time) {
+                                   const std::vector<int>& time_vec) {
   CheckInput_(value);
-  if (value.size() != time.size()) {
+  if (value.size() != time_vec.size()) {
     std::stringstream ss;
     ss << "While initialising agent '" << parent_->prototype()  
-       << "' of spec '" << parent_->spec() << "' at time'" 
+       << "' of spec '" << parent_->spec() << "' at time '" 
        << parent_->context()->time() << "' a problem appeared:\n"
        << "time and value vectors do not have the same size.\n"
-       << "size of time vector: " << time.size()
+       << "size of time vector: " << time_vec.size()
        << ", size of value vector: " << value.size() << "\n";
     
     throw cyclus::ValueError(ss.str());
   }
+
 }
 
 }  // namespace misoenrichment
