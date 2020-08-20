@@ -102,6 +102,16 @@ void FlexibleInput<T>::CheckInput_(const std::vector<T>& value,
     throw cyclus::ValueError(ss.str());
   }
 
+  if (time_vec[0] != 0) {
+    std::stringstream ss;
+    ss << "While initialising agent '" << parent_->prototype()  
+       << "' of spec '" << parent_->spec() << "' at time '" 
+       << parent_->context()->time() << "' a problem appeared:\n"
+       << "the first element of the time vector must be '0' (initial "
+       << "value).\n";
+    
+    throw cyclus::ValueError(ss.str());
+  }
 }
 
 }  // namespace misoenrichment
