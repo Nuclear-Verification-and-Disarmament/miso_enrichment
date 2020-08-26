@@ -7,6 +7,7 @@
 #include "cyclus.h"
 
 #include "enrichment_calculator.h"
+#include "flexible_input.cc"
 #include "miso_helper.h"
 
 namespace misoenrichment {
@@ -129,8 +130,10 @@ class MIsoEnrich : public cyclus::Facility,
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
   
-  void EnterNotify();
-  //  void Build(cyclus::Agent* parent);
+  inline void EnterNotify() {
+    cyclus::Facility::EnterNotify();
+  };
+  void Build(cyclus::Agent* parent);
   void Tick();
   void Tock();
   void AdjustMatlPrefs(cyclus::PrefMap<cyclus::Material>::type& prefs);
@@ -312,6 +315,31 @@ class MIsoEnrich : public cyclus::Facility,
   double longitude; 
   
   cyclus::toolkit::Position coordinates;
+  
+  #pragma cyclus var {  \
+    "default": [],  \
+    "tooltip": "SWU capacity change times in timesteps from beginning " \
+               "of deployment",  \
+    "uilabel": "SWU capacity change times",  \
+    "uitype": "oneormore",  \
+    "doc": "list of timesteps where the SWU is changed. The first " \
+           "timestep has to be 0 as it sets the initial value and all " \
+           "timesteps are measured from the moment of deployment of the " \
+           "facility, not from the start of the simulation."  \
+  }
+  std::vector<int> swu_capacity_times;
+
+  #pragma cyclus var {  \
+    "default": [],  \
+    "tooltip": "SWU capacity list (kg SWU / month)",  \
+    "uilabel": "SWU Capacity List",  \
+    "uitype": "oneormore",  \
+    "doc": "list of separative work unit (SWU) capacity of enrichment " \
+           "facility (kg SWU / month)"  \
+  }
+  std::vector<double> swu_capacity_vals;
+  FlexibleInput<double> swu_flexible;
+
 };
 
 }  // namespace misoenrichment

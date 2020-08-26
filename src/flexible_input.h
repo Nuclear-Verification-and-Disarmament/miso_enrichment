@@ -15,19 +15,19 @@ class FlexibleInput {
   FlexibleInput(cyclus::Agent* parent, std::vector<T> value, 
                 std::vector<int> time);
 
-  T UpdateValue();
+  T UpdateValue(cyclus::Agent* parent);
 
  private:
-  void CheckInput_(const std::vector<T>& value);
-  void CheckInput_(const std::vector<T>& value, 
+  void CheckInput_(cyclus::Agent* parent, const std::vector<T>& value);
+  void CheckInput_(cyclus::Agent* parent, const std::vector<T>& value, 
                    const std::vector<int>& time);
 
   std::vector<T> value_;
   std::vector<int> time_;
-  
-  int current_idx_ = 0;
-
-  cyclus::Agent* parent_;
+  // The time iterator points to the time corresponding to the value
+  // currently used.
+  std::vector<int>::iterator time_it_;
+  int parent_enter_time_;
 };
 
 }  // namespace misoenrichment
