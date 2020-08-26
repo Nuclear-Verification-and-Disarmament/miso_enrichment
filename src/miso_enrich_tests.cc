@@ -23,24 +23,24 @@ namespace misoenrichment {
 void MIsoEnrichTest::SetUp() {
   cyclus::PyStart();
   cyclus::Env::SetNucDataPath();
-  cyclus::Context* ctx = tc_.get();
+  
+  fake_sim = new cyclus::MockSim(1);
+  miso_enrich_facility = new MIsoEnrich(fake_sim->context());
 
-  miso_enrich_facility = new MIsoEnrich(ctx);
   InitParameters();
   SetUpMIsoEnrichment();
-  miso_enrich_facility->EnterNotify();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void MIsoEnrichTest::TearDown() {
   delete miso_enrich_facility;
+  delete fake_sim;
+
   cyclus::PyStop();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void MIsoEnrichTest::InitParameters() {
-  cyclus::Context* ctx = tc_.get();
-
   cyclus::CompMap cm;
   double feed_assay = 0.711;
   double feed_U234 = 5.5e-3;
@@ -49,7 +49,7 @@ void MIsoEnrichTest::InitParameters() {
   cm[922380000] = 100 - feed_assay - feed_U234;
   recipe = cyclus::Composition::CreateFromMass(cm);
   feed_recipe = "feed_recipe";
-  ctx->AddRecipe(feed_recipe, recipe);
+  fake_sim->AddRecipe(feed_recipe, recipe);
 
   feed_commod = "feed_U";
   product_commod = "enriched_U";
@@ -60,6 +60,8 @@ void MIsoEnrichTest::InitParameters() {
   order_prefs = true;
   max_enrich = 0.8;
   swu_capacity = 1e299;
+  swu_vals = std::vector<double>(1,1);
+  swu_times = std::vector<int>(1,0);
   gamma_235 = 1.4;
 }
 
@@ -78,12 +80,17 @@ void MIsoEnrichTest::SetUpMIsoEnrichment() {
   miso_enrich_facility->gamma_235 = gamma_235;
   miso_enrich_facility->latitude = latitude;
   miso_enrich_facility->longitude = longitude;
+  miso_enrich_facility->swu_capacity_vals = swu_vals;
+  miso_enrich_facility->swu_capacity_times = swu_times;
+
+  // TODO delete the unused one
+  miso_enrich_facility->Build(NULL);
+  miso_enrich_facility->EnterNotify();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Material::Ptr MIsoEnrichTest::GetFeedMat(double qty) {
-  return cyclus::Material::CreateUntracked(
-      qty, tc_.get()->GetRecipe(feed_recipe));
+  return cyclus::Material::CreateUntracked(qty, recipe);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -111,7 +118,10 @@ TEST_F(MIsoEnrichTest, BidPrefs) {
     "   <tails_commod>depleted_U</tails_commod> "
     "   <tails_assay>0.002</tails_assay> "
     "   <max_feed_inventory>1</max_feed_inventory> "
-    "   <order_prefs>1</order_prefs>";
+    "   <order_prefs>1</order_prefs>"
+    "   <swu_capacity_times><val>0</val></swu_capacity_times> "
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
+
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur); 
@@ -149,7 +159,9 @@ TEST_F(MIsoEnrichTest, FeedConstraint) {
     "   <initial_feed>100</initial_feed> "
     "   <product_commod>enriched_U</product_commod> "
     "   <tails_commod>depleted_U</tails_commod> "
-    "   <tails_assay>0.002</tails_assay> ";
+    "   <tails_assay>0.002</tails_assay> "
+    "   <swu_capacity_times><val>0</val></swu_capacity_times> "
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
@@ -250,7 +262,9 @@ TEST_F(MIsoEnrichTest, NoBidPrefs) {
     "   <tails_commod>depleted_U</tails_commod> "
     "   <tails_assay>0.002</tails_assay> "
     "   <max_feed_inventory>2</max_feed_inventory> "
-    "   <order_prefs>1</order_prefs>";
+    "   <order_prefs>1</order_prefs>"
+    "   <swu_capacity_times><val>0</val></swu_capacity_times> "
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur); 
@@ -286,7 +300,7 @@ TEST_F(MIsoEnrichTest, Request) {
   // Only initially added material in inventory
   cyclus::Material::Ptr mat = DoRequest();
   EXPECT_DOUBLE_EQ(mat->quantity(), req_qty);
-  EXPECT_EQ(mat->comp(), tc_.get()->GetRecipe(feed_recipe));
+  EXPECT_EQ(mat->comp(), recipe);
   
   // Full inventory
   add_qty = req_qty;
@@ -295,7 +309,7 @@ TEST_F(MIsoEnrichTest, Request) {
   ASSERT_DOUBLE_EQ(req_qty, 0.);
   mat = DoRequest();
   EXPECT_DOUBLE_EQ(mat->quantity(), req_qty);
-  EXPECT_EQ(mat->comp(), tc_.get()->GetRecipe(feed_recipe));
+  EXPECT_EQ(mat->comp(), recipe);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -310,7 +324,9 @@ TEST_F(MIsoEnrichTest, RequestSim) {
     "   <tails_commod>depleted_U</tails_commod> "
     "   <tails_assay>0.002</tails_assay> "
     "   <max_feed_inventory>100</max_feed_inventory> "
-    "   <max_enrich>0.8</max_enrich> ";
+    "   <max_enrich>0.8</max_enrich> "
+    "   <swu_capacity_times><val>0</val></swu_capacity_times> "
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);
@@ -337,7 +353,9 @@ TEST_F(MIsoEnrichTest, TailsTrade) {
     "   <product_commod>enriched_U</product_commod> "
     "   <tails_commod>depleted_U</tails_commod> "
     "   <tails_assay>0.002</tails_assay> "
-    "   <initial_feed>100</initial_feed> ";
+    "   <initial_feed>100</initial_feed> "
+    "   <swu_capacity_times><val>0</val></swu_capacity_times> "
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);
@@ -364,7 +382,7 @@ TEST_F(MIsoEnrichTest, TailsTrade) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(MIsoEnrichTest, Tick) {
-  ASSERT_NO_THROW(miso_enrich_facility->Tick());
+  EXPECT_NO_THROW(miso_enrich_facility->Tick());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
