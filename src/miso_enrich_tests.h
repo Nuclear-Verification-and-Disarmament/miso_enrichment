@@ -7,7 +7,6 @@
 
 #include "composition.h"
 #include "material.h"
-#include "test_context.h"
 
 #include "miso_enrich.h"
 
@@ -16,8 +15,8 @@ namespace misoenrichment {
 class MIsoEnrichTest : public ::testing::Test {
  protected:
   MIsoEnrich* miso_enrich_facility;
-
-  cyclus::TestContext tc_;
+  
+  cyclus::MockSim* fake_sim;
   cyclus::Composition::Ptr recipe;
   
   bool order_prefs;
@@ -25,6 +24,8 @@ class MIsoEnrichTest : public ::testing::Test {
          max_enrich, swu_capacity, tails_assay;
 
   std::string feed_commod, product_commod, tails_commod, feed_recipe;
+  std::vector<double> swu_vals;
+  std::vector<int> swu_times;
   
   // Functions to initialise and end each test
   void SetUp();

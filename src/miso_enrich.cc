@@ -30,7 +30,7 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       latitude(0.0),
       longitude(0.0),
       coordinates(latitude, longitude) {
-
+  
   enrichment_calc = EnrichmentCalculator(gamma_235);
 }
 
@@ -47,17 +47,18 @@ std::string MIsoEnrich::str() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/*
-void MIsoEnrich::Build(cyclus::Agent* parent) {
-  using cyclus::Material;
-
-  cyclus::Facility::Build(parent);
-*/
 void MIsoEnrich::EnterNotify() {
   using cyclus::Material;
-
-  cyclus::Facility::EnterNotify();
   
+  cyclus::Facility::EnterNotify();
+
+  if (swu_capacity_times[0]==-1) {
+    swu_flexible = FlexibleInput<double>(this, swu_capacity_vals);
+  } else {
+    swu_flexible = FlexibleInput<double>(this, swu_capacity_vals, 
+                                         swu_capacity_times);
+  }
+
   if (initial_feed > 0) {
     Material::Ptr mat = Material::Create(
         this, initial_feed, context()->GetRecipe(feed_recipe));
@@ -125,6 +126,15 @@ void MIsoEnrich::AddFeedMat_(cyclus::Material::Ptr mat) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void MIsoEnrich::Tick() {
+  // For an unknown reason, 'UpdateValue' has to be called with a copy of
+  // the 'this' pointer. When directly usiong 'this', the address passed to
+  // the function is increased by 8 bits resulting later on in a
+  // segmentation fault.
+  cyclus::Agent* copy_ptr;
+  cyclus::Agent* source_ptr = this;
+  std::memcpy((void*) &copy_ptr, (void*) &source_ptr, sizeof(cyclus::Agent*));
+
+  swu_capacity = swu_flexible.UpdateValue(copy_ptr);
   current_swu_capacity = swu_capacity;
 }
 
@@ -187,7 +197,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
   
   RecordTimeSeries<double>("supply" + tails_commod, this, 
                            tails_inv.quantity());
-  // TODO talk to CYCAMORE devs about the line below
+  // TODO think about line below
   RecordTimeSeries<double>("supply" + product_commod, this,
                            feed_inv[feed_idx].quantity());
 

@@ -32,8 +32,10 @@ def facility():
               "tails_assay": 0.003,
               "initial_feed": 0,
               "max_feed_inventory": 10000,
-              "gamma_235": 1.3,
-              "swu_capacity": 1e299
+              "gamma_235": 1.35,
+              "swu_capacity": 1e299,
+              "swu_capacity_vals": {"val": [1e5, 1000, 2000]},
+              "swu_capacity_times": {"val": [0, 5, 6]}
             }}
           }
         ]}
