@@ -16,14 +16,13 @@ FlexibleInput<T>::FlexibleInput() {;}
 template <class T>
 FlexibleInput<T>::FlexibleInput(cyclus::Agent* parent, 
                                 std::vector<T> value) {
-  CheckInput_(parent, value);
-  
   value_ = value;
   time_.reserve(value.size());
   for (int i = 0; i < value.size(); i++) {
     time_[i] = i;
   }
   time_it_ = time_.begin();
+  CheckInput_(parent, value);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -40,11 +39,13 @@ FlexibleInput<T>::FlexibleInput(cyclus::Agent* parent,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 template <class T>
 T FlexibleInput<T>::UpdateValue(cyclus::Agent* parent) {
-  // Get current time with t = 0 being the entrance of parent in the simulation
+  // Get current time with t = 0 being the entrance of parent in the 
+  // simulation.
   int t = parent->context()->time() - parent->enter_time();
 
   // The second conditional takes the ending of the time vector into
-  // account. If the last element is reached, *(time_it_+1) is not evaluated.
+  // account. If the last element is reached, *(time_it_+1) is not 
+  // evaluated.
   if (t >= *time_it_ && (time_it_+1 == time_.end() || t < *(time_it_+1))) {
     return value_[time_it_ - time_.begin()];
   } else if (t == *(time_it_+1)) {
@@ -52,8 +53,9 @@ T FlexibleInput<T>::UpdateValue(cyclus::Agent* parent) {
     return value_[time_it_ - time_.begin()];
   } else {
     std::stringstream ss;
-    ss << "Agent '" << parent->prototype()  << "' of spec '" << parent->spec() 
-       << "' with enter_time '" << parent_enter_time_
+    ss << "Agent '" << parent->prototype()  
+       << "' of spec '" << parent->spec() 
+       << "' with enter_time '" << parent->enter_time()
        << "' has passed the invalid timestamp '" << t << "' at time '" 
        << parent->context()->time() << "' to a FlexibleInput variable.\n";
     
