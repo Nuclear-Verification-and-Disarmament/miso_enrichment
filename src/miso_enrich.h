@@ -127,13 +127,11 @@ class MIsoEnrich : public cyclus::Facility,
   friend class MIsoEnrichTest;
 
   #pragma cyclus
+
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
-  
-  inline void EnterNotify() {
-    cyclus::Facility::EnterNotify();
-  };
-  void Build(cyclus::Agent* parent);
+ 
+  void EnterNotify();
   void Tick();
   void Tock();
   void AdjustMatlPrefs(cyclus::PrefMap<cyclus::Material>::type& prefs);
@@ -317,11 +315,10 @@ class MIsoEnrich : public cyclus::Facility,
   cyclus::toolkit::Position coordinates;
   
   #pragma cyclus var {  \
-    "default": [],  \
+    "default": [-1],  \
     "tooltip": "SWU capacity change times in timesteps from beginning " \
                "of deployment",  \
     "uilabel": "SWU capacity change times",  \
-    "uitype": "oneormore",  \
     "doc": "list of timesteps where the SWU is changed. The first " \
            "timestep has to be 0 as it sets the initial value and all " \
            "timesteps are measured from the moment of deployment of the " \
@@ -330,10 +327,9 @@ class MIsoEnrich : public cyclus::Facility,
   std::vector<int> swu_capacity_times;
 
   #pragma cyclus var {  \
-    "default": [],  \
+    "default": [1e299],  \
     "tooltip": "SWU capacity list (kg SWU / month)",  \
     "uilabel": "SWU Capacity List",  \
-    "uitype": "oneormore",  \
     "doc": "list of separative work unit (SWU) capacity of enrichment " \
            "facility (kg SWU / month)"  \
   }

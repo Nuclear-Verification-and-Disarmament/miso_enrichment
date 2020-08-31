@@ -27,7 +27,6 @@ class FlexibleInput {
   // The time iterator points to the time corresponding to the value
   // currently used.
   std::vector<int>::iterator time_it_;
-  int parent_enter_time_;
 };
 
 }  // namespace misoenrichment

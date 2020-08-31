@@ -16,7 +16,6 @@ FlexibleInput<T>::FlexibleInput() {;}
 template <class T>
 FlexibleInput<T>::FlexibleInput(cyclus::Agent* parent, 
                                 std::vector<T> value) {
-  parent_enter_time_ = parent->enter_time();
   CheckInput_(parent, value);
   
   value_ = value;
@@ -32,7 +31,6 @@ template <class T>
 FlexibleInput<T>::FlexibleInput(cyclus::Agent* parent,
                                 std::vector<T> value, 
                                 std::vector<int> time) {
-  parent_enter_time_ = parent->enter_time();
   value_ = value;
   time_ = time;
   time_it_ = time_.begin();
@@ -43,7 +41,7 @@ FlexibleInput<T>::FlexibleInput(cyclus::Agent* parent,
 template <class T>
 T FlexibleInput<T>::UpdateValue(cyclus::Agent* parent) {
   // Get current time with t = 0 being the entrance of parent in the simulation
-  int t = parent->context()->time() - parent_enter_time_;
+  int t = parent->context()->time() - parent->enter_time();
 
   // The second conditional takes the ending of the time vector into
   // account. If the last element is reached, *(time_it_+1) is not evaluated.

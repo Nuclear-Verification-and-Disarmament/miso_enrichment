@@ -32,7 +32,6 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       coordinates(latitude, longitude) {
   
   enrichment_calc = EnrichmentCalculator(gamma_235);
-  swu_capacity_times = std::vector<int>(1,-1);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -48,12 +47,11 @@ std::string MIsoEnrich::str() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void MIsoEnrich::Build(cyclus::Agent* parent) {
+void MIsoEnrich::EnterNotify() {
   using cyclus::Material;
+  
+  cyclus::Facility::EnterNotify();
 
-  cyclus::Facility::Build(parent);
-
-  //TODO check if this works in simulation
   if (swu_capacity_times[0]==-1) {
     swu_flexible = FlexibleInput<double>(this, swu_capacity_vals);
   } else {

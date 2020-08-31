@@ -83,8 +83,6 @@ void MIsoEnrichTest::SetUpMIsoEnrichment() {
   miso_enrich_facility->swu_capacity_vals = swu_vals;
   miso_enrich_facility->swu_capacity_times = swu_times;
 
-  // TODO delete the unused one
-  miso_enrich_facility->Build(NULL);
   miso_enrich_facility->EnterNotify();
 }
 
