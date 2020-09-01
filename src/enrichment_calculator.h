@@ -86,7 +86,7 @@ class EnrichmentCalculator {
   void CalculateFlows_();
   void CalculateSwu_();
   void CalculateConcentrations_();
-  double ValueFunction_(const cyclus::CompMap& composition);
+  double ValueFunction_(cyclus::CompMap composition);
 };
 
 }  // namespace misoenrichment

@@ -46,7 +46,7 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
     expect_feed_qty(100),
     expect_product_qty(0.67202), 
     expect_tails_qty(99.32798),
-    expect_swu_used(199.171),
+    expect_swu_used(199.17105),
     expect_n_enriching(56),
     expect_n_stripping(14) {
   double target_product_assay = 0.9;
