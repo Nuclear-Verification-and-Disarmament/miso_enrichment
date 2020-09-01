@@ -101,16 +101,14 @@ TEST_F(EnrichmentCalculatorTest, Concentrations) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, Flows) {
-  const double abs_tol = 1e-5;  // maximum absolute difference
-  EXPECT_NEAR(expect_feed_qty, feed_qty, abs_tol);
-  EXPECT_NEAR(expect_product_qty, product_qty, abs_tol);
-  EXPECT_NEAR(expect_tails_qty, tails_qty, abs_tol);
+  EXPECT_NEAR(expect_feed_qty, feed_qty, kEpsDouble);
+  EXPECT_NEAR(expect_product_qty, product_qty, kEpsDouble);
+  EXPECT_NEAR(expect_tails_qty, tails_qty, kEpsDouble);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, Swu) {
-  const double abs_tol = 1e-5;  // maximum absolute difference
-  EXPECT_NEAR(expect_swu_used, swu_used, abs_tol);
+  EXPECT_NEAR(expect_swu_used, swu_used, kEpsDouble);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
