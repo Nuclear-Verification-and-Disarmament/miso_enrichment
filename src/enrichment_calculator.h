@@ -27,13 +27,7 @@ class EnrichmentCalculator {
   void PPrint();
 
   void BuildMatchedAbundanceRatioCascade();
-  /*
-  TODO delete new_tails_qty because it should not be the limiting factor?
-  void SetInput(cyclus::Composition::Ptr new_feed_composition,
-    double new_target_product_assay, double new_target_tails_assay, 
-    double new_feed_qty, double new_product_qty, double new_tails_qty, 
-    double new_max_swu);
-  */
+
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
       double new_target_product_assay, double new_target_tails_assay, 
       double new_feed_qty, double new_product_qty, double new_max_swu,
@@ -57,25 +51,22 @@ class EnrichmentCalculator {
 
   double target_product_assay;
   double target_tails_assay;
-  // Units of all of the streams are kg/month
+  // Units of all of the streams are kg timestep^-1
   double target_feed_qty;
   double target_product_qty;
   double feed_qty;
   double product_qty;
   double tails_qty;
-  double max_swu;  // in kg SWU month^-1
+  double max_swu;  // in kg SWU timestep^-1
   double swu = 0;  // Separative work that has been performed
-                   // in kg SWU month^-1
+                   // in kg SWU timestep^-1
 
   // TODO declare vector as const?
   std::vector<int> isotopes;
-  //IsotopesNucID(isotopes);
   std::map<int,double> separation_factors;
   std::map<int,double> alpha_star;
 
-  // Number of stages in the enriching and in the stripping section, 
-  // respectively. They are stored as double to facilitate calculations, 
-  // however the values will also be whole numbers.
+  // Number of stages in the enriching and in the stripping section
   int n_enriching;
   int n_stripping;
   
@@ -86,7 +77,7 @@ class EnrichmentCalculator {
   void CalculateFlows_();
   void CalculateSwu_();
   void CalculateConcentrations_();
-  double ValueFunction_(const cyclus::CompMap& composition);
+  double ValueFunction_(cyclus::CompMap composition);
 };
 
 }  // namespace misoenrichment

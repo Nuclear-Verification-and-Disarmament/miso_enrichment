@@ -19,6 +19,7 @@ cyclus::Material::Ptr mat_natU();
 
 }   // namespace misotest
 
+const double kEpsDouble = 1e-5;
 const double kEpsCompMap = 1e-5;
 const int kIterMax = 200;
 
