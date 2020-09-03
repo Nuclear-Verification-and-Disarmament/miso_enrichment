@@ -29,14 +29,15 @@ EnrichmentCalculator::EnrichmentCalculator(
     cyclus::Composition::Ptr feed_composition, 
     double target_product_assay, double target_tails_assay, 
     double gamma_235, double feed_qty, double product_qty, 
-    double max_swu) : 
+    double max_swu, bool use_downblending) : 
       feed_composition(feed_composition->atom()),
       target_product_assay(target_product_assay),
       target_tails_assay(target_tails_assay),
       gamma_235(gamma_235), 
       target_feed_qty(feed_qty),
       target_product_qty(product_qty),
-      max_swu(max_swu) {
+      max_swu(max_swu),
+      use_downblending(use_downblending) {
   if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be 
     // defined. Additionally, add an exception that should be thrown.
@@ -71,6 +72,8 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
   target_feed_qty = e.target_feed_qty;
   target_product_qty = e.target_product_qty;
   max_swu = e.max_swu;  // in kg SWU month^-1
+
+  use_downblending = e.use_downblending;
   
   IsotopesNucID(isotopes);
   gamma_235 = e.gamma_235;
@@ -119,7 +122,7 @@ void EnrichmentCalculator::SetInput(
     cyclus::Composition::Ptr new_feed_composition,
     double new_target_product_assay, double new_target_tails_assay, 
     double new_feed_qty, double new_product_qty, double new_max_swu,
-    double new_gamma_235) {
+    double new_gamma_235, bool use_downblending) {
   
   // This temporary variable is needed because feed_comp->atom() returns
   // a const cyclus::CompMap object and hence it cannot be normalised.
@@ -170,6 +173,9 @@ void EnrichmentCalculator::SetInput(
       // defined. Additionally, add an exception that should be thrown.
     }
     CalculateFlows_();
+    
+    // if this code snippet is used again then add downblending!!
+  
   }
   */
   BuildMatchedAbundanceRatioCascade();
@@ -197,6 +203,10 @@ void EnrichmentCalculator::EnrichmentOutput(
 void EnrichmentCalculator::BuildMatchedAbundanceRatioCascade() {
   CalculateNStages_();
   CalculateFlows_();
+  
+  if (use_downblending) {
+    Downblend_();
+  }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -337,6 +347,48 @@ void EnrichmentCalculator::CalculateConcentrations_() {
     product_composition[i] = e[i] * atom_frac / (e[i]+s[i]) / e_sum;
     tails_composition[i] = s[i] * atom_frac / (e[i]+s[i]) / s_sum;
   }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EnrichmentCalculator::Downblend_() {
+  double feed_assay = MIsoAtomAssay(feed_composition);
+  double product_assay = MIsoAtomAssay(product_composition);
+  
+  if (product_assay - target_product_assay < 0.00005) {
+    return;
+  }
+
+  // Quantity of blending feed needed per unit of product
+  double blend_feed_per_product = (product_assay-target_product_assay)
+                                  / (target_product_assay-feed_assay);
+
+  // Check whether product or feed is the constraining factor and adapt 
+  // the corresponding quantity. If the SWU is the constraining factor then
+  // use it completely and downblend the resulting product (done in the
+  // next step, uses no SWU).
+  if (cyclus::AlmostEq(product_qty, target_product_qty)) {
+    target_product_qty /= 1 + blend_feed_per_product;
+    CalculateFlows_();
+  }
+  else if (cyclus::AlmostEq(feed_qty, target_feed_qty)) {
+    // While this is not wrong, it is not the optimal solution either and
+    // it might be improved later. (TODO)
+    target_feed_qty -= blend_feed_per_product * product_qty;
+    CalculateFlows_();
+  } 
+
+  double blend_feed = blend_feed_per_product * product_qty;
+  feed_qty += blend_feed;
+  product_qty += blend_feed;
+  
+  // Calculate the downblended product composition
+  for (int i : isotopes) {
+    product_composition[i] = (product_composition[i]*product_qty
+                              + feed_composition[i]*blend_feed)
+                             / (product_qty+blend_feed);
+  }
+  
+  return;
 }
 
 }  // namespace misoenrichment

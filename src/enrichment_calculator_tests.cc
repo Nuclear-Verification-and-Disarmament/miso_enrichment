@@ -49,6 +49,7 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
     expect_swu_used(199.17105),
     expect_n_enriching(56),
     expect_n_stripping(14) {
+  bool use_downblending = false;
   double target_product_assay = 0.9;
   double target_tails_assay = 0.001;
   double gamma = 1.3;
@@ -58,7 +59,8 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
 
   e = EnrichmentCalculator(compPtr_nat_U(), target_product_assay, 
                              target_tails_assay, gamma, target_feed_qty,
-                             target_product_qty, max_swu);
+                             target_product_qty, max_swu, 
+                             use_downblending);
   e.EnrichmentOutput(product_comp, tails_comp, feed_qty, swu_used, 
                      product_qty, tails_qty, n_enriching, n_stripping);
 }
@@ -68,7 +70,7 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
 TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   EnrichmentCalculator e2(
     cyclus::Composition::CreateFromAtom(weapons_grade_U()), 0.95, 0.1, 1.1,
-    1.);
+    1., true);
   e2 = e;
 
   cyclus::CompMap product_comp2, tails_comp2;
@@ -115,6 +117,27 @@ TEST_F(EnrichmentCalculatorTest, Swu) {
 TEST_F(EnrichmentCalculatorTest, NumberStages) {
   EXPECT_EQ(expect_n_enriching, n_enriching);
   EXPECT_EQ(expect_n_stripping, n_stripping);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(EnrichmentCalculatorTest, Downblending) {
+  double target_product_assay = MIsoAtomAssay(weapons_grade_U()) - 0.001;
+
+  cyclus::CompMap bl_product_comp, bl_tails_comp;
+  double bl_feed_qty, bl_product_qty, bl_tails_qty, bl_swu_used;
+  int dummy_int;
+
+  EnrichmentCalculator blender(compPtr_nat_U(), target_product_assay, 
+                               0.001, 1.3, 100, 1e299, 1e299, true);
+  
+  blender.EnrichmentOutput(bl_product_comp, bl_tails_comp, bl_feed_qty, 
+                           bl_swu_used, bl_product_qty, bl_tails_qty,
+                           dummy_int, dummy_int);
+  
+  EXPECT_NEAR(target_product_assay, MIsoAtomAssay(bl_product_comp), 
+              5e-4);
+  EXPECT_TRUE(expect_feed_qty >= bl_feed_qty);
+  EXPECT_TRUE(bl_product_qty > expect_product_qty);
 }
 
 }  // namespace misoenrichment
