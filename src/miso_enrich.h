@@ -17,9 +17,9 @@ namespace misoenrichment {
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
   SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-               double gamma_235) 
+               double gamma_235, bool use_downblending) 
       : feed_comp_(feed_comp), gamma_235_(gamma_235),
-        tails_assay_(tails_assay) {}
+        tails_assay_(tails_assay), use_downblending(use_downblending) {}
   
   virtual ~SwuConverter() {}
 
@@ -32,7 +32,7 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299, gamma_235_);
+               1e299, gamma_235_, use_downblending);
     double swu_used = e.SwuUsed();
     
     return swu_used;
@@ -51,6 +51,7 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
   }
 
  private:
+  bool use_downblending;
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
   double tails_assay_;
@@ -61,9 +62,9 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
 class FeedConverter : public cyclus::Converter<cyclus::Material> {
  public:
   FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-                double gamma_235)
+                double gamma_235, bool use_downblending)
       : feed_comp_(feed_comp), gamma_235_(gamma_235), 
-        tails_assay_(tails_assay) {}
+        tails_assay_(tails_assay), use_downblending(use_downblending) {}
 
   virtual ~FeedConverter() {}
 
@@ -76,7 +77,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e;
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299, gamma_235_);
+               1e299, gamma_235_, use_downblending);
     double feed_used = e.FeedUsed();
     
     cyclus::toolkit::MatQuery mq(m);
@@ -101,6 +102,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
   }
 
  private:
+  bool use_downblending;
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
   double tails_assay_;
@@ -335,6 +337,16 @@ class MIsoEnrich : public cyclus::Facility,
   }
   std::vector<double> swu_capacity_vals;
   FlexibleInput<double> swu_flexible;
+
+  #pragma cyclus var {  \
+    "default": 1,  \
+    "tooltip": "Downblend material",  \
+    "uilabel": "Downblend the product to required enrichment level",  \
+    "doc": "If set to true and if the enriched product exceeds the "  \
+           "desired enrichment level, the product is downblended using "  \
+           "enrichment feed to match the desired level."  \
+  }
+  bool use_downblending;
 
 };
 

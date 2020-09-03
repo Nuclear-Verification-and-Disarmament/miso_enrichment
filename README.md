@@ -17,6 +17,7 @@ Table of Contents
 An example input file is found in `input/main.py` featuring a
 `cycamore::Source` source agent, a `MIsoEnrich` enrichment facility and two
 `cycamore::Sink` agents, one for enriched and one for depleted uranium. 
+
 Note that the sink requests a binary composition of enriched uranium (90% 
 <sup>235</sup>U, 10% <sup>238</sup> U) and that the enrichment facility
 enriches to a level at least equal to the requested one while keeping track
@@ -25,6 +26,13 @@ final composition of enriched uranium beforehand (its desired assay is
 sufficient). In fact, one cannot request a material with a certain 
 concentration in minor isotopes or with a constraint on the minor isotopes
 concentration (e.g., to make it ASTM compliant, see Ref 4).
+
+Additionally, it should be noted that the facility supports downblending of
+uranium. This means that the facility tries to match the desired enrichment
+level as precise as possible by first enriching the uranium (to a higher 
+level, as explained above) and then blending the product with uranium from
+the feed. This procedure is only performed if the `use_downblending`
+variable is set to `True` in the input file.
 
 ## Theoretical background
 The implementation of the facility itself and the interaction with Cyclus'

@@ -18,7 +18,7 @@ class EnrichmentCalculator {
                        double target_product_assay,
                        double target_tails_assay, double gamma,
                        double feed_qty=1e299, double product_qty=1e299,
-                       double max_swu=1e299);
+                       double max_swu=1e299, bool use_downblending=true);
   // TODO in the above constructor it might not make sense to keep the 
   // default arguments for feed_qty and for product_qty. This will be
   // determined in later steps of the implementation.
@@ -31,7 +31,7 @@ class EnrichmentCalculator {
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
       double new_target_product_assay, double new_target_tails_assay, 
       double new_feed_qty, double new_product_qty, double new_max_swu,
-      double gamma_235); 
+      double gamma_235, bool use_downblending); 
 
   void EnrichmentOutput(
       cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
@@ -44,6 +44,8 @@ class EnrichmentCalculator {
   FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
 
  private:
+
+  bool use_downblending;
 
   cyclus::CompMap feed_composition;
   cyclus::CompMap product_composition;
@@ -77,6 +79,8 @@ class EnrichmentCalculator {
   void CalculateFlows_();
   void CalculateSwu_();
   void CalculateConcentrations_();
+  void Downblend_();
+
   double ValueFunction_(cyclus::CompMap composition);
 };
 
