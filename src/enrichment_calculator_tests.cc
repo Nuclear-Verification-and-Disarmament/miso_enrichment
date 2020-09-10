@@ -136,7 +136,7 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   
   EXPECT_NEAR(target_product_assay, MIsoAtomAssay(bl_product_comp), 
               5e-4);
-  EXPECT_TRUE(expect_feed_qty >= bl_feed_qty);
+  EXPECT_DOUBLE_EQ(expect_feed_qty, bl_feed_qty);
   EXPECT_TRUE(bl_product_qty > expect_product_qty);
 }
 
