@@ -122,7 +122,7 @@ void EnrichmentCalculator::SetInput(
     cyclus::Composition::Ptr new_feed_composition,
     double new_target_product_assay, double new_target_tails_assay, 
     double new_feed_qty, double new_product_qty, double new_max_swu,
-    double new_gamma_235, bool use_downblending) {
+    double new_gamma_235, bool new_use_downblending) {
   
   // This temporary variable is needed because feed_comp->atom() returns
   // a const cyclus::CompMap object and hence it cannot be normalised.
@@ -143,6 +143,8 @@ void EnrichmentCalculator::SetInput(
   target_product_qty = new_product_qty;
   max_swu = new_max_swu;
   
+  use_downblending = new_use_downblending;
+
   // TODO Think about reimplementing this part to ensure that only the bare
   // minimum of update calculations are performed
   /*
@@ -234,21 +236,9 @@ void EnrichmentCalculator::CalculateNStages_() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::CalculateFlows_() {
-  double sum_e = 0;
-  double sum_s = 0;
-
-  for (int i : isotopes) {
-    double e;
-    double s;  
-    double atom_frac = MIsoAtomFrac(feed_composition, i);
-
-    // Eq. (37)
-    e = 1. / alpha_star[i] / (1-std::pow(alpha_star[i],-n_enriching));
-    // Eq. (39)
-    s = 1. / alpha_star[i] / (std::pow(alpha_star[i], n_stripping+1)-1);
-    sum_e += e * atom_frac / (e+s);  // right-hand side of Eq. (47)
-    sum_s += s * atom_frac / (e+s);  // right-hand side of Eq. (50)
-  }
+  double sum_e;
+  double sum_s;
+  CalculateSums(sum_e, sum_s);
 
   // In the following, it is determined if the feed or the product quantity
   // available is a constraint. For this, the target feed and product 
@@ -320,14 +310,6 @@ void EnrichmentCalculator::CalculateConcentrations_() {
   // to his article.
   std::map<int,double> e;
   std::map<int,double> s;
-  
-  double alpha_235;
-  double atom_frac;
-  double delta_concentration;
-  double e_sum = 0;
-  double s_sum = 0;
-  
-  // Define the above declared variables.
   for (int i : isotopes) {
     // Eq. (37)
     e[i] = 1. / alpha_star[i] 
@@ -335,17 +317,17 @@ void EnrichmentCalculator::CalculateConcentrations_() {
     // Eq. (39)
     s[i] = 1. / alpha_star[i] 
            / (std::pow(alpha_star[i], n_stripping+1.)-1.);
-
-    atom_frac = MIsoAtomFrac(feed_composition, i);
-    e_sum += e[i] * atom_frac / (e[i]+s[i]);  // Eq. (48) denominator
-    s_sum += s[i] * atom_frac / (e[i]+s[i]);  // Eq. (51) denominator
   }
+
+  double sum_e;
+  double sum_s;
+  CalculateSums(sum_e, sum_s);
   
   // Calculate the compositions of product and tails.
   for (int i : isotopes) {
-    atom_frac = MIsoAtomFrac(feed_composition, i);
-    product_composition[i] = e[i] * atom_frac / (e[i]+s[i]) / e_sum;
-    tails_composition[i] = s[i] * atom_frac / (e[i]+s[i]) / s_sum;
+    double atom_frac = MIsoAtomFrac(feed_composition, i);
+    product_composition[i] = e[i] * atom_frac / (e[i]+s[i]) / sum_e;
+    tails_composition[i] = s[i] * atom_frac / (e[i]+s[i]) / sum_s;
   }
 }
 
@@ -371,9 +353,11 @@ void EnrichmentCalculator::Downblend_() {
     CalculateFlows_();
   }
   else if (cyclus::AlmostEq(feed_qty, target_feed_qty)) {
-    // While this is not wrong, it is not the optimal solution either and
-    // it might be improved later. (TODO)
-    target_feed_qty -= blend_feed_per_product * product_qty;
+    double sum_e;
+    double sum_s;
+    CalculateSums(sum_e, sum_s);
+    
+    target_feed_qty /= 1 + blend_feed_per_product*sum_e;
     CalculateFlows_();
   } 
 
@@ -389,6 +373,26 @@ void EnrichmentCalculator::Downblend_() {
   }
   
   return;
+} 
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EnrichmentCalculator::CalculateSums(double& sum_e, double& sum_s) {
+  // Variable naming follows E. von Halle, the equation numbers also refer
+  // to his article.
+  sum_e = 0;
+  sum_s = 0;
+  
+  for (int i : isotopes) {
+    double atom_frac = MIsoAtomFrac(feed_composition, i);
+    // Eq. (37)
+    double e = 1. / alpha_star[i] 
+                  / (1-std::pow(alpha_star[i],-n_enriching));
+    // Eq. (39)
+    double s = 1. / alpha_star[i] 
+                  / (std::pow(alpha_star[i], n_stripping+1)-1);
+    sum_e += e * atom_frac / (e+s);  // right-hand side of Eq. (47)
+    sum_s += s * atom_frac / (e+s);  // right-hand side of Eq. (50)
+  }
 }
 
 }  // namespace misoenrichment

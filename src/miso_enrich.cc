@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <map>
 #include <sstream> 
 #include <vector>
@@ -68,8 +69,8 @@ void MIsoEnrich::EnterNotify() {
     feed_inv.push_back(cyclus::toolkit::ResBuf<cyclus::Material>());
     feed_inv.back().capacity(max_feed_inventory);
     feed_inv_comp.push_back(context()->GetRecipe(feed_recipe));
+    feed_idx = 0;  // set current feed idx to the only existing inventory
   }
-  feed_idx = 0;  // set current feed idx to the only existing inventory
 
   LOG(cyclus::LEV_DEBUG2, "MIsoEn") << "Multi-Isotope Enrichment Facility "
                                     << "entering the simulation: ";
@@ -116,12 +117,16 @@ void MIsoEnrich::AddFeedMat_(cyclus::Material::Ptr mat) {
       e.msg(Agent::InformErrorMsg(e.msg()));
     }
     feed_inv_comp.push_back(comp);
+    // '-1' because of index starting at 0
+    feed_idx = std::distance(feed_inv.begin(), feed_inv.end()) - 1;
+
     LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() << " added " 
                                      << mat->quantity() << " of " 
                                      << feed_commod 
-                                     << " to its new inventory which is"
+                                     << " to its new inventory (no. "
+                                     << feed_idx << ") which is "
                                      << "now holding " 
-                                     << feed_inv[push_idx].quantity();  
+                                     << feed_inv[feed_idx].quantity();  
   }
 }
 

@@ -80,6 +80,7 @@ class EnrichmentCalculator {
   void CalculateSwu_();
   void CalculateConcentrations_();
   void Downblend_();
+  void CalculateSums(double& sum_e, double& sum_s);
 
   double ValueFunction_(cyclus::CompMap composition);
 };

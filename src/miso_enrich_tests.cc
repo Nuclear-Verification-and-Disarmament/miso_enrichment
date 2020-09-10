@@ -159,7 +159,8 @@ TEST_F(MIsoEnrichTest, FeedConstraint) {
     "   <tails_commod>depleted_U</tails_commod> "
     "   <tails_assay>0.002</tails_assay> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
-    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
+    "   <use_downblending>0</use_downblending> ";
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
@@ -262,7 +263,8 @@ TEST_F(MIsoEnrichTest, NoBidPrefs) {
     "   <max_feed_inventory>2</max_feed_inventory> "
     "   <order_prefs>1</order_prefs>"
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
-    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
+    "   <use_downblending>0</use_downblending> ";
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur); 
@@ -324,7 +326,8 @@ TEST_F(MIsoEnrichTest, RequestSim) {
     "   <max_feed_inventory>100</max_feed_inventory> "
     "   <max_enrich>0.8</max_enrich> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
-    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
+    "   <use_downblending>0</use_downblending> ";
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);
@@ -353,7 +356,8 @@ TEST_F(MIsoEnrichTest, TailsTrade) {
     "   <tails_assay>0.002</tails_assay> "
     "   <initial_feed>100</initial_feed> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
-    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
+    "   <use_downblending>0</use_downblending> ";
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);
