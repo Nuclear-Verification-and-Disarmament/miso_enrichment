@@ -121,7 +121,7 @@ TEST_F(EnrichmentCalculatorTest, NumberStages) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, Downblending) {
-  double target_product_assay = MIsoAtomAssay(weapons_grade_U()) - 0.001;
+  double target_product_assay = MIsoAssay(weapons_grade_U()) - 0.001;
 
   cyclus::CompMap bl_product_comp, bl_tails_comp;
   double bl_feed_qty, bl_product_qty, bl_tails_qty, bl_swu_used;
@@ -134,7 +134,7 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
                            bl_swu_used, bl_product_qty, bl_tails_qty,
                            dummy_int, dummy_int);
   
-  EXPECT_NEAR(target_product_assay, MIsoAtomAssay(bl_product_comp), 
+  EXPECT_NEAR(target_product_assay, MIsoAssay(bl_product_comp), 
               5e-4);
   EXPECT_DOUBLE_EQ(expect_feed_qty, bl_feed_qty);
   EXPECT_TRUE(bl_product_qty > expect_product_qty);

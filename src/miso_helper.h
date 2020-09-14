@@ -32,21 +32,19 @@ int ResBufIdx(
 
 double MIsoAtomAssay(cyclus::Composition::Ptr comp);
 double MIsoAtomAssay(cyclus::Material::Ptr rsrc);
-double MIsoAtomAssay(std::map<int,double> compmap);
 
 double MIsoMassAssay(cyclus::Composition::Ptr comp);
 double MIsoMassAssay(cyclus::Material::Ptr rsrc);
-double MIsoMassAssay(std::map<int,double> compmap);
 
 double MIsoAtomFrac(cyclus::Composition::Ptr composition,
                             int isotope);
 double MIsoAtomFrac(cyclus::Material::Ptr rsrc, int isotope);
-double MIsoAtomFrac(cyclus::CompMap compmap, int isotope);
-
 double MIsoMassFrac(cyclus::Composition::Ptr composition, 
                             int isotope);
 double MIsoMassFrac(cyclus::Material::Ptr rsrc, int isotope);
-double MIsoMassFrac(std::map<int,double> compmap, int isotope);
+
+double MIsoAssay(cyclus::CompMap compmap);
+double MIsoFrac(cyclus::CompMap compmap, int isotope);
 
 // Calculates the stage separation factor for all isotopes starting from 
 // the given U235 overall separation factor.

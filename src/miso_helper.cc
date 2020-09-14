@@ -143,11 +143,6 @@ double MIsoAtomAssay(cyclus::Material::Ptr rsrc) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MIsoAtomAssay(std::map<int,double> compmap) {
-  return MIsoAtomFrac(compmap, IsotopeToNucID(235));
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 double MIsoMassAssay(cyclus::Composition::Ptr comp) {
   return MIsoMassFrac(comp, IsotopeToNucID(235));
 }
@@ -158,14 +153,9 @@ double MIsoMassAssay(cyclus::Material::Ptr rsrc) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MIsoMassAssay(std::map<int,double> compmap) {
-  return MIsoMassFrac(compmap, IsotopeToNucID(235));
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 double MIsoAtomFrac(cyclus::Composition::Ptr composition, 
                             int isotope) {
-  return MIsoAtomFrac(composition->atom(), isotope);
+  return MIsoFrac(composition->atom(), isotope);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -174,7 +164,23 @@ double MIsoAtomFrac(cyclus::Material::Ptr rsrc, int isotope) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MIsoAtomFrac(cyclus::CompMap compmap, int isotope) {
+double MIsoMassFrac(cyclus::Composition::Ptr composition, 
+                            int isotope) {
+  return MIsoFrac(composition->mass(), isotope);
+}
+  
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+double MIsoMassFrac(cyclus::Material::Ptr rsrc, int isotope) {
+  return MIsoMassFrac(rsrc->comp(), isotope);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+double MIsoAssay(cyclus::CompMap compmap) {
+  return MIsoFrac(compmap, IsotopeToNucID(235));
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+double MIsoFrac(cyclus::CompMap compmap, int isotope) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   
@@ -197,44 +203,6 @@ double MIsoAtomFrac(cyclus::CompMap compmap, int isotope) {
     }
   }
   isotope_assay /= uranium_atom_frac;
-  return isotope_assay;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MIsoMassFrac(cyclus::Composition::Ptr composition, 
-                            int isotope) {
-  return MIsoMassFrac(composition->mass(), isotope);
-}
-  
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MIsoMassFrac(cyclus::Material::Ptr rsrc, int isotope) {
-  return MIsoMassFrac(rsrc->comp(), isotope);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-double MIsoMassFrac(std::map<int,double> compmap, int isotope) {
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
-
-  double isotope_assay;
-  double uranium_mass_frac = 0;
-
-  if (isotope < 10010000) {
-    std::stringstream ss;
-    ss << "Isotope id '" << isotope << "'is not a valid NucID!";
-    throw cyclus::ValueError(ss.str());
-  }
-  // Get total uranium mass fraction, all non-uranium elements are not 
-  // considered here as they are directly sent to the tails.
-  for (int i : isotopes) {
-    if (compmap.find(i) != compmap.end()) {
-      uranium_mass_frac += compmap.at(i);
-      if (i==isotope) {
-        isotope_assay = compmap.at(i);
-      }
-    }
-  }
-  isotope_assay /= uranium_mass_frac;
   return isotope_assay;
 }
 

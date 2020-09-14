@@ -221,12 +221,12 @@ void EnrichmentCalculator::CalculateNStages_() {
   do {
     n_enriching++;
     CalculateConcentrations_();
-  } while (MIsoAtomAssay(product_composition) < target_product_assay
+  } while (MIsoAssay(product_composition) < target_product_assay
            && n_enriching <= kIterMax);
   do {
     n_stripping++;
     CalculateConcentrations_();
-  } while (MIsoAtomAssay(tails_composition) > target_tails_assay
+  } while (MIsoAssay(tails_composition) > target_tails_assay
            && n_stripping <= kIterMax);
 
   if ((n_enriching == kIterMax) || (n_stripping == kIterMax)) {
@@ -325,7 +325,7 @@ void EnrichmentCalculator::CalculateConcentrations_() {
   
   // Calculate the compositions of product and tails.
   for (int i : isotopes) {
-    double atom_frac = MIsoAtomFrac(feed_composition, i);
+    double atom_frac = MIsoFrac(feed_composition, i);
     product_composition[i] = e[i] * atom_frac / (e[i]+s[i]) / sum_e;
     tails_composition[i] = s[i] * atom_frac / (e[i]+s[i]) / sum_s;
   }
@@ -333,8 +333,8 @@ void EnrichmentCalculator::CalculateConcentrations_() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::Downblend_() {
-  double feed_assay = MIsoAtomAssay(feed_composition);
-  double product_assay = MIsoAtomAssay(product_composition);
+  double feed_assay = MIsoAssay(feed_composition);
+  double product_assay = MIsoAssay(product_composition);
   
   if (product_assay - target_product_assay < 0.00005) {
     return;
@@ -383,7 +383,7 @@ void EnrichmentCalculator::CalculateSums(double& sum_e, double& sum_s) {
   sum_s = 0;
   
   for (int i : isotopes) {
-    double atom_frac = MIsoAtomFrac(feed_composition, i);
+    double atom_frac = MIsoFrac(feed_composition, i);
     // Eq. (37)
     double e = 1. / alpha_star[i] 
                   / (1-std::pow(alpha_star[i],-n_enriching));
