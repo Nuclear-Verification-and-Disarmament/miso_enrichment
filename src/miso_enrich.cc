@@ -495,13 +495,13 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
   LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype()
                                    << " has performed an enrichment: ";
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Feed Qty: " << feed_required;
-  LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Feed Assay: "
+  LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Feed Assay (atomic frac): "
                                    << feed_assay;
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Product Qty: " << product_qty;
-  LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Product Assay: "
+  LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Product Assay (atomic frac): "
                                    << MIsoAtomAssay(product_comp);
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Tails Qty: " << tails_qty;
-  LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Tails Assay: "
+  LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Tails Assay (atomic frac): "
                                    << MIsoAtomAssay(tails_comp);
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * SWU: " << swu_required;
   LOG(cyclus::LEV_INFO5, "MIsoEn") << "   * Current SWU capacity: " 
