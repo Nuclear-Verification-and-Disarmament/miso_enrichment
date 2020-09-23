@@ -124,20 +124,35 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   double target_product_assay = MIsoAssay(weapons_grade_U()) - 0.001;
 
   cyclus::CompMap bl_product_comp, bl_tails_comp;
+  cyclus::CompMap bl_product_comp2;
   double bl_feed_qty, bl_product_qty, bl_tails_qty, bl_swu_used;
+  double bl_feed_qty2, bl_product_qty2;
   int dummy_int;
-
+  
+  // In this case, the feed is the constraining factor.
   EnrichmentCalculator blender(compPtr_nat_U(), target_product_assay, 
                                0.001, 1.3, 100, 1e299, 1e299, true);
-  
   blender.EnrichmentOutput(bl_product_comp, bl_tails_comp, bl_feed_qty, 
                            bl_swu_used, bl_product_qty, bl_tails_qty,
                            dummy_int, dummy_int);
-  
-  EXPECT_NEAR(target_product_assay, MIsoAssay(bl_product_comp), 
-              5e-4);
+
+  EXPECT_DOUBLE_EQ(target_product_assay, MIsoAssay(bl_product_comp));
   EXPECT_DOUBLE_EQ(expect_feed_qty, bl_feed_qty);
   EXPECT_TRUE(bl_product_qty > expect_product_qty);
+  
+  // In this case, the product is the constraining factor.
+  // Of course, the results from this and from the previous enrichment
+  // should be identical.
+  EnrichmentCalculator blender2(compPtr_nat_U(), target_product_assay,
+                                0.001, 1.3, 1e299, bl_product_qty,
+                                1e299, true);
+  blender2.EnrichmentOutput(bl_product_comp2, bl_tails_comp, bl_feed_qty2, 
+                            bl_swu_used, bl_product_qty2, bl_tails_qty,
+                            dummy_int, dummy_int);
+
+  EXPECT_DOUBLE_EQ(target_product_assay, MIsoAssay(bl_product_comp2));
+  EXPECT_DOUBLE_EQ(bl_feed_qty, bl_feed_qty2);
+  EXPECT_DOUBLE_EQ(bl_product_qty, bl_product_qty2);
 }
 
 }  // namespace misoenrichment
