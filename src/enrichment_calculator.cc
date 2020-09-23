@@ -360,17 +360,17 @@ void EnrichmentCalculator::Downblend_() {
     target_feed_qty /= 1 + blend_feed_per_product*sum_e;
     CalculateFlows_();
   } 
-
   double blend_feed = blend_feed_per_product * product_qty;
-  feed_qty += blend_feed;
-  product_qty += blend_feed;
   
-  // Calculate the downblended product composition
+  // Calculate the downblended product composition.
   for (int i : isotopes) {
     product_composition[i] = (product_composition[i]*product_qty
                               + feed_composition[i]*blend_feed)
                              / (product_qty+blend_feed);
   }
+  // Add blending feed to mass balances.
+  feed_qty += blend_feed;
+  product_qty += blend_feed;
   
   return;
 } 
