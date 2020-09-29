@@ -339,20 +339,23 @@ void EnrichmentCalculator::Downblend_() {
   if (product_assay - target_product_assay < 0.00005) {
     return;
   }
+  
+  // Both const values store the initial value passed by MIsoEnrich while
+  // the non-const target quantities are used to calculate the amount of
+  // feed and product material for enrichment (excluding downblending).
+  const double TARGET_FEED_QTY = target_feed_qty;
+  const double TARGET_PRODUCT_QTY = target_product_qty;
 
   // Quantity of blending feed needed per unit of product
   double blend_feed_per_product = (product_assay-target_product_assay)
                                   / (target_product_assay-feed_assay);
 
   // Check whether product or feed is the constraining factor and adapt 
-  // the corresponding quantity. If the SWU is the constraining factor then
-  // use it completely and downblend the resulting product (done in the
-  // next step, uses no SWU).
-  if (cyclus::AlmostEq(product_qty, target_product_qty)) {
+  // the corresponding quantity.
+  if (cyclus::AlmostEq(product_qty, TARGET_PRODUCT_QTY)) {
     target_product_qty /= 1 + blend_feed_per_product;
     CalculateFlows_();
-  }
-  else if (cyclus::AlmostEq(feed_qty, target_feed_qty)) {
+  } else if (cyclus::AlmostEq(feed_qty, TARGET_FEED_QTY)) {
     double sum_e;
     double sum_s;
     CalculateSums(sum_e, sum_s);
@@ -360,8 +363,32 @@ void EnrichmentCalculator::Downblend_() {
     target_feed_qty /= 1 + blend_feed_per_product*sum_e;
     CalculateFlows_();
   } 
-  double blend_feed = blend_feed_per_product * product_qty;
   
+  // Calculate the blending feed needed. If the SWU is the constraint or in
+  // 'close-call' cases (e.g., product is the constraint but feed is nearly
+  // completely used or vice-versa), check that both product and feed
+  // limits are not exceeded.
+  double blend_feed = blend_feed_per_product * product_qty;
+  if (blend_feed+feed_qty > TARGET_FEED_QTY 
+      && !cyclus::AlmostEq(blend_feed+feed_qty, TARGET_FEED_QTY)) {
+    double sum_e;
+    double sum_s;
+    CalculateSums(sum_e, sum_s);
+    
+    target_feed_qty /= 1 + blend_feed_per_product*sum_e;
+    CalculateFlows_();
+    
+    blend_feed = blend_feed_per_product * product_qty;
+  }
+  if (blend_feed+product_qty > TARGET_PRODUCT_QTY
+      && !cyclus::AlmostEq(blend_feed+feed_qty, TARGET_PRODUCT_QTY)) {
+    target_product_qty /= 1 + blend_feed_per_product;
+    CalculateFlows_();
+
+    blend_feed = blend_feed_per_product * product_qty;
+  }
+  
+  // Finalise the downblending:
   // Calculate the downblended product composition.
   for (int i : isotopes) {
     product_composition[i] = (product_composition[i]*product_qty
