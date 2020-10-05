@@ -381,7 +381,7 @@ void EnrichmentCalculator::Downblend_() {
     blend_feed = blend_feed_per_product * product_qty;
   }
   if (blend_feed+product_qty > TARGET_PRODUCT_QTY
-      && !cyclus::AlmostEq(blend_feed+feed_qty, TARGET_PRODUCT_QTY)) {
+      && !cyclus::AlmostEq(blend_feed+product_qty, TARGET_PRODUCT_QTY)) {
     target_product_qty /= 1 + blend_feed_per_product;
     CalculateFlows_();
 
