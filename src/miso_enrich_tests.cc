@@ -63,6 +63,7 @@ void MIsoEnrichTest::InitParameters() {
   swu_vals = std::vector<double>(1,1);
   swu_times = std::vector<int>(1,0);
   gamma_235 = 1.4;
+  enrichment_method = "centrifuge";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -82,6 +83,7 @@ void MIsoEnrichTest::SetUpMIsoEnrichment() {
   miso_enrich_facility->longitude = longitude;
   miso_enrich_facility->swu_capacity_vals = swu_vals;
   miso_enrich_facility->swu_capacity_times = swu_times;
+  miso_enrich_facility->enrichment_method = enrichment_method;
 
   miso_enrich_facility->EnterNotify();
 }
@@ -118,7 +120,8 @@ TEST_F(MIsoEnrichTest, BidPrefs) {
     "   <max_feed_inventory>1</max_feed_inventory> "
     "   <order_prefs>1</order_prefs>"
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
-    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
+    "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
+    "   <enrichment_method>centrifuge</enrichment_method> ";
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
@@ -160,7 +163,8 @@ TEST_F(MIsoEnrichTest, FeedConstraint) {
     "   <tails_assay>0.002</tails_assay> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
-    "   <use_downblending>0</use_downblending> ";
+    "   <use_downblending>0</use_downblending> "
+    "   <enrichment_method>centrifuge</enrichment_method> ";
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
@@ -264,7 +268,9 @@ TEST_F(MIsoEnrichTest, NoBidPrefs) {
     "   <order_prefs>1</order_prefs>"
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
-    "   <use_downblending>0</use_downblending> ";
+    "   <use_downblending>0</use_downblending> "
+    "   <enrichment_method>centrifuge</enrichment_method> ";
+
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur); 
@@ -327,7 +333,9 @@ TEST_F(MIsoEnrichTest, RequestSim) {
     "   <max_enrich>0.8</max_enrich> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
-    "   <use_downblending>0</use_downblending> ";
+    "   <use_downblending>0</use_downblending> "
+    "   <enrichment_method>centrifuge</enrichment_method> ";
+
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);
@@ -357,7 +365,9 @@ TEST_F(MIsoEnrichTest, TailsTrade) {
     "   <initial_feed>100</initial_feed> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
-    "   <use_downblending>0</use_downblending> ";
+    "   <use_downblending>0</use_downblending> "
+    "   <enrichment_method>centrifuge</enrichment_method> ";
+
   int simdur = 2;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);

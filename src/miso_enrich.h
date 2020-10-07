@@ -17,9 +17,11 @@ namespace misoenrichment {
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
   SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-               double gamma_235, bool use_downblending) 
+               double gamma_235, bool use_downblending, 
+               std::string enrichment_method) 
       : feed_comp_(feed_comp), gamma_235_(gamma_235),
-        tails_assay_(tails_assay), use_downblending(use_downblending) {}
+        tails_assay_(tails_assay), use_downblending(use_downblending),
+        enrichment_method_(enrichment_method) {}
   
   virtual ~SwuConverter() {}
 
@@ -32,7 +34,7 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299, gamma_235_, use_downblending);
+               1e299, gamma_235_, use_downblending, enrichment_method_);
     double swu_used = e.SwuUsed();
     
     return swu_used;
@@ -49,12 +51,12 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
 
     return cast != NULL && feed_eq && tails_eq;
   }
-
  private:
   bool use_downblending;
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
   double tails_assay_;
+  std::string enrichment_method_;
 };
 
 // TODO think about passing a pointer to MIsoEnrich's EnrichmentCalculator
@@ -62,9 +64,11 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
 class FeedConverter : public cyclus::Converter<cyclus::Material> {
  public:
   FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-                double gamma_235, bool use_downblending)
+                double gamma_235, bool use_downblending, 
+                std::string enrichment_method)
       : feed_comp_(feed_comp), gamma_235_(gamma_235), 
-        tails_assay_(tails_assay), use_downblending(use_downblending) {}
+        tails_assay_(tails_assay), use_downblending(use_downblending),
+        enrichment_method_(enrichment_method) {}
 
   virtual ~FeedConverter() {}
 
@@ -77,7 +81,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e;
     e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299, gamma_235_, use_downblending);
+               1e299, gamma_235_, use_downblending, enrichment_method_);
     double feed_used = e.FeedUsed();
     
     cyclus::toolkit::MatQuery mq(m);
@@ -106,6 +110,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
   double tails_assay_;
+  std::string enrichment_method_;
 };
 
 /// @class MIsoEnrich
@@ -348,6 +353,18 @@ class MIsoEnrich : public cyclus::Facility,
   }
   bool use_downblending;
 
+  #pragma cyclus var {  \
+    "tooltip": "Enrichment method",  \
+    "uilabel": "Enrichment method, either 'centrifuge' or 'diffusion'",  \
+    "uitype": "combobox",  \
+    "categorical": ["centrifuge", "diffusion"],  \
+    "doc": "Chooses the enrichment method. Currently, only two values "  \
+           "are possible, i.e. 'centrifuge' for gas centrifugation and "  \
+           "'diffusion' for gaseous diffusion. The difference between "  \
+           "both lies in the calculation of the separation factors."  \
+  } 
+  std::string enrichment_method;
+  
 };
 
 }  // namespace misoenrichment

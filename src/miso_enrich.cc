@@ -31,9 +31,11 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       latitude(0.0),
       longitude(0.0),
       coordinates(latitude, longitude),
-      use_downblending(true) {
+      use_downblending(true),
+      enrichment_method("centrifuge") {
   
-  enrichment_calc = EnrichmentCalculator(gamma_235);
+  enrichment_calc = EnrichmentCalculator(
+      gamma_235, enrichment_method);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -258,10 +260,10 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
     cyclus::Composition::Ptr feed_comp = feed_inv_comp[feed_idx];
     cyclus::Converter<Material>::Ptr swu_converter(
         new SwuConverter(feed_comp, tails_assay, gamma_235, 
-                         use_downblending));
+                         use_downblending, enrichment_method));
     cyclus::Converter<Material>::Ptr feed_converter(
         new FeedConverter(feed_comp, tails_assay, gamma_235, 
-                          use_downblending));
+                          use_downblending, enrichment_method));
     CapacityConstraint<Material> swu_constraint(swu_capacity, 
                                                 swu_converter);
     CapacityConstraint<Material> feed_constraint(
@@ -291,7 +293,8 @@ cyclus::Material::Ptr MIsoEnrich::Offer_(
   
   enrichment_calc.SetInput(feed_inv_comp[feed_idx], MIsoAtomAssay(mat), 
                            tails_assay, feed_qty, product_qty, 
-                           swu_capacity, gamma_235, use_downblending);
+                           swu_capacity, gamma_235, use_downblending,
+                           enrichment_method);
   enrichment_calc.EnrichmentOutput(product_comp, dummy_comp, dummy_double,
                                    dummy_double, product_qty, dummy_double,
                                    dummy_int, dummy_int);
@@ -462,7 +465,7 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
   enrichment_calc.SetInput(feed_inv_comp[feed_idx], product_assay,
                            tails_assay, feed_inv[feed_idx].quantity(), 
                            qty, current_swu_capacity, gamma_235,
-                           use_downblending);
+                           use_downblending, enrichment_method);
   enrichment_calc.EnrichmentOutput(product_comp, tails_comp, feed_required,
                                    swu_required, product_qty, tails_qty,
                                    n_enriching, n_stripping);
@@ -480,7 +483,10 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
     std::stringstream ss;
     ss << " tried to remove " << feed_required << " from its feed "
        << " inventory nr " << feed_idx << " holding " 
-       << feed_inv[feed_idx].quantity();
+       << feed_inv[feed_idx].quantity() << "\n"
+       << "Enrichment performed indicated above\n";
+    enrichment_calc.PPrint();
+
     throw cyclus::ValueError(cyclus::Agent::InformErrorMsg(ss.str()));
   }
   cyclus::Material::Ptr response = pop_mat->ExtractComp(

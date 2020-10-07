@@ -56,11 +56,12 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
   double target_feed_qty = 100;
   double target_product_qty = 1e299;
   double max_swu = 1e299;
+  std::string enrichment_method = "centrifuge";
 
   e = EnrichmentCalculator(compPtr_nat_U(), target_product_assay, 
                              target_tails_assay, gamma, target_feed_qty,
                              target_product_qty, max_swu, 
-                             use_downblending);
+                             use_downblending, enrichment_method);
   e.EnrichmentOutput(product_comp, tails_comp, feed_qty, swu_used, 
                      product_qty, tails_qty, n_enriching, n_stripping);
 }
@@ -70,7 +71,7 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
 TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   EnrichmentCalculator e2(
     cyclus::Composition::CreateFromAtom(weapons_grade_U()), 0.95, 0.1, 1.1,
-    1., true);
+    1., 1234, 234234, true, "diffusion");
   e2 = e;
 
   cyclus::CompMap product_comp2, tails_comp2;
@@ -131,7 +132,8 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   
   // In this case, the feed is the constraining factor.
   EnrichmentCalculator blender(compPtr_nat_U(), target_product_assay, 
-                               0.001, 1.3, 100, 1e299, 1e299, true);
+                               0.001, 1.3, 100, 1e299, 1e299, true,
+                               "centrifuge");
   blender.EnrichmentOutput(bl_product_comp, bl_tails_comp, bl_feed_qty, 
                            bl_swu_used, bl_product_qty, bl_tails_qty,
                            dummy_int, dummy_int);
@@ -145,7 +147,7 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   // should be identical.
   EnrichmentCalculator blender2(compPtr_nat_U(), target_product_assay,
                                 0.001, 1.3, 1e299, bl_product_qty,
-                                1e299, true);
+                                1e299, true, "centrifuge");
   blender2.EnrichmentOutput(bl_product_comp2, bl_tails_comp, bl_feed_qty2, 
                             bl_swu_used, bl_product_qty2, bl_tails_qty,
                             dummy_int, dummy_int);

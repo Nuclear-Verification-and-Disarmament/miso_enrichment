@@ -207,7 +207,22 @@ double MIsoFrac(cyclus::CompMap compmap, int isotope) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::map<int,double> CalculateSeparationFactor(double gamma_235) {
+std::map<int,double> DiffusionSeparationFactor() {
+  std::vector<int> isotopes;
+  IsotopesNucID(isotopes);
+  std::map<int,double> separation_factors;
+  const double hexafluoride = 6 * 19;
+  const double key_isotope_hex = 238 + hexafluoride;
+
+  for (int i : isotopes) {
+    double mass_hex = NucIDToIsotope(i) + hexafluoride;
+    separation_factors[i] = std::pow(key_isotope_hex / mass_hex, 0.5);
+  }
+  return separation_factors;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+std::map<int,double> CentrifugeSeparationFactor(double gamma_235) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   std::map<int,double> separation_factors;

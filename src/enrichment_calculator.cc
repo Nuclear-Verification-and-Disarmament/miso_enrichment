@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <iostream>
-#include <string>
 
 #include "comp_math.h"
 #include "cyc_limits.h"
@@ -18,8 +17,9 @@ EnrichmentCalculator::EnrichmentCalculator() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
-    gamma_235(gamma_235) {
+EnrichmentCalculator::EnrichmentCalculator(double gamma_235,
+                                           std::string enrichment_method) :
+    gamma_235(gamma_235), enrichment_method(enrichment_method) {
   IsotopesNucID(isotopes);
   CalculateGammaAlphaStar_();
 }
@@ -29,15 +29,16 @@ EnrichmentCalculator::EnrichmentCalculator(
     cyclus::Composition::Ptr feed_composition, 
     double target_product_assay, double target_tails_assay, 
     double gamma_235, double feed_qty, double product_qty, 
-    double max_swu, bool use_downblending) : 
+    double max_swu, bool use_downblending, std::string enrichment_method) : 
       feed_composition(feed_composition->atom()),
       target_product_assay(target_product_assay),
-      target_tails_assay(target_tails_assay),
+      target_tails_assay(target_tails_assay), 
       gamma_235(gamma_235), 
       target_feed_qty(feed_qty),
       target_product_qty(product_qty),
       max_swu(max_swu),
-      use_downblending(use_downblending) {
+      use_downblending(use_downblending),
+      enrichment_method(enrichment_method) {
   if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be 
     // defined. Additionally, add an exception that should be thrown.
@@ -51,7 +52,21 @@ EnrichmentCalculator::EnrichmentCalculator(
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::CalculateGammaAlphaStar_() {
-  separation_factors = CalculateSeparationFactor(gamma_235);
+  std::string centrifuge = "centrifuge";
+  std::string diffusion = "diffusion";
+
+  if (enrichment_method == diffusion) {
+    separation_factors = DiffusionSeparationFactor();
+  } else if (enrichment_method == centrifuge) {
+    separation_factors = CentrifugeSeparationFactor(gamma_235);
+  } else {
+    std::stringstream ss;
+    ss << "Error in 'EnrichmentCalculator::CalculateGammaAlphaStar':\n"
+       << "'enrichment_method' has to be either 'centrifuge' or "
+       << "'diffusion'.\n";
+    throw cyclus::ValueError(ss.str());
+  }
+
   for (int i : isotopes) {
     // E. von Halle Eq. (15)
     alpha_star[i] = separation_factors[i]
@@ -76,13 +91,9 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
   use_downblending = e.use_downblending;
   
   IsotopesNucID(isotopes);
+  enrichment_method = e.enrichment_method;
   gamma_235 = e.gamma_235;
-  separation_factors = CalculateSeparationFactor(gamma_235);
-  for (int i : isotopes) {
-    // E. von Halle Eq. (15)
-    alpha_star[i] = separation_factors[i]
-                    / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
-  }
+  CalculateGammaAlphaStar_();
   
   // TODO Check why the recalculated variables are not copied
   BuildMatchedAbundanceRatioCascade();
@@ -103,6 +114,7 @@ void EnrichmentCalculator::PPrint() {
             << "  Separative work used   " << swu << "\n\n"
             << "  n(enriching)           " << n_enriching << "\n"
             << "  n(stripping)           " << n_stripping << "\n"
+            << "  Enrichment method      " << enrichment_method << "\n"
             << "  Separation factors         232     233      234      235"
             << "      236      238\n                         ";
   for (int nuc : isotopes) {
@@ -122,7 +134,8 @@ void EnrichmentCalculator::SetInput(
     cyclus::Composition::Ptr new_feed_composition,
     double new_target_product_assay, double new_target_tails_assay, 
     double new_feed_qty, double new_product_qty, double new_max_swu,
-    double new_gamma_235, bool new_use_downblending) {
+    double new_gamma_235, bool new_use_downblending, 
+    std::string new_enrichment_method) {
   
   // This temporary variable is needed because feed_comp->atom() returns
   // a const cyclus::CompMap object and hence it cannot be normalised.
@@ -131,7 +144,9 @@ void EnrichmentCalculator::SetInput(
   cyclus::CompMap new_compmap = new_feed_composition->atom();
   cyclus::compmath::Normalize(&new_compmap);
   
-  if (new_gamma_235 != gamma_235) {
+  if (new_enrichment_method != enrichment_method 
+      || new_gamma_235 != gamma_235) {
+    enrichment_method = new_enrichment_method;
     gamma_235 = new_gamma_235;
     CalculateGammaAlphaStar_();
   }

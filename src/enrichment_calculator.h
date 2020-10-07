@@ -2,6 +2,7 @@
 #define MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
 
 #include <map>
+#include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -13,12 +14,14 @@ namespace misoenrichment {
 class EnrichmentCalculator {
  public:
   EnrichmentCalculator();
-  EnrichmentCalculator(double gamma_235);
+  EnrichmentCalculator(double gamma_235, 
+                       std::string enrichment_method="centrifuge");
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
                        double feed_qty=1e299, double product_qty=1e299,
-                       double max_swu=1e299, bool use_downblending=true);
+                       double max_swu=1e299, bool use_downblending=true,
+                       std::string enrichment_method="centrifuge");
   // TODO in the above constructor it might not make sense to keep the 
   // default arguments for feed_qty and for product_qty. This will be
   // determined in later steps of the implementation.
@@ -31,7 +34,8 @@ class EnrichmentCalculator {
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
       double new_target_product_assay, double new_target_tails_assay, 
       double new_feed_qty, double new_product_qty, double new_max_swu,
-      double gamma_235, bool use_downblending); 
+      double gamma_235, bool use_downblending, 
+      std::string new_enrichment_method); 
 
   void EnrichmentOutput(
       cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
@@ -63,7 +67,6 @@ class EnrichmentCalculator {
   double swu = 0;  // Separative work that has been performed
                    // in kg SWU timestep^-1
 
-  // TODO declare vector as const?
   std::vector<int> isotopes;
   std::map<int,double> separation_factors;
   std::map<int,double> alpha_star;
@@ -72,6 +75,7 @@ class EnrichmentCalculator {
   int n_enriching;
   int n_stripping;
   
+  std::string enrichment_method; // Either 'centrifuge' or 'diffusion'
   double gamma_235;  // The overall separation factor for U-235
   
   void CalculateGammaAlphaStar_();

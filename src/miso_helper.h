@@ -58,7 +58,8 @@ double MIsoFrac(cyclus::CompMap compmap, int isotope);
 // Uranium Isotopes in Enrichment Cascades'. In: Science and Global 
 // Security, 16:26--36 (2008). ISSN: 0892-9882.
 // DOI: 10.1080/08929880802361796
-std::map<int,double> CalculateSeparationFactor(double gamma_235);
+std::map<int,double> CentrifugeSeparationFactor(double gamma_235);
+std::map<int,double> DiffusionSeparationFactor();
 
 }  // namespace misoenrichment
 
