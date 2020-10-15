@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "comp_math.h"
 #include "composition.h"
 #include "material.h"
 #include "pyne.h"
@@ -84,6 +85,34 @@ TEST(MIsoHelperTest, SeparationFactor) {
   for (int i : isotopes) {
     EXPECT_DOUBLE_EQ(separation_factor[i], expected[i]);
   }
+}
+
+TEST(MIsoHelperTest, CalculationForMyself) {
+  using cyclus::Composition;
+  
+  cyclus::CompMap cm, atom, mass;
+  cyclus::CompMap::iterator it;
+
+  cm[922340000] = 1.3410561832447948e-05;
+  cm[922350000] = 0.0029407028927118856;
+  cm[922380000] = 0.9970458865454556;
+ 
+  Composition::Ptr comp = Composition::CreateFromAtom(cm);
+  
+  atom = comp->atom();
+  cyclus::compmath::Normalize(&atom);
+  std::cout << "Atom fractions:\n";
+  for (it = atom.begin(); it != atom.end(); ++it) {
+    std::cout << it->first << ": " << it->second << "\n";
+  }
+  
+  mass = comp->mass();
+  cyclus::compmath::Normalize(&mass);
+  std::cout << "Mass fractions:\n";
+  for (it = mass.begin(); it != mass.end(); ++it) {
+    std::cout << it->first << ": " << it->second << "\n";
+  }
+  
 }
 
 } // namespace misoenrichment

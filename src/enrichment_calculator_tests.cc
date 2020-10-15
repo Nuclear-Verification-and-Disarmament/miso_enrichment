@@ -99,6 +99,7 @@ TEST_F(EnrichmentCalculatorTest, Concentrations) {
   EXPECT_TRUE(misotest::CompareCompMap(expect_product_comp, 
                                         product_comp));
   EXPECT_TRUE(misotest::CompareCompMap(expect_tails_comp, tails_comp));
+  e.PPrint();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -153,6 +154,48 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   EXPECT_DOUBLE_EQ(target_product_assay, MIsoAssay(bl_product_comp2));
   EXPECT_DOUBLE_EQ(bl_feed_qty, bl_feed_qty2);
   EXPECT_DOUBLE_EQ(bl_product_qty, bl_product_qty2);
+}
+
+TEST_F(EnrichmentCalculatorTest, Max) {
+  cyclus::CompMap natU;
+  natU[922340000] = 0.0054;
+  natU[922350000] = 0.7204;
+  natU[922380000] = 99.2742;
+  cyclus::Composition::Ptr comp = cyclus::Composition::CreateFromAtom(natU);
+
+  EnrichmentCalculator calc(comp, 0.9, 0.003, 1.35, 10000,
+                            1e6, 1e6, true);
+  calc.PPrint(); 
+  calc.EnrichmentOutput(product_comp, tails_comp, feed_qty, swu_used, 
+                     product_qty, tails_qty, n_enriching, n_stripping);
+
+  std::map<int,double>::iterator it;
+  std::cout << "Product composition in atom frac\n";
+  cyclus::compmath::Normalize(&product_comp);
+  for (it = product_comp.begin(); it != product_comp.end(); ++it) {
+    std::cout << std::setprecision(10) << it->first << ": " << it->second << "\n";
+  }
+  std::cout << "\n\n";
+  std::cout << "Product composition in mass frac\n";
+  comp = cyclus::Composition::CreateFromAtom(product_comp);
+  product_comp = comp->mass();
+  cyclus::compmath::Normalize(&product_comp);
+  for (it = product_comp.begin(); it != product_comp.end(); ++it) {
+    std::cout << std::setprecision(10) << it->first << ": " << it->second << "\n";
+  }
+  std::cout << "tails composition in atom frac\n";
+  cyclus::compmath::Normalize(&tails_comp);
+  for (it = tails_comp.begin(); it != tails_comp.end(); ++it) {
+    std::cout << std::setprecision(10) << it->first << ": " << it->second << "\n";
+  }
+
+  cyclus::Composition::Ptr t = cyclus::Composition::CreateFromAtom(tails_comp);
+  tails_comp = t->mass();
+  cyclus::compmath::Normalize(&tails_comp);
+  std::cout << "tails composition in atom frac\n";
+  for (it = tails_comp.begin(); it != tails_comp.end(); ++it) {
+    std::cout << std::setprecision(10) << it->first << ": " << it->second << "\n";
+  }
 }
 
 }  // namespace misoenrichment

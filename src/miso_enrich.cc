@@ -31,7 +31,8 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       latitude(0.0),
       longitude(0.0),
       coordinates(latitude, longitude),
-      use_downblending(true) {
+      use_downblending(true),
+      eps_rsrc(1e-12) {
   
   enrichment_calc = EnrichmentCalculator(gamma_235);
 }
@@ -390,7 +391,7 @@ void MIsoEnrich::GetMatlTrades(
                                        << it->amt << " of " 
                                        << tails_commod;
       double pop_qty = std::min(qty, tails_inv.quantity());
-      response = tails_inv.Pop(pop_qty, cyclus::eps_rsrc());
+      response = tails_inv.Pop(pop_qty, eps_rsrc);
     } else {
       LOG(cyclus::LEV_INFO5, "MIsoEn") << prototype() 
                                        << " just received an order for "
@@ -474,7 +475,7 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
       pop_mat = cyclus::toolkit::Squash(
           feed_inv[feed_idx].PopN(feed_inv[feed_idx].count()));
     } else {
-      pop_mat = feed_inv[feed_idx].Pop(feed_required, cyclus::eps_rsrc());
+      pop_mat = feed_inv[feed_idx].Pop(feed_required, eps_rsrc);
     }
   } catch (cyclus::Error& e) {
     std::stringstream ss;
@@ -484,7 +485,8 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
     throw cyclus::ValueError(cyclus::Agent::InformErrorMsg(ss.str()));
   }
   cyclus::Material::Ptr response = pop_mat->ExtractComp(
-      product_qty, cyclus::Composition::CreateFromAtom(product_comp));
+      product_qty, cyclus::Composition::CreateFromAtom(product_comp),
+      eps_rsrc);
   tails_inv.Push(pop_mat);
 
   current_swu_capacity -= swu_required;

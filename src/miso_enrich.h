@@ -348,6 +348,7 @@ class MIsoEnrich : public cyclus::Facility,
   }
   bool use_downblending;
 
+  const double eps_rsrc;
 };
 
 }  // namespace misoenrichment
