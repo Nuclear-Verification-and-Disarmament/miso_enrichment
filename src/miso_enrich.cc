@@ -31,11 +31,12 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       latitude(0.0),
       longitude(0.0),
       coordinates(latitude, longitude),
-      use_downblending(true),
-      enrichment_method("centrifuge") {
-  
+      //use_downblending(true) {
+      use_downblending(true), use_centrifuges(false) {
+   
+  enrichment_method = use_centrifuges ? "centrifuge" : "diffusion";
   enrichment_calc = EnrichmentCalculator(
-      gamma_235, enrichment_method);
+      gamma_235, "centrifuge");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

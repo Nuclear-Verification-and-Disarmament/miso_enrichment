@@ -17,6 +17,12 @@ EnrichmentCalculator::EnrichmentCalculator() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/*
+EnrichmentCalculator::EnrichmentCalculator(double gamma_235) : gamma_235(gamma_235) {
+  IsotopesNucID(isotopes);
+  CalculateGammaAlphaStar_();
+}
+*/
 EnrichmentCalculator::EnrichmentCalculator(double gamma_235,
                                            std::string enrichment_method) :
     gamma_235(gamma_235), enrichment_method(enrichment_method) {

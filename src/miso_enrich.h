@@ -212,7 +212,7 @@ class MIsoEnrich : public cyclus::Facility,
     "uitype": "outcommodity" \
   }
   std::string tails_commod;
-
+ 
   #pragma cyclus var { \
     "default": 0.003, "tooltip": "tails assay",	\
     "uilabel": "Tails Assay", \
@@ -333,15 +333,6 @@ class MIsoEnrich : public cyclus::Facility,
   }
   std::vector<int> swu_capacity_times;
 
-  #pragma cyclus var {  \
-    "default": [1e299],  \
-    "tooltip": "SWU capacity list (kg SWU / month)",  \
-    "uilabel": "SWU Capacity List",  \
-    "doc": "list of separative work unit (SWU) capacity of enrichment " \
-           "facility (kg SWU / month)"  \
-  }
-  std::vector<double> swu_capacity_vals;
-  FlexibleInput<double> swu_flexible;
 
   #pragma cyclus var {  \
     "default": 1,  \
@@ -351,9 +342,33 @@ class MIsoEnrich : public cyclus::Facility,
            "desired enrichment level, the product is downblended using "  \
            "enrichment feed to match the desired level."  \
   }
+  bool use_centrifuges; 
+  
+  #pragma cyclus var {  \
+    "default": [1e299],  \
+    "tooltip": "SWU capacity list (kg SWU / month)",  \
+    "uilabel": "SWU Capacity List",  \
+    "doc": "list of separative work unit (SWU) capacity of enrichment " \
+           "facility (kg SWU / month)"  \
+  }
+  std::vector<double> swu_capacity_vals;
+  FlexibleInput<double> swu_flexible;
+  /*
+  #pragma cyclus var {  \
+    "default": 1,  \
+    "tooltip": "Downblend material",  \
+    "uilabel": "Downblend the product to required enrichment level",  \
+    "doc": "If set to true and if the enriched product exceeds the "  \
+           "desired enrichment level, the product is downblended using "  \
+           "enrichment feed to match the desired level."  \
+  }
+  */
   bool use_downblending;
 
+  std::string enrichment_method;
+  /*
   #pragma cyclus var {  \
+    "default": "centrifuge",  \
     "tooltip": "Enrichment method",  \
     "uilabel": "Enrichment method, either 'centrifuge' or 'diffusion'",  \
     "uitype": "combobox",  \
@@ -364,7 +379,7 @@ class MIsoEnrich : public cyclus::Facility,
            "both lies in the calculation of the separation factors."  \
   } 
   std::string enrichment_method;
-  
+  */ 
 };
 
 }  // namespace misoenrichment
