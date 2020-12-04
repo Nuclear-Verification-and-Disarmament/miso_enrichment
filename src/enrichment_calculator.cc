@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <iostream>
-#include <string>
 
 #include "comp_math.h"
 #include "cyc_limits.h"
@@ -18,8 +17,9 @@ EnrichmentCalculator::EnrichmentCalculator() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
-    gamma_235(gamma_235) {
+EnrichmentCalculator::EnrichmentCalculator(double gamma_235,
+                                           std::string enrichment_method) :
+    gamma_235(gamma_235), enrichment_method(enrichment_method) {
   IsotopesNucID(isotopes);
   CalculateGammaAlphaStar_();
 }
@@ -28,12 +28,13 @@ EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
 EnrichmentCalculator::EnrichmentCalculator(
     cyclus::Composition::Ptr feed_composition, 
     double target_product_assay, double target_tails_assay, 
-    double gamma_235, double feed_qty, double product_qty, 
-    double max_swu, bool use_downblending) : 
+    double gamma_235, std::string enrichment_method, double feed_qty, 
+    double product_qty, double max_swu, bool use_downblending) : 
       feed_composition(feed_composition->atom()),
       target_product_assay(target_product_assay),
       target_tails_assay(target_tails_assay),
-      gamma_235(gamma_235), 
+      gamma_235(gamma_235),
+      enrichment_method(enrichment_method),
       target_feed_qty(feed_qty),
       target_product_qty(product_qty),
       max_swu(max_swu),
@@ -51,7 +52,8 @@ EnrichmentCalculator::EnrichmentCalculator(
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::CalculateGammaAlphaStar_() {
-  separation_factors = CalculateSeparationFactor(gamma_235);
+  separation_factors = CalculateSeparationFactor(gamma_235, 
+                                                 enrichment_method);
   for (int i : isotopes) {
     // E. von Halle Eq. (15)
     alpha_star[i] = separation_factors[i]
@@ -77,13 +79,9 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
   
   IsotopesNucID(isotopes);
   gamma_235 = e.gamma_235;
-  separation_factors = CalculateSeparationFactor(gamma_235);
-  for (int i : isotopes) {
-    // E. von Halle Eq. (15)
-    alpha_star[i] = separation_factors[i]
-                    / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
-  }
-  
+  enrichment_method = e.enrichment_method;
+  CalculateGammaAlphaStar_();
+ 
   // TODO Check why the recalculated variables are not copied
   BuildMatchedAbundanceRatioCascade();
 
@@ -103,6 +101,7 @@ void EnrichmentCalculator::PPrint() {
             << "  Separative work used   " << swu << "\n\n"
             << "  n(enriching)           " << n_enriching << "\n"
             << "  n(stripping)           " << n_stripping << "\n"
+            << "  Enrichment method      " << enrichment_method << "\n"
             << "  Separation factors         232     233      234      235"
             << "      236      238\n                         ";
   for (int nuc : isotopes) {
@@ -122,7 +121,8 @@ void EnrichmentCalculator::SetInput(
     cyclus::Composition::Ptr new_feed_composition,
     double new_target_product_assay, double new_target_tails_assay, 
     double new_feed_qty, double new_product_qty, double new_max_swu,
-    double new_gamma_235, bool new_use_downblending) {
+    double new_gamma_235, std::string new_enrichment_method,
+    bool new_use_downblending) {
   
   // This temporary variable is needed because feed_comp->atom() returns
   // a const cyclus::CompMap object and hence it cannot be normalised.
@@ -131,8 +131,10 @@ void EnrichmentCalculator::SetInput(
   cyclus::CompMap new_compmap = new_feed_composition->atom();
   cyclus::compmath::Normalize(&new_compmap);
   
-  if (new_gamma_235 != gamma_235) {
+  if (new_gamma_235 != gamma_235 
+      || new_enrichment_method != enrichment_method) {
     gamma_235 = new_gamma_235;
+    enrichment_method = new_enrichment_method;
     CalculateGammaAlphaStar_();
   }
   feed_composition = new_compmap;
@@ -218,6 +220,8 @@ void EnrichmentCalculator::CalculateNStages_() {
   // U235 concentration in tails).
   n_enriching = 0;
   n_stripping = 0; 
+
+  const int kIterMax = (enrichment_method == "centrifuge") ? 200 : 7000;
   do {
     n_enriching++;
     CalculateConcentrations_();

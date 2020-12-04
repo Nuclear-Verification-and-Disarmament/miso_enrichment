@@ -2,6 +2,7 @@
 #define MISOENRICHMENT_SRC_MISO_HELPER_H_
 
 #include <map>
+#include <string>
 #include <vector>
 
 #include "composition.h"
@@ -21,7 +22,6 @@ cyclus::Material::Ptr mat_natU();
 
 const double kEpsDouble = 1e-5;
 const double kEpsCompMap = 1e-5;
-const int kIterMax = 200;
 
 void IsotopesNucID(std::vector<int>& isotopes);
 int IsotopeToNucID(int isotope);
@@ -58,7 +58,8 @@ double MIsoFrac(cyclus::CompMap compmap, int isotope);
 // Uranium Isotopes in Enrichment Cascades'. In: Science and Global 
 // Security, 16:26--36 (2008). ISSN: 0892-9882.
 // DOI: 10.1080/08929880802361796
-std::map<int,double> CalculateSeparationFactor(double gamma_235);
+std::map<int,double> CalculateSeparationFactor(
+    double gamma_235, std::string enrichment_method);
 
 }  // namespace misoenrichment
 

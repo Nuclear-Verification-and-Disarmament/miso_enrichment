@@ -66,23 +66,34 @@ TEST(MIsoHelperTest, CheckFractionsMaterial) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST(MIsoHelperTest, SeparationFactor) {
-  // The values below are valid for alpha*beta = 1.6
   double gamma_235 = 1.6;
-  std::map<int,double> separation_factor = CalculateSeparationFactor(
-                                                              gamma_235);
-
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
-  std::map<int,double> expected;
-  expected[922320000] = 2.2;
-  expected[922330000] = 2.0;
-  expected[922340000] = 1.8;
-  expected[922350000] = 1.6;
-  expected[922360000] = 1.4;
-  expected[922380000] = 1.0;
+  std::string enrichment_methods[2] = {"centrifuge", "diffusion"};
+  std::map<std::string,std::map<int,double> > expected;
   
-  for (int i : isotopes) {
-    EXPECT_DOUBLE_EQ(separation_factor[i], expected[i]);
+  expected["centrifuge"][922320000] = 2.2;
+  expected["centrifuge"][922330000] = 2.0;
+  expected["centrifuge"][922340000] = 1.8;
+  expected["centrifuge"][922350000] = 1.6;
+  expected["centrifuge"][922360000] = 1.4;
+  expected["centrifuge"][922380000] = 1.0;
+  
+  expected["diffusion"][922320000] = 1.008633;
+  expected["diffusion"][922330000] = 1.007179;
+  expected["diffusion"][922340000] = 1.005731;
+  expected["diffusion"][922350000] = 1.004289;
+  expected["diffusion"][922360000] = 1.002853;
+  expected["diffusion"][922380000] = 1.0;
+  
+  std::vector<int> isotopes;
+  IsotopesNucID(isotopes); 
+  for (std::string method : enrichment_methods) {
+    std::map<int,double> separation_factor = CalculateSeparationFactor(
+        gamma_235, method);
+    for (int i : isotopes) {
+      // Use EXPECT_NEAR because of the limited precision of the values in
+      // the diffusion case as indicated in Houston Wood's article.
+      EXPECT_NEAR(separation_factor[i], expected[method][i], 1e-6);
+    }
   }
 }
 

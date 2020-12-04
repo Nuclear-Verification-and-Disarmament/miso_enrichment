@@ -207,18 +207,38 @@ double MIsoFrac(cyclus::CompMap compmap, int isotope) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::map<int,double> CalculateSeparationFactor(double gamma_235) {
+std::map<int,double> CalculateSeparationFactor(
+    double gamma_235, std::string enrichment_method) {
   std::vector<int> isotopes;
   IsotopesNucID(isotopes);
   std::map<int,double> separation_factors;
   
+  //TODO remove the cout statement below
+  std::cout << "enrichment method = " << enrichment_method << "\n\n\n\n";
+ 
   // We consider U-238 to be the key component hence the mass differences
   // are calculated with respect to this isotope.
-  for (int i : isotopes) {
-    double delta_mass = 238. - NucIDToIsotope(i);
-    double gamma = 1. + delta_mass*(gamma_235-1.) / (238.-235.);
-    separation_factors[i] = gamma;
+  if (enrichment_method == "centrifuge") {
+    for (int i : isotopes) {
+      // Here, the mass difference is considered hence it does not matter
+      // if one considers the mass of U or of UF6.
+      double delta_mass = 238. - NucIDToIsotope(i);
+      separation_factors[i] = 1. + delta_mass*(gamma_235-1.) / (238.-235.);
+    }
+  } else if (enrichment_method == "diffusion") {
+    const double hexafluoride = 6. * 19.;
+    const double key_isotope_hex = 238. + hexafluoride;
+    for (int i : isotopes) {
+      // Here, the molecular weight of UF6 is considered.
+      double mass_hex =  NucIDToIsotope(i) + hexafluoride;
+      separation_factors[i] = std::pow(key_isotope_hex / mass_hex, 0.5); 
+    }
+  } else {
+    std::string msg = "Variable 'enrichment_method' has to be either "
+                      "'centrifuge' or 'diffusion'.";
+    throw cyclus::ValueError(msg);
   }
+  
   return separation_factors;
 }
 

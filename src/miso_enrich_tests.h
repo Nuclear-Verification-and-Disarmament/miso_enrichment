@@ -23,7 +23,8 @@ class MIsoEnrichTest : public ::testing::Test {
   double gamma_235, initial_feed, inv_size, latitude, longitude,
          max_enrich, swu_capacity, tails_assay;
 
-  std::string feed_commod, product_commod, tails_commod, feed_recipe;
+  std::string feed_commod, product_commod, tails_commod, feed_recipe, 
+              enrichment_method;
   std::vector<double> swu_vals;
   std::vector<int> swu_times;
   

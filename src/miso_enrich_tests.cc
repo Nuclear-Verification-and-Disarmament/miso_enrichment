@@ -63,6 +63,7 @@ void MIsoEnrichTest::InitParameters() {
   swu_vals = std::vector<double>(1,1);
   swu_times = std::vector<int>(1,0);
   gamma_235 = 1.4;
+  enrichment_method = "centrifuge";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -82,6 +83,7 @@ void MIsoEnrichTest::SetUpMIsoEnrichment() {
   miso_enrich_facility->longitude = longitude;
   miso_enrich_facility->swu_capacity_vals = swu_vals;
   miso_enrich_facility->swu_capacity_times = swu_times;
+  miso_enrich_facility->enrichment_method = enrichment_method;
 
   miso_enrich_facility->EnterNotify();
 }
