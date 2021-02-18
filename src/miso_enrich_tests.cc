@@ -76,6 +76,7 @@ void MIsoEnrichTest::SetUpMIsoEnrichment() {
   miso_enrich_facility->max_feed_inventory = inv_size;
   miso_enrich_facility->order_prefs = order_prefs;
   miso_enrich_facility->swu_capacity = swu_capacity;
+  miso_enrich_facility->current_swu_capacity = swu_capacity;
   miso_enrich_facility->max_enrich = max_enrich;
   miso_enrich_facility->gamma_235 = gamma_235;
   miso_enrich_facility->latitude = latitude;
@@ -198,8 +199,10 @@ TEST_F(MIsoEnrichTest, GetMatlBids) {
   cm[922380000] = 49.9945;
   Material::Ptr product = Material::CreateUntracked(
       1, cyclus::Composition::CreateFromMass(cm)); 
+  // Clearing the CompMap is technically not needed but may be clearer.
+  cm.clear();
   cm[922350000] = 0.3;
-  cm[922380000] = 99.6945;
+  cm[922380000] = 99.7;
   Material::Ptr tails = Material::CreateUntracked(
       1, cyclus::Composition::CreateFromMass(cm));
   req_prod = cyclus::Request<Material>::Create(product, miso_enrich_facility, 
