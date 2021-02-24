@@ -18,7 +18,7 @@ def facility():
           {
             "name": "DepletedUSink",
             "config": {"Sink": {
-              "in_commods": {"val": ["DepeletedU"]},
+              "in_commods": {"val": ["DepletedU"]},
               "recipe_name": "DepletedURecipe"
             }}
           },
