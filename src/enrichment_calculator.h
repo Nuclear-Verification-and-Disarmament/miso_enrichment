@@ -22,6 +22,7 @@ class EnrichmentCalculator {
   // TODO in the above constructor it might not make sense to keep the 
   // default arguments for feed_qty and for product_qty. This will be
   // determined in later steps of the implementation.
+  EnrichmentCalculator(const EnrichmentCalculator& e);
   EnrichmentCalculator& operator= (const EnrichmentCalculator& e);
   
   void PPrint();
@@ -64,7 +65,7 @@ class EnrichmentCalculator {
                    // in kg SWU timestep^-1
 
   // TODO declare vector as const?
-  std::vector<int> isotopes;
+  const std::vector<int> isotopes;
   std::map<int,double> separation_factors;
   std::map<int,double> alpha_star;
 

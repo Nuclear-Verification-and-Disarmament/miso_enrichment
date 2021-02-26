@@ -51,15 +51,31 @@ cyclus::Composition::Ptr comp_depletedU() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Composition::Ptr comp_natU() {
-  // TODO check where this is used and if the hydrogen could be removed
   cyclus::CompMap comp;
   comp[922340000] = 5.5e-3;
   comp[922350000] = 0.711;
   comp[922380000] = 99.2835;
-  comp[10010000] = 10;  // insert hydrogen to check if it is filtered out
   
   return cyclus::Composition::CreateFromMass(comp);
 };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cyclus::Composition::Ptr comp_reprocessedU() {
+  // Composition taken from Exploring Uranium Resource Constraints on 
+  // Fissile Material Production in Pakistan. Zia Mian, A. H. Nayyar and 
+  // R. Rajaraman. Science and Global Security 17, 2009: p.87. 
+  // DOI: 10.1080/08929880902975834
+
+  cyclus::CompMap comp;
+  comp[922320000] = 1.013e-10;
+  comp[922330000] = 2.550e-9;
+  comp[922340000] = 0.005;
+  comp[922350000] = 0.616;
+  comp[922360000] = 0.015;
+  comp[922380000] = 99.364;
+
+  return cyclus::Composition::CreateFromMass(comp);
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Composition::Ptr comp_weapongradeU() {
@@ -86,6 +102,16 @@ void IsotopesNucID(std::vector<int>& isotopes) {
   for (int i = 0; i < isotopes.size(); i++) {
     isotopes[i] = (92*1000 + isotopes[i]) * 10000;
   }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+std::vector<int> IsotopesNucID_vector() {
+  int iso[6] = {232, 233, 234, 235, 236, 238};
+  std::vector<int> isotopes(iso, iso + sizeof(iso)/sizeof(int));
+  for (int& i : isotopes) {
+    i = (92*1000 + i) * 10000;
+  } 
+  return isotopes;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

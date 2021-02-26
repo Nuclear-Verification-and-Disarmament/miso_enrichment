@@ -43,6 +43,7 @@ TEST(MIsoHelperTest, CheckFractionsComposition) {
                                + 0.992835/pyne::atomic_mass(922380000));
 
   cyclus::Composition::Ptr comp = misotest::comp_natU();
+  std::cout << "TODO Add composition with non-uranium elements\n";
   EXPECT_DOUBLE_EQ(MIsoAtomAssay(comp), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoAtomFrac(comp, 922350000), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoMassAssay(comp), expected_mass235);

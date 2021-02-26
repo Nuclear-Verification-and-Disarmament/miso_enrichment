@@ -14,6 +14,7 @@ namespace misotest {
 bool CompareCompMap(cyclus::CompMap cm1, cyclus::CompMap cm2);
 cyclus::Composition::Ptr comp_depletedU();
 cyclus::Composition::Ptr comp_natU();
+cyclus::Composition::Ptr comp_reprocessedU();
 cyclus::Composition::Ptr comp_weapongradeU();
 cyclus::Material::Ptr mat_natU();
 
@@ -23,6 +24,7 @@ const double kEpsDouble = 1e-5;
 const double kEpsCompMap = 1e-5;
 const int kIterMax = 200;
 
+std::vector<int> IsotopesNucID_vector();
 void IsotopesNucID(std::vector<int>& isotopes);
 int IsotopeToNucID(int isotope);
 int NucIDToIsotope(int nuc_id);

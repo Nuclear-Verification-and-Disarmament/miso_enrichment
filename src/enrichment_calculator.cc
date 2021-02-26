@@ -13,16 +13,16 @@
 namespace misoenrichment {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EnrichmentCalculator::EnrichmentCalculator() {
-  IsotopesNucID(isotopes);
-}
+// Constructor delegation only possible from C++11 onwards, CMake checks if
+// C++11 is supported.
+EnrichmentCalculator::EnrichmentCalculator() : EnrichmentCalculator(1.4) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
-    gamma_235(gamma_235) {
-  IsotopesNucID(isotopes);
-  CalculateGammaAlphaStar_();
-}
+// Constructor delegation only possible from C++11 onwards, CMake checks if
+// C++11 is supported.
+EnrichmentCalculator::EnrichmentCalculator(double gamma_235) : 
+  EnrichmentCalculator(misotest::comp_reprocessedU(), 0.05, 0.003, 
+                       gamma_235, 1, 1, 1e299, true) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
@@ -37,14 +37,29 @@ EnrichmentCalculator::EnrichmentCalculator(
       target_feed_qty(feed_qty),
       target_product_qty(product_qty),
       max_swu(max_swu),
-      use_downblending(use_downblending) {
+      use_downblending(use_downblending),
+      isotopes(IsotopesNucID_vector()) {
   if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be 
     // defined. Additionally, add an exception that should be thrown.
   }
   cyclus::compmath::Normalize(&this->feed_composition);
+  CalculateGammaAlphaStar_();
 
-  IsotopesNucID(isotopes);
+  BuildMatchedAbundanceRatioCascade();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EnrichmentCalculator::EnrichmentCalculator(const EnrichmentCalculator& e) :
+    feed_composition(e.feed_composition), 
+    product_composition(e.product_composition), 
+    tails_composition(e.tails_composition),
+    target_product_assay(e.target_product_assay),
+    target_tails_assay(e.target_tails_assay),
+    target_feed_qty(e.target_feed_qty),
+    target_product_qty(e.target_product_qty), max_swu(e.max_swu),
+    use_downblending(e.use_downblending), isotopes(IsotopesNucID_vector()),
+    gamma_235(e.gamma_235) {
   CalculateGammaAlphaStar_();
   BuildMatchedAbundanceRatioCascade();
 }
@@ -75,14 +90,9 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
 
   use_downblending = e.use_downblending;
   
-  IsotopesNucID(isotopes);
+  //IsotopesNucID(isotopes);
   gamma_235 = e.gamma_235;
-  separation_factors = CalculateSeparationFactor(gamma_235);
-  for (int i : isotopes) {
-    // E. von Halle Eq. (15)
-    alpha_star[i] = separation_factors[i]
-                    / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
-  }
+  CalculateGammaAlphaStar_();
   
   // TODO Check why the recalculated variables are not copied
   BuildMatchedAbundanceRatioCascade();
