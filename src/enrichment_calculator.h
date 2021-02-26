@@ -83,7 +83,7 @@ class EnrichmentCalculator {
   void Downblend_();
   void CalculateSums(double& sum_e, double& sum_s);
 
-  double ValueFunction_(cyclus::CompMap composition);
+  double ValueFunction_(const cyclus::CompMap& composition);
 };
 
 }  // namespace misoenrichment

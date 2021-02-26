@@ -289,27 +289,45 @@ void EnrichmentCalculator::CalculateSwu_() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 double EnrichmentCalculator::ValueFunction_(
-    cyclus::CompMap composition) {
+    const cyclus::CompMap& composition) {
   const int NUCID_235 = IsotopeToNucID(235);
   const int NUCID_238 = IsotopeToNucID(238);
-
   double value = 0.;
- 
-  std::vector<int>::iterator it;
-  for (it = isotopes.begin(); it != isotopes.end(); it++) {
-    double k = (separation_factors[*it]-1) 
+  
+  try {
+    composition.at(NUCID_235);
+    composition.at(NUCID_238);
+  } catch (const std::out_of_range& err) {
+    if (composition.size()==0) {
+      // This case can happen, e.g., during initalisation and is not a bug.
+      return value;
+    }
+    // Else, throw an error.
+    std::stringstream msg;
+    msg << "No U-235 or U-238 present in composition passed to "
+        << "'EnrichmentCalculator::ValueFunction_'.";
+    throw cyclus::KeyError(msg.str());
+  }
+
+  for (int i : isotopes) {
+    try {
+      composition.at(i);
+    } catch (const std::out_of_range& err) {
+      continue;
+    }
+    double k = (separation_factors[i]-1)
                / (separation_factors[NUCID_235]-1);
     if (cyclus::AlmostEq(k, 0.5)) {
       // This formula is not included in  de la Garza 1963, it is taken 
       // from the preceding article, see Eq. (26) in:
       // A. de la Garza et al., 'Multicomponent isotope separation in 
       // cascades'. Chemical Engineering Science 15, pp. 188-209 (1961).
-      value += std::log(composition[*it] / composition[NUCID_238]);
+      value += std::log(composition.at(i) / composition.at(NUCID_238));
     } else {
-      value += composition[*it] / (2*k - 1);
+      value += composition.at(i) / (2*k - 1);
     }
   }
-  value *= std::log(composition[NUCID_235] / composition[NUCID_238]);
+  value *= std::log(composition.at(NUCID_235) / composition.at(NUCID_238));
 
   return value;
 }
