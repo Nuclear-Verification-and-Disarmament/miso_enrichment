@@ -79,8 +79,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
     double feed_used = e.FeedUsed();
     
     cyclus::toolkit::MatQuery mq(m);
-    std::vector<int> isotopes;
-    IsotopesNucID(isotopes);
+    std::vector<int> isotopes(IsotopesNucID());
     std::set<int> nucs(isotopes.begin(), isotopes.end());
     double feed_uranium_frac = mq.atom_frac(nucs);
 

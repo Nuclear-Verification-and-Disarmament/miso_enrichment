@@ -24,8 +24,7 @@ const double kEpsDouble = 1e-5;
 const double kEpsCompMap = 1e-5;
 const int kIterMax = 200;
 
-std::vector<int> IsotopesNucID_vector();
-void IsotopesNucID(std::vector<int>& isotopes);
+const std::vector<int> IsotopesNucID();
 int IsotopeToNucID(int isotope);
 int NucIDToIsotope(int nuc_id);
 int ResBufIdx(

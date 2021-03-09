@@ -39,7 +39,7 @@ EnrichmentCalculator::EnrichmentCalculator(
       feed_qty(0.), product_qty(0.),
       max_swu(max_swu),
       use_downblending(use_downblending),
-      isotopes(IsotopesNucID_vector()) {
+      isotopes(IsotopesNucID()) {
   if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be 
     // defined. Additionally, add an exception that should be thrown.
@@ -59,7 +59,7 @@ EnrichmentCalculator::EnrichmentCalculator(const EnrichmentCalculator& e) :
     target_tails_assay(e.target_tails_assay),
     target_feed_qty(e.target_feed_qty),
     target_product_qty(e.target_product_qty), max_swu(e.max_swu),
-    use_downblending(e.use_downblending), isotopes(IsotopesNucID_vector()),
+    use_downblending(e.use_downblending), isotopes(IsotopesNucID()),
     gamma_235(e.gamma_235) {
   CalculateGammaAlphaStar_();
   BuildMatchedAbundanceRatioCascade();
@@ -91,7 +91,6 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
 
   use_downblending = e.use_downblending;
   
-  //IsotopesNucID(isotopes);
   gamma_235 = e.gamma_235;
   CalculateGammaAlphaStar_();
   
