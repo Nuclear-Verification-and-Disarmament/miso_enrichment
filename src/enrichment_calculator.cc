@@ -13,38 +13,54 @@
 namespace misoenrichment {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EnrichmentCalculator::EnrichmentCalculator() {
-  IsotopesNucID(isotopes);
-}
+// Constructor delegation only possible from C++11 onwards, CMake checks if
+// C++11 is supported.
+EnrichmentCalculator::EnrichmentCalculator() : EnrichmentCalculator(1.4) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
-    gamma_235(gamma_235) {
-  IsotopesNucID(isotopes);
-  CalculateGammaAlphaStar_();
-}
+// Constructor delegation only possible from C++11 onwards, CMake checks if
+// C++11 is supported.
+EnrichmentCalculator::EnrichmentCalculator(double gamma_235) : 
+  EnrichmentCalculator(misotest::comp_reprocessedU(), 0.05, 0.003, 
+                       gamma_235, 1, 1, 1e299, true) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
-    cyclus::Composition::Ptr feed_composition, 
+    cyclus::Composition::Ptr feed_comp,
     double target_product_assay, double target_tails_assay, 
     double gamma_235, double feed_qty, double product_qty, 
     double max_swu, bool use_downblending) : 
-      feed_composition(feed_composition->atom()),
+      feed_composition(feed_comp->atom()),
       target_product_assay(target_product_assay),
       target_tails_assay(target_tails_assay),
       gamma_235(gamma_235), 
       target_feed_qty(feed_qty),
       target_product_qty(product_qty),
+      feed_qty(0.), product_qty(0.),
       max_swu(max_swu),
-      use_downblending(use_downblending) {
+      use_downblending(use_downblending),
+      isotopes(IsotopesNucID()) {
   if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be 
     // defined. Additionally, add an exception that should be thrown.
   }
-  cyclus::compmath::Normalize(&this->feed_composition);
+  cyclus::compmath::Normalize(&feed_composition);
+  CalculateGammaAlphaStar_();
 
-  IsotopesNucID(isotopes);
+  BuildMatchedAbundanceRatioCascade();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EnrichmentCalculator::EnrichmentCalculator(const EnrichmentCalculator& e) :
+    feed_composition(e.feed_composition), 
+    product_composition(e.product_composition), 
+    tails_composition(e.tails_composition),
+    target_product_assay(e.target_product_assay),
+    target_tails_assay(e.target_tails_assay),
+    target_feed_qty(e.target_feed_qty),
+    target_product_qty(e.target_product_qty), max_swu(e.max_swu),
+    use_downblending(e.use_downblending), isotopes(IsotopesNucID()),
+    gamma_235(e.gamma_235) {
   CalculateGammaAlphaStar_();
   BuildMatchedAbundanceRatioCascade();
 }
@@ -75,14 +91,8 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
 
   use_downblending = e.use_downblending;
   
-  IsotopesNucID(isotopes);
   gamma_235 = e.gamma_235;
-  separation_factors = CalculateSeparationFactor(gamma_235);
-  for (int i : isotopes) {
-    // E. von Halle Eq. (15)
-    alpha_star[i] = separation_factors[i]
-                    / std::sqrt(separation_factors[IsotopeToNucID(235)]); 
-  }
+  CalculateGammaAlphaStar_();
   
   // TODO Check why the recalculated variables are not copied
   BuildMatchedAbundanceRatioCascade();
@@ -124,18 +134,13 @@ void EnrichmentCalculator::SetInput(
     double new_feed_qty, double new_product_qty, double new_max_swu,
     double new_gamma_235, bool new_use_downblending) {
   
-  // This temporary variable is needed because feed_comp->atom() returns
-  // a const cyclus::CompMap object and hence it cannot be normalised.
-  // However, the normalisation is needed to be able to compare it to the
-  // current feed_composition
-  cyclus::CompMap new_compmap = new_feed_composition->atom();
-  cyclus::compmath::Normalize(&new_compmap);
+  feed_composition = new_feed_composition->atom();
+  cyclus::compmath::Normalize(&feed_composition);
   
   if (new_gamma_235 != gamma_235) {
     gamma_235 = new_gamma_235;
     CalculateGammaAlphaStar_();
   }
-  feed_composition = new_compmap;
   target_product_assay = new_target_product_assay;
   target_tails_assay = new_target_tails_assay;
 
@@ -185,12 +190,22 @@ void EnrichmentCalculator::SetInput(
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::EnrichmentOutput(
-    cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp,
+    cyclus::Composition::Ptr& product_comp, cyclus::Composition::Ptr& tails_comp,
     double& feed_used, double& swu_used, double& product_produced, 
     double& tails_produced, int& n_enrich, int& n_strip) {
 
-  product_comp = product_composition;
-  tails_comp = tails_composition;
+  // This step is needed to prevent a 'double free' error. It is caused for 
+  // unknown reasons by cyclus::Material::ExtractComp and 
+  // cyclus::compmath::ApplyThreshold. See also Cyclus issue #1524:
+  // https://github.com/cyclus/cyclus/issues/1524
+  cyclus::CompMap cm;
+  for (const auto& x : product_composition) {
+    if (x.second > 0) {
+      cm[x.first] = x.second;
+    }
+  }
+  product_comp = cyclus::Composition::CreateFromAtom(cm);
+  tails_comp = cyclus::Composition::CreateFromAtom(tails_composition);
   
   feed_used = feed_qty;
   swu_used = swu;
@@ -199,6 +214,13 @@ void EnrichmentCalculator::EnrichmentOutput(
   
   n_enrich = n_enriching;
   n_strip = n_stripping;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EnrichmentCalculator::ProductOutput(
+    cyclus::Composition::Ptr& old_product_comp, double& old_product_qty) {
+  old_product_comp = cyclus::Composition::CreateFromAtom(product_composition);
+  old_product_qty = product_qty;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -279,27 +301,45 @@ void EnrichmentCalculator::CalculateSwu_() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 double EnrichmentCalculator::ValueFunction_(
-    cyclus::CompMap composition) {
+    const cyclus::CompMap& composition) {
   const int NUCID_235 = IsotopeToNucID(235);
   const int NUCID_238 = IsotopeToNucID(238);
-
   double value = 0.;
- 
-  std::vector<int>::iterator it;
-  for (it = isotopes.begin(); it != isotopes.end(); it++) {
-    double k = (separation_factors[*it]-1) 
+  
+  try {
+    composition.at(NUCID_235);
+    composition.at(NUCID_238);
+  } catch (const std::out_of_range& err) {
+    if (composition.size()==0) {
+      // This case can happen, e.g., during initalisation and is not a bug.
+      return value;
+    }
+    // Else, throw an error.
+    std::stringstream msg;
+    msg << "No U-235 or U-238 present in composition passed to "
+        << "'EnrichmentCalculator::ValueFunction_'.";
+    throw cyclus::KeyError(msg.str());
+  }
+
+  for (int i : isotopes) {
+    try {
+      composition.at(i);
+    } catch (const std::out_of_range& err) {
+      continue;
+    }
+    double k = (separation_factors[i]-1)
                / (separation_factors[NUCID_235]-1);
     if (cyclus::AlmostEq(k, 0.5)) {
       // This formula is not included in  de la Garza 1963, it is taken 
       // from the preceding article, see Eq. (26) in:
       // A. de la Garza et al., 'Multicomponent isotope separation in 
       // cascades'. Chemical Engineering Science 15, pp. 188-209 (1961).
-      value += std::log(composition[*it] / composition[NUCID_238]);
+      value += std::log(composition.at(i) / composition.at(NUCID_238));
     } else {
-      value += composition[*it] / (2*k - 1);
+      value += composition.at(i) / (2*k - 1);
     }
   }
-  value *= std::log(composition[NUCID_235] / composition[NUCID_238]);
+  value *= std::log(composition.at(NUCID_235) / composition.at(NUCID_238));
 
   return value;
 }

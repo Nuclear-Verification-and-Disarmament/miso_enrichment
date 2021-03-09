@@ -25,8 +25,7 @@ TEST(MIsoHelperTest, ChooseCorrectResBuf) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST(MIsoHelperTest, NucIDConversion) {
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
+  std::vector<int> isotopes(IsotopesNucID());
   
   for (int i : isotopes) {
     int isotope = NucIDToIsotope(i);
@@ -43,6 +42,7 @@ TEST(MIsoHelperTest, CheckFractionsComposition) {
                                + 0.992835/pyne::atomic_mass(922380000));
 
   cyclus::Composition::Ptr comp = misotest::comp_natU();
+  std::cout << "TODO Add composition with non-uranium elements\n";
   EXPECT_DOUBLE_EQ(MIsoAtomAssay(comp), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoAtomFrac(comp, 922350000), expected_atom235);
   EXPECT_DOUBLE_EQ(MIsoMassAssay(comp), expected_mass235);
@@ -71,8 +71,7 @@ TEST(MIsoHelperTest, SeparationFactor) {
   std::map<int,double> separation_factor = CalculateSeparationFactor(
                                                               gamma_235);
 
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
+  std::vector<int> isotopes(IsotopesNucID());
   std::map<int,double> expected;
   expected[922320000] = 2.2;
   expected[922330000] = 2.0;

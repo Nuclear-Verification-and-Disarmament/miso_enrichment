@@ -27,12 +27,11 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
       cyclus::Material::Ptr m, cyclus::Arc const * a = NULL,
       cyclus::ExchangeTranslationContext<cyclus::Material> 
           const * ctx = NULL) const {
-    EnrichmentCalculator e;
     
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
-    e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299, gamma_235_, use_downblending);
+    EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
+                           1e299, product_qty, 1e299, use_downblending);
     double swu_used = e.SwuUsed();
     
     return swu_used;
@@ -75,14 +74,12 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
     
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
-    EnrichmentCalculator e;
-    e.SetInput(feed_comp_, product_assay, tails_assay_, 1e299, product_qty,
-               1e299, gamma_235_, use_downblending);
+    EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
+                           1e299, product_qty, 1e299, use_downblending);
     double feed_used = e.FeedUsed();
     
     cyclus::toolkit::MatQuery mq(m);
-    std::vector<int> isotopes;
-    IsotopesNucID(isotopes);
+    std::vector<int> isotopes(IsotopesNucID());
     std::set<int> nucs(isotopes.begin(), isotopes.end());
     double feed_uranium_frac = mq.atom_frac(nucs);
 

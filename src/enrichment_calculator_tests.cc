@@ -63,6 +63,8 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
                              use_downblending);
   e.EnrichmentOutput(product_comp, tails_comp, feed_qty, swu_used, 
                      product_qty, tails_qty, n_enriching, n_stripping);
+  product_cm = product_comp->atom();
+  tails_cm = tails_comp->atom();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -70,10 +72,10 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
 TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   EnrichmentCalculator e2(
     cyclus::Composition::CreateFromAtom(weapons_grade_U()), 0.95, 0.1, 1.1,
-    1., true);
+    1., 1e299, 1e299, true);
   e2 = e;
 
-  cyclus::CompMap product_comp2, tails_comp2;
+  cyclus::Composition::Ptr product_comp2, tails_comp2;
   double feed_qty2, product_qty2, tails_qty2, swu_used2;
   int n_enriching2, n_stripping2;
   
@@ -84,8 +86,10 @@ TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   // assignment operator, but it does check the results. It is expected
   // that if the assignment should not have worked correctly then the 
   // results would be wrong as well.
-  EXPECT_TRUE(misotest::CompareCompMap(product_comp2, product_comp));
-  EXPECT_TRUE(misotest::CompareCompMap(tails_comp2, tails_comp));
+  EXPECT_TRUE(misotest::CompareCompMap(product_comp2->atom(), 
+                                       product_comp->atom()));
+  EXPECT_TRUE(misotest::CompareCompMap(tails_comp2->atom(), 
+                                       tails_comp->atom()));
   EXPECT_DOUBLE_EQ(feed_qty2, feed_qty);
   EXPECT_DOUBLE_EQ(product_qty2, product_qty);
   EXPECT_DOUBLE_EQ(tails_qty2, tails_qty);
@@ -97,8 +101,8 @@ TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, Concentrations) {
   EXPECT_TRUE(misotest::CompareCompMap(expect_product_comp, 
-                                        product_comp));
-  EXPECT_TRUE(misotest::CompareCompMap(expect_tails_comp, tails_comp));
+                                        product_cm));
+  EXPECT_TRUE(misotest::CompareCompMap(expect_tails_comp, tails_cm));
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -123,8 +127,8 @@ TEST_F(EnrichmentCalculatorTest, NumberStages) {
 TEST_F(EnrichmentCalculatorTest, Downblending) {
   double target_product_assay = MIsoAssay(weapons_grade_U()) - 0.001;
 
-  cyclus::CompMap bl_product_comp, bl_tails_comp;
-  cyclus::CompMap bl_product_comp2;
+  cyclus::Composition::Ptr bl_product_comp, bl_tails_comp;
+  cyclus::Composition::Ptr bl_product_comp2;
   double bl_feed_qty, bl_product_qty, bl_tails_qty, bl_swu_used;
   double bl_feed_qty2, bl_product_qty2;
   int dummy_int;
@@ -136,7 +140,7 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
                            bl_swu_used, bl_product_qty, bl_tails_qty,
                            dummy_int, dummy_int);
 
-  EXPECT_DOUBLE_EQ(target_product_assay, MIsoAssay(bl_product_comp));
+  EXPECT_DOUBLE_EQ(target_product_assay, MIsoAtomAssay(bl_product_comp));
   EXPECT_DOUBLE_EQ(expect_feed_qty, bl_feed_qty);
   EXPECT_TRUE(bl_product_qty > expect_product_qty);
   
@@ -150,7 +154,7 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
                             bl_swu_used, bl_product_qty2, bl_tails_qty,
                             dummy_int, dummy_int);
 
-  EXPECT_DOUBLE_EQ(target_product_assay, MIsoAssay(bl_product_comp2));
+  EXPECT_DOUBLE_EQ(target_product_assay, MIsoAtomAssay(bl_product_comp2));
   EXPECT_DOUBLE_EQ(bl_feed_qty, bl_feed_qty2);
   EXPECT_DOUBLE_EQ(bl_product_qty, bl_product_qty2);
 }

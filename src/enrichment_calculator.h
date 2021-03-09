@@ -17,11 +17,9 @@ class EnrichmentCalculator {
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
-                       double feed_qty=1e299, double product_qty=1e299,
-                       double max_swu=1e299, bool use_downblending=true);
-  // TODO in the above constructor it might not make sense to keep the 
-  // default arguments for feed_qty and for product_qty. This will be
-  // determined in later steps of the implementation.
+                       double feed_qty, double product_qty, 
+                       double max_swu, bool use_downblending=true);
+  EnrichmentCalculator(const EnrichmentCalculator& e);
   EnrichmentCalculator& operator= (const EnrichmentCalculator& e);
   
   void PPrint();
@@ -33,11 +31,12 @@ class EnrichmentCalculator {
       double new_feed_qty, double new_product_qty, double new_max_swu,
       double gamma_235, bool use_downblending); 
 
-  void EnrichmentOutput(
-      cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
-      double& feed_used, double& swu_used, double& product_produced, 
-      double& tails_produced, int& n_enrich, int& n_strip);
-  
+  void EnrichmentOutput(cyclus::Composition::Ptr& product_comp, 
+                        cyclus::Composition::Ptr& tails_comp, double& feed_used,
+                        double& swu_used, double& product_produced, 
+                        double& tails_produced, int& n_enrich, int& n_strip);
+  void ProductOutput(cyclus::Composition::Ptr&, double&);
+
   inline double FeedUsed() { return feed_qty; }
   inline double SwuUsed() { return swu; }
 
@@ -63,8 +62,7 @@ class EnrichmentCalculator {
   double swu = 0;  // Separative work that has been performed
                    // in kg SWU timestep^-1
 
-  // TODO declare vector as const?
-  std::vector<int> isotopes;
+  const std::vector<int> isotopes;
   std::map<int,double> separation_factors;
   std::map<int,double> alpha_star;
 
@@ -82,7 +80,7 @@ class EnrichmentCalculator {
   void Downblend_();
   void CalculateSums(double& sum_e, double& sum_s);
 
-  double ValueFunction_(cyclus::CompMap composition);
+  double ValueFunction_(const cyclus::CompMap& composition);
 };
 
 }  // namespace misoenrichment

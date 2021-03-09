@@ -1,3 +1,7 @@
+import sys
+sys.path.append('./')
+sys.path.append('./input')
+
 import archetypes
 import commodity
 import control

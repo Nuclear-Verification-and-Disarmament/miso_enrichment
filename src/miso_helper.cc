@@ -13,8 +13,7 @@ namespace misotest {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool CompareCompMap(cyclus::CompMap cm1, cyclus::CompMap cm2) {
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
+  std::vector<int> isotopes(IsotopesNucID());
   std::vector<int>::iterator it;
   // The following for-loop has been added to ensure that the all of the
   // uranium keys are present in both compmaps, else the comparison fails.
@@ -51,15 +50,31 @@ cyclus::Composition::Ptr comp_depletedU() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Composition::Ptr comp_natU() {
-  // TODO check where this is used and if the hydrogen could be removed
   cyclus::CompMap comp;
   comp[922340000] = 5.5e-3;
   comp[922350000] = 0.711;
   comp[922380000] = 99.2835;
-  comp[10010000] = 10;  // insert hydrogen to check if it is filtered out
   
   return cyclus::Composition::CreateFromMass(comp);
 };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cyclus::Composition::Ptr comp_reprocessedU() {
+  // Composition taken from Exploring Uranium Resource Constraints on 
+  // Fissile Material Production in Pakistan. Zia Mian, A. H. Nayyar and 
+  // R. Rajaraman. Science and Global Security 17, 2009: p.87. 
+  // DOI: 10.1080/08929880902975834
+
+  cyclus::CompMap comp;
+  comp[922320000] = 1.013e-10;
+  comp[922330000] = 2.550e-9;
+  comp[922340000] = 0.005;
+  comp[922350000] = 0.616;
+  comp[922360000] = 0.015;
+  comp[922380000] = 99.364;
+
+  return cyclus::Composition::CreateFromMass(comp);
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Composition::Ptr comp_weapongradeU() {
@@ -81,11 +96,13 @@ cyclus::Material::Ptr mat_natU() {
 }  // namespace misotest
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void IsotopesNucID(std::vector<int>& isotopes) {
-  isotopes = {232, 233, 234, 235, 236, 238};
-  for (int i = 0; i < isotopes.size(); i++) {
-    isotopes[i] = (92*1000 + isotopes[i]) * 10000;
-  }
+const std::vector<int> IsotopesNucID() {
+  int iso[6] = {232, 233, 234, 235, 236, 238};
+  std::vector<int> isotopes(iso, iso + sizeof(iso)/sizeof(int));
+  for (int& i : isotopes) {
+    i = (92*1000 + i) * 10000;
+  } 
+  return isotopes;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -102,8 +119,7 @@ int IsotopeToNucID(int isotope) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 int NucIDToIsotope(int nuc_id) {
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
+  std::vector<int> isotopes(IsotopesNucID());
   std::vector<int>::iterator it;
   
   it = std::find(isotopes.begin(), isotopes.end(), nuc_id);
@@ -181,8 +197,7 @@ double MIsoAssay(cyclus::CompMap compmap) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 double MIsoFrac(cyclus::CompMap compmap, int isotope) {
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
+  std::vector<int> isotopes(IsotopesNucID());
   
   double isotope_assay = 0;
   double uranium_atom_frac = 0;
@@ -208,10 +223,9 @@ double MIsoFrac(cyclus::CompMap compmap, int isotope) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::map<int,double> CalculateSeparationFactor(double gamma_235) {
-  std::vector<int> isotopes;
-  IsotopesNucID(isotopes);
+  std::vector<int> isotopes(IsotopesNucID());
   std::map<int,double> separation_factors;
-  
+
   // We consider U-238 to be the key component hence the mass differences
   // are calculated with respect to this isotope.
   for (int i : isotopes) {
