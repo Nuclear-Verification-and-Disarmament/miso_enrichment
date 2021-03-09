@@ -31,10 +31,7 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       latitude(0.0),
       longitude(0.0),
       coordinates(latitude, longitude),
-      use_downblending(true) {
-  
-  enrichment_calc = EnrichmentCalculator(gamma_235);
-}
+      use_downblending(true) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 MIsoEnrich::~MIsoEnrich() {}
@@ -283,20 +280,17 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Material::Ptr MIsoEnrich::Offer_(
     cyclus::Material::Ptr mat) {
-  cyclus::CompMap product_comp, dummy_comp;
-  double dummy_double;
+  cyclus::Composition::Ptr product_comp;
   double feed_qty = feed_inv[feed_idx].quantity();
+  double product_assay = MIsoAtomAssay(mat);
   double product_qty = mat->quantity();
-  int dummy_int;
-  
-  enrichment_calc.SetInput(feed_inv_comp[feed_idx], MIsoAtomAssay(mat), 
-                           tails_assay, feed_qty, product_qty, 
-                           swu_capacity, gamma_235, use_downblending);
-  enrichment_calc.EnrichmentOutput(product_comp, dummy_comp, dummy_double,
-                                   dummy_double, product_qty, dummy_double,
-                                   dummy_int, dummy_int);
-  return cyclus::Material::CreateUntracked(
-      product_qty, cyclus::Composition::CreateFromAtom(product_comp)); 
+ 
+  EnrichmentCalculator e(feed_inv_comp[feed_idx], product_assay,
+                         tails_assay, gamma_235, feed_qty, product_qty,
+                         swu_capacity, use_downblending);
+  e.ProductOutput(product_comp, product_qty);
+
+  return cyclus::Material::CreateUntracked(product_qty, product_comp);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -450,20 +444,21 @@ void MIsoEnrich::AddMat_(cyclus::Material::Ptr mat) {
 cyclus::Material::Ptr MIsoEnrich::Enrich_(
     cyclus::Material::Ptr mat, double qty) {
 
-  cyclus::CompMap product_comp, tails_comp;
+  cyclus::Composition::Ptr product_comp;
+  cyclus::Composition::Ptr tails_comp;
   double feed_required, swu_required, product_qty, tails_qty;
   int n_enriching, n_stripping;
 
   double feed_assay = MIsoAtomAssay(feed_inv_comp[feed_idx]);
+  double feed_qty = feed_inv[feed_idx].quantity();
   double product_assay = MIsoAtomAssay(mat);
   
   // In the following line, the enrichment is calculated but it is not yet
   // performed!
-  enrichment_calc.SetInput(feed_inv_comp[feed_idx], product_assay,
-                           tails_assay, feed_inv[feed_idx].quantity(), 
-                           qty, current_swu_capacity, gamma_235,
-                           use_downblending);
-  enrichment_calc.EnrichmentOutput(product_comp, tails_comp, feed_required,
+  EnrichmentCalculator e(feed_inv_comp[feed_idx], product_assay,
+                         tails_assay, gamma_235, feed_qty, qty,
+                         swu_capacity, use_downblending);
+  e.EnrichmentOutput(product_comp, tails_comp, feed_required,
                                    swu_required, product_qty, tails_qty,
                                    n_enriching, n_stripping);
   // Now, perform the enrichment by popping the feed and converting it to 
@@ -483,8 +478,8 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
        << feed_inv[feed_idx].quantity();
     throw cyclus::ValueError(cyclus::Agent::InformErrorMsg(ss.str()));
   }
-  cyclus::Material::Ptr response = pop_mat->ExtractComp(
-      product_qty, cyclus::Composition::CreateFromAtom(product_comp));
+  cyclus::Material::Ptr response = pop_mat->ExtractComp(product_qty, 
+                                                        product_comp);
   tails_inv.Push(pop_mat);
 
   current_swu_capacity -= swu_required;

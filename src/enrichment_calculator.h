@@ -34,11 +34,12 @@ class EnrichmentCalculator {
       double new_feed_qty, double new_product_qty, double new_max_swu,
       double gamma_235, bool use_downblending); 
 
-  void EnrichmentOutput(
-      cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp, 
-      double& feed_used, double& swu_used, double& product_produced, 
-      double& tails_produced, int& n_enrich, int& n_strip);
-  
+  void EnrichmentOutput(cyclus::Composition::Ptr& product_comp, 
+                        cyclus::Composition::Ptr& tails_comp, double& feed_used,
+                        double& swu_used, double& product_produced, 
+                        double& tails_produced, int& n_enrich, int& n_strip);
+  void ProductOutput(cyclus::Composition::Ptr&, double&);
+
   inline double FeedUsed() { return feed_qty; }
   inline double SwuUsed() { return swu; }
 

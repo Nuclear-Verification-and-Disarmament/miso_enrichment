@@ -26,16 +26,17 @@ EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
-    cyclus::Composition::Ptr feed_composition, 
+    cyclus::Composition::Ptr feed_comp,
     double target_product_assay, double target_tails_assay, 
     double gamma_235, double feed_qty, double product_qty, 
     double max_swu, bool use_downblending) : 
-      feed_composition(feed_composition->atom()),
+      feed_composition(feed_comp->atom()),
       target_product_assay(target_product_assay),
       target_tails_assay(target_tails_assay),
       gamma_235(gamma_235), 
       target_feed_qty(feed_qty),
       target_product_qty(product_qty),
+      feed_qty(0.), product_qty(0.),
       max_swu(max_swu),
       use_downblending(use_downblending),
       isotopes(IsotopesNucID_vector()) {
@@ -43,7 +44,7 @@ EnrichmentCalculator::EnrichmentCalculator(
     // TODO think about whether one or two of these variables have to be 
     // defined. Additionally, add an exception that should be thrown.
   }
-  cyclus::compmath::Normalize(&this->feed_composition);
+  cyclus::compmath::Normalize(&feed_composition);
   CalculateGammaAlphaStar_();
 
   BuildMatchedAbundanceRatioCascade();
@@ -134,18 +135,13 @@ void EnrichmentCalculator::SetInput(
     double new_feed_qty, double new_product_qty, double new_max_swu,
     double new_gamma_235, bool new_use_downblending) {
   
-  // This temporary variable is needed because feed_comp->atom() returns
-  // a const cyclus::CompMap object and hence it cannot be normalised.
-  // However, the normalisation is needed to be able to compare it to the
-  // current feed_composition
-  cyclus::CompMap new_compmap = new_feed_composition->atom();
-  cyclus::compmath::Normalize(&new_compmap);
+  feed_composition = new_feed_composition->atom();
+  cyclus::compmath::Normalize(&feed_composition);
   
   if (new_gamma_235 != gamma_235) {
     gamma_235 = new_gamma_235;
     CalculateGammaAlphaStar_();
   }
-  feed_composition = new_compmap;
   target_product_assay = new_target_product_assay;
   target_tails_assay = new_target_tails_assay;
 
@@ -195,12 +191,22 @@ void EnrichmentCalculator::SetInput(
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::EnrichmentOutput(
-    cyclus::CompMap& product_comp, cyclus::CompMap& tails_comp,
+    cyclus::Composition::Ptr& product_comp, cyclus::Composition::Ptr& tails_comp,
     double& feed_used, double& swu_used, double& product_produced, 
     double& tails_produced, int& n_enrich, int& n_strip) {
 
-  product_comp = product_composition;
-  tails_comp = tails_composition;
+  // This step is needed to prevent a 'double free' error. It is caused for 
+  // unknown reasons by cyclus::Material::ExtractComp and 
+  // cyclus::compmath::ApplyThreshold. See also Cyclus issue #1524:
+  // https://github.com/cyclus/cyclus/issues/1524
+  cyclus::CompMap cm;
+  for (const auto& x : product_composition) {
+    if (x.second > 0) {
+      cm[x.first] = x.second;
+    }
+  }
+  product_comp = cyclus::Composition::CreateFromAtom(cm);
+  tails_comp = cyclus::Composition::CreateFromAtom(tails_composition);
   
   feed_used = feed_qty;
   swu_used = swu;
@@ -209,6 +215,13 @@ void EnrichmentCalculator::EnrichmentOutput(
   
   n_enrich = n_enriching;
   n_strip = n_stripping;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EnrichmentCalculator::ProductOutput(
+    cyclus::Composition::Ptr& old_product_comp, double& old_product_qty) {
+  old_product_comp = cyclus::Composition::CreateFromAtom(product_composition);
+  old_product_qty = product_qty;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
