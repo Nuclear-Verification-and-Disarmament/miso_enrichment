@@ -298,7 +298,6 @@ bool MIsoEnrich::ValidReq_(const cyclus::Material::Ptr& req_mat) {
   double u_235 = MIsoAtomAssay(req_mat);
   double u_238 = MIsoAtomFrac(req_mat, IsotopeToNucID(238));
 
-// bool u_238_present = u_238 > 0 && !cyclus::AlmostEq(u_238, 0);
   bool u_238_present = u_238 > 0;
   bool not_depleted = u_235 > tails_assay;
   bool possible_enrichment = u_235 < max_enrich;
@@ -312,9 +311,6 @@ bool SortBids(cyclus::Bid<cyclus::Material>* i,
   cyclus::Material::Ptr mat_i = i->offer();
   cyclus::Material::Ptr mat_j = j->offer();
 
-  // TODO cycamore uses mass(U235) compared to total mass. This would also
-  // include possible non-U elements that are sent directly to tails. 
-  // Because of this, they should not be considered here IMO.
   return MIsoAtomAssay(mat_i) <= MIsoAtomAssay(mat_j);
 }
 
@@ -442,7 +438,7 @@ void MIsoEnrich::AddMat_(cyclus::Material::Ptr mat) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Material::Ptr MIsoEnrich::Enrich_(
-    cyclus::Material::Ptr mat, double qty) {
+    cyclus::Material::Ptr mat, double request_qty) {
 
   cyclus::Composition::Ptr product_comp;
   cyclus::Composition::Ptr tails_comp;
@@ -456,7 +452,7 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
   // In the following line, the enrichment is calculated but it is not yet
   // performed!
   EnrichmentCalculator e(feed_inv_comp[feed_idx], product_assay,
-                         tails_assay, gamma_235, feed_qty, qty,
+                         tails_assay, gamma_235, feed_qty, request_qty,
                          swu_capacity, use_downblending);
   e.EnrichmentOutput(product_comp, tails_comp, feed_required,
                                    swu_required, product_qty, tails_qty,

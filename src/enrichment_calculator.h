@@ -17,11 +17,8 @@ class EnrichmentCalculator {
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
-                       double feed_qty=1e299, double product_qty=1e299,
-                       double max_swu=1e299, bool use_downblending=true);
-  // TODO in the above constructor it might not make sense to keep the 
-  // default arguments for feed_qty and for product_qty. This will be
-  // determined in later steps of the implementation.
+                       double feed_qty, double product_qty, 
+                       double max_swu, bool use_downblending=true);
   EnrichmentCalculator(const EnrichmentCalculator& e);
   EnrichmentCalculator& operator= (const EnrichmentCalculator& e);
   
@@ -65,7 +62,6 @@ class EnrichmentCalculator {
   double swu = 0;  // Separative work that has been performed
                    // in kg SWU timestep^-1
 
-  // TODO declare vector as const?
   const std::vector<int> isotopes;
   std::map<int,double> separation_factors;
   std::map<int,double> alpha_star;
