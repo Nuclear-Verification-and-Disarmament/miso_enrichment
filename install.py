@@ -37,6 +37,11 @@ def install(args):
     root_dir = os.path.split(__file__)[0]
     makefile = os.path.join(args.build_dir, 'Makefile')
 
+    print("Installing Python (sub)module 'SpentFuelGPR'...")
+    spent_fuel_gpr_dir = os.path.join(root_dir, "SpentFuelGPR")
+    subprocess.check_call(["pip3", "install", "-e", spent_fuel_gpr_dir])
+    print()
+
     if not os.path.exists(makefile):
         rtn = subprocess.call(['which', 'cmake'], shell=(os.name == 'nt'))
         if rtn != 0:
