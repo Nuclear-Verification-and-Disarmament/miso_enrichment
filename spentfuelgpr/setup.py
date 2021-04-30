@@ -5,16 +5,16 @@ from setuptools import setup
 
 def main():
     setup(
-        name="SpentFuelGPR",
+        name="spentfuelgpr",
         version="0.1",
         description="Python part of the MIsoEnrichment module",
         author="Nuclear Verification and Disarmament Group, RWTH Aachen University",
         url="https://github.com/maxschalz/miso_enrichment/",
         license="BSD-3-Clause",
-        packages=["SpentFuelGPR"],
+        packages=["spentfuelgpr"],
         classifiers=["License :: OSI Approved :: BSD-3-Clause License",
                      "Programming Language :: Python :: 3"],
-        install_requires=["numpy"]
+        install_requires=["json", "numpy", "os"]
     )
     return
 
