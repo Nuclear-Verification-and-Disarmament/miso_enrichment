@@ -1,53 +1,93 @@
 
 import json
-import numpy
+import numpy as np
 import os
 
-from kernel import Kernel
+from . import kernel
+
+
+#TODO
+# - Find a workaround for the ugly calculations that are currently
+#   performed in 'get_input_params' for the 'power_output' parameter
+#   and that are only relevant (?) for the SRS reactor.
 
 def main():
     return
 
 def predict():
     """Calculate the spent fuel composition."""
-    # Check if the kernels needed exist.
     # Rationale for the choice of these isotopes:
     # - isotope fraction > 1e-15
     # - stable U isotopes, i.e., 1/2 time > days (omit U230, 231, 237)
     # - stable Pu isotopes
     # - decay into 'interesting' material (relevant for U->Np->Pu)
     # - stable Pu isotopes
+
     isotopes = ('U232', 'U233', 'U234', 'U235', 'U235m', 'U236', 'U238',
                 'U239', 'U240', 'Pu238', 'Pu239', 'Pu240', 'Pu241', 
                 'Pu242', 'Pu243', 'Pu244', 'Np239', 'Np240', 'Np240m', 
                 'Np241')
+
+    # Check if the needed kernels and parameter information exist.
     data_dir = os.path.join(os.path.split(__file__)[0], "..", "data")
     kernel_dir = os.path.join(data_dir, "trained_kernels")
     if not os.path.isdir(kernel_dir):
         raise OSError("'trained_kernels' directory not found!")
     for iso in isotopes:
-        fname = iso + ".npy"
+        fname = f"{iso}.npy"
         if not os.path.isfile(os.path.join(kernel_dir, fname)):
             msg = f"Trained kernel '{fname}' not found!"
             raise FileNotFoundError(msg)
 
+        fname = f"training_params_{iso}.json"
+        if not os.path.isfile(os.path.join(kernel_dir, fname)):
+            msg = f"Training parameters '{fname}' not found!"
+            raise FileNotFoundError(msg)
+
     # Load input parameters, training data and the kernel type.
-    kernel_type = "ASQE"
+    training_data = np.load(os.path.join(data_dir, "x_trainingset.npy"),
+                            allow_pickle=True)
     par = ("enrichment", "temperature", "power_output", "burnup")
     reactor_input_params = get_input_params(par)
-    size = 100  # Needed if a subset of the data was used for training.
-    training_data = np.load(os.path.join(data_dir, "x_trainingset.npy"),
-                            allow_pickle=True)[:size]
-    spent_fuel_composition = {}
+    reactor_input_params = np.expand_dims(reactor_input_params, axis=0)
+
+    # Calculate the spent fuel composition for all isotopes.
+    spent_fuel_composition = {"spent_fuel_composition": {}}
     for iso in isotopes:
-        fname = f"{iso}.npy"
-        trained_kernel = np.load(os.path.join(kernel_dir, fname), 
+        kernel_fname = os.path.join(kernel_dir, f"{iso}.npy")
+        params_fname = os.path.join(kernel_dir,
+                                    f"training_params_{iso}.json")
+
+        with open(params_fname, "r") as f:
+            data = json.load(f)
+            kernel_type = data["kernel_type"]
+            size = data["size"]
+        check_input_params(reactor_input_params, training_data[:size])
+        trained_kernel = np.load(kernel_fname,
                                  allow_pickle=True).item()
-        mass = run_kernel(reactor_input_params, training_data,
+        mass = run_kernel(reactor_input_params, training_data[:size],
                           trained_kernel, kernel_type)
-        spent_fuel_composition[iso] = mass
+        spent_fuel_composition["spent_fuel_composition"][iso] = mass
 
     store_results(spent_fuel_composition)
+
+def check_input_params(params, training_data):
+    """Check the validity of the input parameters.
+
+    The function raises a ValueError if the checks fail, else it has no
+    return value.
+    """
+    min_vals = np.min(training_data, axis=0)
+    max_vals = np.max(training_data, axis=0)
+    is_valid = (np.all(min_vals < params[0])
+                and np.all(params[0] < max_vals))
+
+    if not is_valid:
+        msg = ("[spentfuelgpr] One or more parameters exceed the bounds.\n"
+               + f"Minimum parameter values: {min_vals}\n"
+               + f"Actual parameter values:  {params[0]}\n"
+               + f"Maximum parameter values: {max_vals}")
+        raise ValueError(msg)
 
 def get_input_params(pnames):
     """Read in the Gpr input parameters.
@@ -64,34 +104,38 @@ def get_input_params(pnames):
 
     Returns
     -------
-    input_params : dict
-        A dictionary with the extracted values and with keys being the 
-        names from `pnames`.
+    input_params : array
+        An array containing the extracted values in the same order as
+        specified in `pnames`.
     """
-    data_dir = os.path.join(os.path.split(__file__)[0], "..", "data")
     fname = "gpr_reactor_input_params.json"
-    with open(os.path.join(data_dir, fname), "r") as f:
+    with open(fname, "r") as f:
         data = json.load(f)
-        input_params = {}
+        input_params = []
         
         for param in pnames:
             param = param.lower()
             if param == "enrichment":
                 enrich = data["fresh_fuel_composition"]["922350000"]
-                input_params["enrichment"] = enrich
+                input_params.append(enrich)
+            elif param == "power_output":
+                # These calculations below have to be performed for the
+                # Savannah River Site reactor. Currently, they are
+                # hardcoded but this is hopefully subject to change.
+                # TODO update this implementation
+                n_assemblies_tot = 500;
+                n_assemblies_model = 18;
+                feet_to_cm = 30.48;
+                assembly_length = 12;  # in feet
+                power = (data[param] * n_assemblies_model
+                         / n_assemblies_tot / assembly_length
+                         / feet_to_cm)
+                power *= 1e6  # conversion MW to W
+                input_params.append(power)
             else:
-                try:
-                    input_params[param] = data[param]
-                except KeyError as e:
-                    msg = (f"Key '{param}' not found. Enter a value "
-                           + "manually to continue or press Enter, in "
-                           + "which case an error is raised.\n")
-                    manual_entry = input(msg)
-                    if manual_entry == "":
-                        raise e
-                    input_params[param] = manual_entry
+                input_params.append(data[param])
     
-    return input_params
+    return np.array(input_params)
 
 def store_results(composition):
     """Store the composition in a .json file.
@@ -102,26 +146,25 @@ def store_results(composition):
         A dictionary with the keys being the isotopes and the values
         being the corresponding masses.
     """
-    data_dir = os.path.join(os.path.split(__file__)[0], "..", "data")
     fname = "gpr_reactor_spent_fuel_composition.json"
-    with open(os.path.join(data_dir, fname), "r") as f:
+    with open(fname, "w") as f:
         json.dump(composition, f, indent=2)
 
 def run_kernel(reactor_input_params, x_train, trained_kernel, 
-               kernel_type='ASQE'):
-    """Calculate the amount of the isotope in question in the spent fuel
+               kernel_params, kernel_type='ASQE'):
+    """Calculate the mass of one isotope in the spent fuel.
 
     Parameters
     ----------
     reactor_input_params
-        The input parameters used in the calculations and as defined
-        above in *TODO insert name of the function calling `prediction`*
+        Input parameters used in the calculations and as defined above
+        in 'predict()' and in 'get_input_params'
     x_train
-        The input parameters used during training.
+        Input parameters used during training
     trained_kernel
-        The trained kernel, specific to the isotope in question
+        Trained kernel, specific to the isotope in question
     kernel_type
-        The type of the trained kernel. TODO UPDATE WHICH KERNEL IS USED
+        The type of the trained kernel
 
     Returns
     -------
@@ -132,10 +175,13 @@ def run_kernel(reactor_input_params, x_train, trained_kernel,
     if (kernel_type != 'ASQE'):
         msg = "Currently, only the 'ASQE' kernel type is supported."
         raise ValueError(msg)
-    
-    k_s = Kernel(reactor_input_params, x_train, kernel_type, params, 
-                 gradient=False)
-    mu_s = np.dot(k_s.T, alpha_)
+
+    kernel_params = trained_kernel["Params"]
+    alpha = trained_kernel["alpha_"]
+    lambda_ = trained_kernel["LAMBDA"]
+    k_s = kernel.Kernel(reactor_input_params, x_train, kernel_type,
+                 kernel_params, gradient=False, LAMBDA=lambda_)
+    mu_s = np.dot(k_s.T, alpha)
     
     return mu_s[0]
 

@@ -1,1 +1,2 @@
-from spentfuelgpr.predict_posterior import *
+from .kernel import *
+from .predict_posterior import *

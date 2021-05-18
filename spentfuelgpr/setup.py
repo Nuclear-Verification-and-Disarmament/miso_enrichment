@@ -14,7 +14,7 @@ def main():
         packages=["spentfuelgpr"],
         classifiers=["License :: OSI Approved :: BSD-3-Clause License",
                      "Programming Language :: Python :: 3"],
-        install_requires=["json", "numpy", "os"]
+        install_requires=["numpy"]
     )
     return
 
