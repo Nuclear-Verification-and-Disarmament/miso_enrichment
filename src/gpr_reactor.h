@@ -15,11 +15,9 @@
 //   evaluates to `true`, else, the set gets not filled!
 // - no implementation of `Reactor::fuel_pref(cyclus::Material::Ptr)` because
 //   it is not used in the reactor class.
-// - implement Antonio's stuff (obviously)
 // - think about the weird (?) decommissioning behaviour of the cycamore
 //   archetype and whether or not I should use it as well
-// - not a todo, but a note: contrary to cycamore's Reactor, this reactor model
-//   does not feature a change of preferences or recipes over time.
+// - check if GPRs use mass or molar fractions?
 
 namespace misoenrichment {
 
@@ -28,6 +26,10 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   /// Constructor for GprReactor Class
   /// @param ctx the cyclus context for access to simulation-wide parameters
   explicit GprReactor(cyclus::Context* ctx);
+
+  ~GprReactor();
+
+  friend class GprReactorTest;
 
   /// The Prime Directive
   /// Generates code that handles all input file reading and restart operations
@@ -98,7 +100,10 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   // Core specifics
   #pragma cyclus var { \
     "default": 3, \
-    "doc": "Number of assemblies in a full core." \
+    "doc": "Number of assemblies in a full core. This value is used in " \
+           "combination with the assembly mass, the irradiation time and the " \
+           "thermal power output to calculate the specific burnup needed for " \
+           "the Gaussian process regression." \
   }
   int n_assem_core;
 
@@ -112,7 +117,10 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   #pragma cyclus var { \
     "uitype": "range", \
     "range": [1., 1e5], \
-    "doc": "The mass of one assembly in kg." \
+    "doc": "The mass of one assembly in kg. This value is used in " \
+           "combination with the number of assemblies in a full core, the " \
+           "irradiation time and the thermal power output to calculate the " \
+           "specific burnup needed for the Gaussian process regression." \
   }
   double assem_size;
 
@@ -128,7 +136,10 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   #pragma cyclus var { \
     "default": 12, \
     "doc": "The duration of one complete irradiation cycle excluding the " \
-           "refuelling, in units of simulation time steps." \
+           "refuelling, in units of simulation time steps. This value is " \
+           "used in combination with the core mass and the thermal power " \
+           "output to calculate the specific burnup needed for the Gaussian " \
+           "process regression." \
   }
   int cycle_time;
   
@@ -177,11 +188,20 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
     "default": 0, \
     "uitype": "range", \
     "range": [0, 10000], \
-    "units": "MWe", \
-    "doc": "The amount of electrical power that the reactor produces during " \
-           "operation." \
+    "units": "MWth", \
+    "doc": "The amount of thermal power that the reactor produces during " \
+           "operation. This value is used in combination with the core mass " \
+           "and the irradiation time to calculate the specific burnup needed " \
+           "for the Gaussian process regression." \
   }
   double power_output;
+
+  #pragma cyclus var { \
+    "default": 350, \
+    "units": "K", \
+    "doc": "The reactor moderator temperature." \
+  }
+  double temperature;
 
   // This variable is internal only and true if fuel has already been discharged
   // this cycle.
@@ -228,6 +248,19 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   # pragma cyclus var {"capacity": "n_assem_spent * assem_size"}
   cyclus::toolkit::ResBuf<cyclus::Material> spent_inv;
 
+  // This set contains all nuc ids that may be part of fresh fuel. So far,
+  // they are limited to U235 and U238, however this list will expand in the
+  // future. Notably, other U isotopes will be included (probably U232 up to
+  // U236) and possibly Pu as well.
+  const std::set<int> permitted_fresh_fuel_comps;
+  // This set contains all nuc ids of isotopes in spent fuel that we are
+  // interested in and that the GPRs calculate.
+  const std::set<int> relevant_spent_fuel_comps;
+
+  // Filenames of files used to pass arguments and results between the Python 
+  // file and the C++ Cyclus archetype.
+  const std::string out_fname;
+  const std::string in_fname;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Coordinates
@@ -249,12 +282,12 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
 
   bool Discharge_();
   bool Retired_();
+  cyclus::Composition::Ptr ImportSpentFuelComposition_(double qty);
   std::map<std::string, cyclus::toolkit::MatVec> PeekSpent_();
   std::map<std::string, cyclus::toolkit::MatVec> PopSpent_();
-  //std::string InCommod_(cyclus::Material::Ptr m);
   std::string OutCommod_(cyclus::Material::Ptr m);
-  //std::string InRecipe_(cyclus::Material::Ptr m);
-  std::string OutRecipe_(cyclus::Material::Ptr m);
+  void CompositionToOutFile_(cyclus::Composition::Ptr comp,
+                             bool delete_outfile = false);
   void IndexRes_(cyclus::Resource::Ptr m, std::string incommod);
   void Load_();
   void Record_(std::string name, std::string val);

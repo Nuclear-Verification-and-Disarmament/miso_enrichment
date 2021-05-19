@@ -124,6 +124,10 @@ set(LIBS ${LIBS} ${COIN_LIBRARIES})
 FIND_PACKAGE(PythonLibs REQUIRED)
 SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
 
+# Find Niels Lohmann's 'JSON for Modern C++' package
+FIND_PACKAGE(nlohmann_json REQUIRED)
+SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${nlohmann_json_INCLUDE_DIRS})
+
 # include all the directories we just found
 INCLUDE_DIRECTORIES(${STUB_INCLUDE_DIRS})
 

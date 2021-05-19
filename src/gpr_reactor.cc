@@ -1,10 +1,18 @@
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+
 #include "gpr_reactor.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <fstream>
 #include <iterator>
 #include <sstream>
 #include <utility>
+
+#include <nlohmann/json.hpp>
 
 // Future changes relating to the implementation of Antonio's GPRs are marked 
 // with the following comment:
@@ -33,12 +41,33 @@ GprReactor::GprReactor(cyclus::Context* ctx)
       cycle_step(0), 
       discharged(false), 
       power_output(0.), 
+      temperature(0.),
       res_indexes(std::map<int,int>()), 
       is_hybrid(true),
       side_products(std::vector<std::string>()), 
       side_product_quantity(std::vector<double>()),
-      unique_out_commods(std::set<std::string>())
-  {;}
+      unique_out_commods(std::set<std::string>()),
+      permitted_fresh_fuel_comps(std::set<int>({922350000, 922380000})),
+      relevant_spent_fuel_comps(std::set<int>(
+          {922320000, 922330000, 922340000, 922350000, 922350001, 922360000, 
+           922380000, 922390000, 922400000, 932390000, 932400000, 932400001, 
+           932410000, 942380000, 942390000, 942400000, 942410000, 942420000, 
+           942430000, 942440000}
+      )),
+      out_fname("gpr_reactor_input_params.json"),
+      in_fname("gpr_reactor_spent_fuel_composition.json") {
+  // TODO check, e.g., runtime performance to determine if calling PyStart here
+  // and doing the imports here (i.e., once) is actually faster or if this is 
+  // all optimised anyway.
+  //cyclus::PyStart();
+  //PyRun_SimpleString("import setuptest");
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+GprReactor::~GprReactor() {
+  // TODO see comment in constructor
+  //cyclus::PyStop();
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> GprReactor::GetMatlBids(
@@ -384,46 +413,6 @@ std::map<std::string, cyclus::toolkit::MatVec> GprReactor::PopSpent_() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/*
-std::string GprReactor::InCommod_(cyclus::Material::Ptr m) {
-  int i = res_indexes[m->obj_id()];
-  if (i >= in_commods.size()) {
-    throw cyclus::KeyError("misoenrichment::GprReactor - no incommod for material object");
-  }
-  return in_commods[i];
-}
-*/
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::string GprReactor::OutCommod_(cyclus::Material::Ptr m) {
-  int i = res_indexes[m->obj_id()];
-  if (i >= out_commods.size()) {
-    throw cyclus::KeyError("misoenrichment::GprReactor - no outcommod for material object");
-  }
-  return out_commods[i];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/*
-std::string GprReactor::InRecipe_(cyclus::Material::Ptr m) {
-  int i = res_indexes[m->obj_id()];
-  if (i >= in_recipes.size()) {
-    throw cyclus::KeyError("misoenrichment::GprReactor - no inrecipe for material object");
-  }
-  return in_recipes[i];
-}
-*/
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::string GprReactor::OutRecipe_(cyclus::Material::Ptr m) {
-  int i = res_indexes[m->obj_id()];
-  if (i >= out_recipes.size()) {
-    throw cyclus::KeyError("misoenrichment::GprReactor - no outrecipe for material object");
-  }
-  return out_recipes[i];
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void GprReactor::IndexRes_(cyclus::Resource::Ptr m, std::string incommod) {
   for (int i = 0; i < in_commods.size(); ++i) {
     if (in_commods[i] == incommod) {
@@ -516,11 +505,181 @@ void GprReactor::Transmute_(int n_assem) {
   ss << old.size() << " assemblies";
   Record_("TRANSMUTE", ss.str());
 
-  // TODO somewhere at this place, Antonio's GPRs must be used.
-  // TODO ANTONIO GPR
+  cyclus::PyStart();
+  int python_exit_code;
+  python_exit_code += PyRun_SimpleString("import spentfuelgpr");
   for (int i = 0; i < old.size(); ++i) {
-    old[i]->Transmute(context()->GetRecipe(OutRecipe_(old[i])));
+    CompositionToOutFile_(old[i]->comp(), false);
+    python_exit_code += PyRun_SimpleString("spentfuelgpr.predict()");
+    cyclus::Composition::Ptr spent_fuel_comp = ImportSpentFuelComposition_(
+        old[i]->quantity());
+    old[i]->Transmute(spent_fuel_comp);
   }
+  if (python_exit_code != 0) {
+    throw cyclus::Error("Execution of Python code in Gpr::ReactorTick "
+                        "unsuccessful!");
+  }
+
+  // Having finished the GPR calculations, delete the .json files to prevent
+  // cluttering up the working directory.
+  if (std::remove(in_fname.c_str()) != 0) {
+    std::stringstream msg;
+    msg << "Error deleting file '" << in_fname << "'.";
+    throw cyclus::IOError(msg.str());
+  }
+  if (std::remove(out_fname.c_str()) != 0) {
+    std::stringstream msg;
+    msg << "Error deleting file '" << out_fname << "'.";
+    throw cyclus::IOError(msg.str());
+  }
+    // TODO the code below can be deleted UNLESS it turns out that the GPR
+    // predictions are computationally significant and that they are causing a
+    // bottleneck. If this is the case, then do something along the lines shown
+    // below.
+    /*
+    bool same_composition = true;
+    cyclus::Composition::Ptr previous_comp = old[0]->comp();
+    for (cyclus::Material::Ptr mat : old) {
+      it (!cyclus::compmath::AlmostEq(mat->comp(), previous_comp)) {
+        same_composition = false;
+        break;
+      }
+    }
+    */
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void GprReactor::CompositionToOutFile_(cyclus::Composition::Ptr comp,
+                                       bool delete_outfile) {
+  nlohmann::json json_object;
+
+  // TODO check if GPRs use mass or atom percent
+  cyclus::CompMap cm = comp->atom();
+  cyclus::compmath::Normalize(&cm);
+  cyclus::CompMap::iterator compmap_it;
+  // Loop over each isotope in composition.
+  for (compmap_it = cm.begin(); compmap_it != cm.end(); ++compmap_it) {
+    std::set<int>::iterator isotope_it = permitted_fresh_fuel_comps.find(
+        compmap_it->first);
+    // Ensure that the fresh fuel is solely composed of isotopes taken into
+    // account by the GPR, if not, throw an error.
+    if (isotope_it == permitted_fresh_fuel_comps.end()) {
+      std::stringstream msg;
+      msg << "GprReactor fuel must be composed of (some or all of) the "
+             "following isotopes: ";
+      for (const int& iso : permitted_fresh_fuel_comps) {
+        msg << iso << " ";
+      }
+      msg << "\n";
+      throw cyclus::ValueError(msg.str());
+    }
+    std::string nuc_id = std::to_string(compmap_it->first);
+    double fraction = compmap_it->second;
+    json_object["fresh_fuel_composition"][nuc_id] = fraction;
+  }
+
+  // TODO also pass `relevant_spent_fuel_comps` to tell GPR which isotopes to
+  // reconstruct?
+  uint64_t irradiation_time;
+  if (context() != NULL) {
+    const long seconds_per_day = 60 * 60 * 24;
+    irradiation_time = cycle_time * context()->sim_info().dt / seconds_per_day;
+  } else {
+    // kDefaultTimeStepDur defined in cyclus/src/context.h as duration in
+    // seconds of 1/12 of a year, like so:
+    // const uint64_t kDefaultTimeStepDur = 2629846;
+    irradiation_time = cycle_time * kDefaultTimeStepDur;
+  }
+
+  // TODO Update burnup calculation below.
+  // TODO This is strictly speaking not correct in the case of a reactor using
+  // for example uranium dioxide (UO2) as fuel. In that case, the denonimator
+  // would consist only of the mass of uranium, excluding the oxygen mass.
+  double burnup = power_output * irradiation_time / n_assem_core
+                  / assem_size;  // in MWd/kg
+
+  json_object["temperature"] = temperature;  // in K
+  json_object["power_output"] = power_output;  // in MWth
+  json_object["irradiation_time"] = irradiation_time;  // in days
+  json_object["burnup"] = burnup;  // Save JSON output in output file.
+  std::ofstream file(out_fname, std::ofstream::out | std::ofstream::trunc);
+  file << std::setw(2) << json_object << "\n";
+  file.close();
+
+  // Deleting the output file does not make sense except for unit tests to
+  // prevent cluttering up the working directory where the unit tests are
+  // performed.
+  if (delete_outfile && (std::remove(out_fname.c_str()) != 0)) {
+    std::stringstream msg;
+    msg << "Error deleting file '" << out_fname << "'.\n";
+    throw cyclus::IOError(msg.str());
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cyclus::Composition::Ptr GprReactor::ImportSpentFuelComposition_(double qty) {
+  using cyclus::Composition;
+
+  nlohmann::json json_object;
+
+  // Dump file contents into json object.
+  std::ifstream file(in_fname, std::ifstream::in);
+  if (!file.is_open()) {
+    std::stringstream msg;
+    msg << "Cannot find file '" << in_fname << "'";
+    throw cyclus::IOError(msg.str());
+  }
+  file >> json_object;
+  file.close();
+
+  try {
+    json_object.at("spent_fuel_composition");
+  } catch (const nlohmann::detail::out_of_range& e) {
+    std::stringstream msg;
+    msg << "Cannot find key 'spent_fuel_composition' in '" << in_fname << "'."
+        << "\nException id: " << e.id;
+    throw cyclus::IOError(msg.str());
+  }
+
+  cyclus::CompMap cm;
+  // This variable is the ratio of the material to be transmuted ('qty' kg) to
+  // the mass of the full core.
+  const double fraction_of_core = qty / (n_assem_core * assem_size);
+  // 'mass' is the absolute mass of the isotope in question in a full reactor
+  // core after one irradiation period.
+  double mass;
+  double sum = 0;
+
+  for (const int& nuc_id : relevant_spent_fuel_comps) {
+    try {
+      std::string key = std::to_string(nuc_id);
+      mass = json_object.at("spent_fuel_composition").at(key);
+    } catch (const nlohmann::detail::out_of_range& e) {
+      continue;
+    }
+    cm[nuc_id] = mass * fraction_of_core;
+    sum += mass * fraction_of_core;
+  }
+  // All isotopes part of the spent fuel but not calculated by the Gpr (i.e.,
+  // all isotopes not part of 'relevant_spent_fuel_comps') are `represented' by
+  // hydrogen (H1). This is obviously not correct, but we are not interested in
+  // this part of the spent fuel so it should be alright.
+  if (!cyclus::AlmostEq(qty, sum)) {
+    cm[10010000] = qty - sum;
+  }
+
+  // TODO check if Gpr uses atom or mass fraction
+  Composition::Ptr spent_fuel_comp = Composition::CreateFromMass(cm);
+  return spent_fuel_comp;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+std::string GprReactor::OutCommod_(cyclus::Material::Ptr m) {
+  int i = res_indexes[m->obj_id()];
+  if (i >= out_commods.size()) {
+    throw cyclus::KeyError("misoenrichment::GprReactor - no outcommod for material object");
+  }
+  return out_commods[i];
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
