@@ -1,19 +1,34 @@
 # misoenrichment: a Cyclus multi component isotope enrichment module
 
 `misoenrichment` is a module developed at the [Nuclear Verification and Disarmament Group](https://www.nvd.rwth-aachen.de/) at RWTH Aachen University for the nuclear fuel cycle simulator
-[Cyclus](http://fuelcycle.org). It provides a Cyclus facility that enriches 
-uranium streams composed of two or more isotopes taking into account the 
+[Cyclus](http://fuelcycle.org). It currently provides two Cyclus facilities. 
+
+`MIsoEnrich` is an enrichment facility that enriches 
+streams composed of two or more uranium isotopes taking into account the 
 different enrichment behaviour of minor isotopes such as <sup>234</sup>U (present in
 natural as well as in reprocessed uranium) or <sup>236</sup>U (present in 
 reprocessed uranium from spent nuclear fuel). The tracking of minor
 isotopes makes this module suitable for nuclear archaeology, see, e.g., Ref 3.
 
+`GprReactor` is a Cyclus reactor facility that uses Gaussian Process 
+Regression (GPR) to calculate the composition of the irradiated fuel depending
+on various input parameters. Generally, this implementation works for any
+reactor type and any input parameters. However, one needs the appropriate
+GPR model (which needs to be generated using training data) and depending 
+on which input parameters are chosen, the source code of `GprReactor` may
+need minor tweaking. Additional information on this issue will be given
+in future commits.
+
 Table of Contents
-- [Getting Started](#getting-started)
-- [Theoretical background](#theoretical-background)
+- [MIsoEnrich](#misoenrich)
+  - [Getting Started](#getting-started)
+  - [Theoretical background](#theoretical-background)
+- [GprReactor](#gprreactor)
+  - [Requirements](#requirements)
 - [References](#references)
 
-## Getting started
+## MIsoEnrich
+### Getting started
 An example input file is found in `input/main.py` featuring a
 `cycamore::Source` source agent, a `MIsoEnrich` enrichment facility and two
 `cycamore::Sink` agents, one for enriched and one for depleted uranium. 
@@ -34,7 +49,7 @@ level, as explained above) and then blending the product with uranium from
 the feed. This procedure is only performed if the `use_downblending`
 variable is set to `True` in the input file.
 
-## Theoretical background
+### Theoretical background
 The implementation of the facility itself and the interaction with Cyclus'
 Dynamic Resource Exchange is based on the binary enrichment facility from 
 the [Cycamore](https://github.com/cyclus/cycamore) package.
@@ -43,6 +58,16 @@ The multi-component isotope calculations are based on mainly on Refs 1 and 2.
 Ref 1 derives the mathematical formalism of a matched abundance ratio cascade
 using constant overall stage separation factors while Ref 2 gives a new 
 physically founded approach to calculating said separation factors.
+
+## GprReactor
+### Requirements
+This facility needs Niels Lohmann's [JSON for Modern C++](https://json.nlohmann.me/)
+library. It can be downloaded from his [GitHub repository](https://github.com/nlohmann/json)
+or using one of the many package managers, see [here](https://github.com/nlohmann/json#package-managers).
+Successfully tested using `conda install -c conda-forge nlohmann_json`
+
+Additionally, one needs `Python3` in combination with the `NumPy` and 
+`SciPy` packages.
 
 ## References
 
