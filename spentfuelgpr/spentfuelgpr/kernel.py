@@ -11,7 +11,7 @@ or https://github.com/FigueroaAC/GPs-for-SpentFuel
 import numpy as np
 from scipy.spatial.distance import cdist
 
-def Kernel(X1, X2, Type, *params, gradient=False, LAMBDA=None):
+def Kernel(X1, X2, Type, *params, gradient=False):
     '''
     All the kernels have a bit of noise added in order to prevent the covariance
     matrix becoming singular. The amount of noise to be added is also a 
@@ -35,10 +35,9 @@ def Kernel(X1, X2, Type, *params, gradient=False, LAMBDA=None):
             return K
         
     if Type == 'ASQE':
-        if LAMBDA is None:
-            LAMBDA = np.eye(len(X2[0]))
-            length_scales = 1/params[0][1:-1]
-            np.fill_diagonal(LAMBDA,length_scales)
+        LAMBDA = np.eye(len(X2[0]))
+        length_scales = 1/params[0][1:-1]
+        np.fill_diagonal(LAMBDA,length_scales)
 
         X1 = np.dot(X1,LAMBDA)
         X2 = np.dot(X2,LAMBDA)

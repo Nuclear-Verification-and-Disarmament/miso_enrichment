@@ -47,6 +47,17 @@ def predict():
     # Load input parameters, training data and the kernel type.
     training_data = np.load(os.path.join(data_dir, "x_trainingset.npy"),
                             allow_pickle=True)
+    if not os.path.isfile(os.path.join(data_dir,
+                                   "y_trainingset_reduced.npy")):
+        y_data = np.load(os.path.join(data_dir, "y_trainingset.npy"),
+                         allow_pickle=True).item()
+        shrink_dictionary(
+            y_data, isotopes,
+            os.path.join(data_dir, "y_trainingset_reduced.npy"))
+
+    y_data = np.load(
+        os.path.join(data_dir, "y_trainingset_reduced.npy"),
+        allow_pickle=True).item()
     par = ("enrichment", "temperature", "power_output", "burnup")
     reactor_input_params = get_input_params(par)
     reactor_input_params = np.expand_dims(reactor_input_params, axis=0)
@@ -57,18 +68,26 @@ def predict():
         kernel_fname = os.path.join(kernel_dir, f"{iso}.npy")
         params_fname = os.path.join(kernel_dir,
                                     f"training_params_{iso}.json")
-
         with open(params_fname, "r") as f:
             data = json.load(f)
             kernel_type = data["kernel_type"]
             size = data["size"]
-        check_input_params(reactor_input_params, training_data[:size])
+        x_train = training_data[:size]
+        y_train = np.array(y_data[iso])[:size]
+        check_input_params(reactor_input_params, x_train)
         trained_kernel = np.load(kernel_fname,
                                  allow_pickle=True).item()
-        mass = run_kernel(reactor_input_params, training_data[:size],
+        mass = run_kernel(reactor_input_params, x_train, y_train,
                           trained_kernel, kernel_type)
-        spent_fuel_composition["spent_fuel_composition"][iso] = mass
 
+        if mass < 0:
+            msg = (f"Calculated mass of {iso} in spent fuel is {mass} "
+                   + "kg.\nHowever, the mass cannot be negative!\n"
+                   + f"Parameters used: {reactor_input_params}")
+            raise RuntimeError(msg)
+
+        iso = iso[:-1]+"M" if iso[-1] == "m" else iso
+        spent_fuel_composition["spent_fuel_composition"][iso] = mass
     store_results(spent_fuel_composition)
 
 def check_input_params(params, training_data):
@@ -88,6 +107,27 @@ def check_input_params(params, training_data):
                + f"Actual parameter values:  {params[0]}\n"
                + f"Maximum parameter values: {max_vals}")
         raise ValueError(msg)
+
+def shrink_dictionary(data, isotopes, fname):
+    """Remove unnecessary data from dictionary to reduce runtime
+
+    Parameters
+    ----------
+    data : dict
+        A dictionary containing all the data with the keys being the
+        isotopes.
+    isotopes : iterable
+        All the isotopes that remain in the final dictionary
+    fname : string
+        Filename of the final dictionary
+    """
+    d = {}
+    for iso in isotopes:
+        d[iso] = data[iso]
+
+    np.save(fname, d, allow_pickle=True)
+
+    return
 
 def get_input_params(pnames):
     """Read in the Gpr input parameters.
@@ -150,7 +190,7 @@ def store_results(composition):
     with open(fname, "w") as f:
         json.dump(composition, f, indent=2)
 
-def run_kernel(reactor_input_params, x_train, trained_kernel, 
+def run_kernel(reactor_input_params, x_train, y_train, trained_kernel,
                kernel_params, kernel_type='ASQE'):
     """Calculate the mass of one isotope in the spent fuel.
 
@@ -161,6 +201,8 @@ def run_kernel(reactor_input_params, x_train, trained_kernel,
         in 'predict()' and in 'get_input_params'
     x_train
         Input parameters used during training
+    y_train
+        Output used during training
     trained_kernel
         Trained kernel, specific to the isotope in question
     kernel_type
@@ -178,12 +220,15 @@ def run_kernel(reactor_input_params, x_train, trained_kernel,
 
     kernel_params = trained_kernel["Params"]
     alpha = trained_kernel["alpha_"]
-    lambda_ = trained_kernel["LAMBDA"]
     k_s = kernel.Kernel(reactor_input_params, x_train, kernel_type,
-                 kernel_params, gradient=False, LAMBDA=lambda_)
-    mu_s = np.dot(k_s.T, alpha)
+                        kernel_params, gradient=False)
+    mu_s = np.dot(k_s.T, alpha)[0]
+
+    # Revert the normalisation of the output which is used during
+    # training of the Gpr.
+    mu_s = mu_s * np.std(y_train) + np.mean(y_train)
     
-    return mu_s[0]
+    return mu_s
 
 """
 Part of the spent fuel compositions obtained from SERPENT simulations 
