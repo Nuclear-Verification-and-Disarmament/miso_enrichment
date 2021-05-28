@@ -37,7 +37,6 @@ class GprReactorTest : public ::testing::Test {
   std::vector<std::string> in_commods;
   std::vector<std::string> out_commods;
   std::vector<std::string> in_recipes;
-  std::vector<std::string> out_recipes;
   std::vector<double> fuel_prefs;
 
   // The Do* functions are a hack: GprReactorTest is a friend class to
