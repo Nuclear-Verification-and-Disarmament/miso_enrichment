@@ -12,6 +12,7 @@
 #include <sstream>
 #include <utility>
 
+#include "pyne.h"
 #include <nlohmann/json.hpp>
 
 // Future changes relating to the implementation of Antonio's GPRs are marked 
@@ -26,7 +27,6 @@ GprReactor::GprReactor(cyclus::Context* ctx)
       in_commods(std::vector<std::string>()), 
       out_commods(std::vector<std::string>()), 
       in_recipes(std::vector<std::string>()), 
-      out_recipes(std::vector<std::string>()), 
       fuel_prefs(std::vector<double>()),
       n_assem_core(0), 
       n_assem_batch(0), 
@@ -75,11 +75,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> GprReactor::GetMatlBids(
   using cyclus::BidPortfolio;
   using cyclus::Material;
   
-  // TODO ensure that if statement below yields true despite initialiser list
-  // in the class' constructor!
   if (unique_out_commods.empty()) {
-    // TODO delete std::cout statement.
-    std::cout << "\n\nGprRea: Confirmation that `unique_out_commods` is empty\n";
     for (int i = 0; i < out_commods.size(); ++i) {
       unique_out_commods.insert(out_commods[i]);
     }
@@ -652,13 +648,21 @@ cyclus::Composition::Ptr GprReactor::ImportSpentFuelComposition_(double qty) {
 
   for (const int& nuc_id : relevant_spent_fuel_comps) {
     try {
-      std::string key = std::to_string(nuc_id);
+      // Convert NucID to a human-readable string as used in the json file, for
+      // example: '922350001' is converted to 'U235M'.
+      std::string key = pyne::nucname::name(nuc_id);
       mass = json_object.at("spent_fuel_composition").at(key);
     } catch (const nlohmann::detail::out_of_range& e) {
       continue;
     }
     cm[nuc_id] = mass * fraction_of_core;
     sum += mass * fraction_of_core;
+  }
+  if (cyclus::AlmostEq(sum, 0.)) {
+    // This error is thrown if no isotopes contained in
+    // `relevant_spent_fuel_comps` are found in the spent fuel composition file.
+    // Notably, this prevents the program to continue if the file were empty.
+    throw cyclus::ValueError("No relevant isotopes found in the spent fuel!\n");
   }
   // All isotopes part of the spent fuel but not calculated by the Gpr (i.e.,
   // all isotopes not part of 'relevant_spent_fuel_comps') are `represented' by

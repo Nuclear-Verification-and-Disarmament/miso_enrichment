@@ -79,14 +79,6 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   }
   std::vector<std::string> in_recipes;
 
-  // TODO This variable might get deleted
-  // TODO ANTONIO GPR
-  #pragma cyclus var { \
-    "uitype": ["oneormore", "outrecipe"], \
-    "doc": "An ordered list of the output (spent fuel) recipes." \
-  }
-  std::vector<std::string> out_recipes;
-
   #pragma cyclus var { \
     "default": [], \
     "doc": "The preference for each input fuel type, in the same order as " \
