@@ -126,6 +126,9 @@ SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
 
 # Find Niels Lohmann's 'JSON for Modern C++' package
 FIND_PACKAGE(nlohmann_json REQUIRED)
+# The line below does not work!
+# For unknown reasons, CMake does not find the include directories
+# and nlohmann_json_INCLUDE_DIRS is an unset variable.
 SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${nlohmann_json_INCLUDE_DIRS})
 
 # include all the directories we just found
