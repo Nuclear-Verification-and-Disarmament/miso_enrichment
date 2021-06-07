@@ -64,7 +64,22 @@ physically founded approach to calculating said separation factors.
 This facility needs Niels Lohmann's [JSON for Modern C++](https://json.nlohmann.me/)
 library. It can be downloaded from his [GitHub repository](https://github.com/nlohmann/json)
 or using one of the many package managers, see [here](https://github.com/nlohmann/json#package-managers).
-Successfully tested using `conda install -c conda-forge nlohmann_json`
+Successfully tested using `conda install -c conda-forge nlohmann_json` and using `CMake`.
+When using `CMake`, then the package needs to be installed globally 
+(i.e., under `/usr/local`), as shown in the following:
+```
+$ git clone https://github.com/nlohmann/json
+$ cd json
+$ mkdir build
+$cd build
+$ cmake ..
+$ make
+$ sudo make install
+```
+While it _should_ be possible to install `JSON for Modern C++` locally,
+i.e. in `~/.local`, this results in `CMake` not finding `nlohmann/json.hpp`
+during the `misoenrichment` installation. I will hopefully manage to 
+fix this in future versions.
 
 Additionally, one needs `Python3` in combination with the `NumPy` and 
 `SciPy` packages.
