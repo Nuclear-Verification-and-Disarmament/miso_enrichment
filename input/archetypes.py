@@ -5,7 +5,9 @@ def archetypes():
              {"lib": "agents", "name": "NullRegion"},
              {"lib": "cycamore", "name": "Sink"},
              {"lib": "cycamore", "name": "Source"},
-             {"lib": "misoenrichment", "name":"MIsoEnrich"}
+             {"lib": "cycamore", "name": "Storage"},
+             {"lib": "misoenrichment", "name": "GprReactor"},
+             {"lib": "misoenrichment", "name": "MIsoEnrich"}
            ]
          }}
 
