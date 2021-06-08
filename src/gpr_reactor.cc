@@ -502,7 +502,7 @@ void GprReactor::Transmute_(int n_assem) {
   Record_("TRANSMUTE", ss.str());
 
   cyclus::PyStart();
-  int python_exit_code;
+  int python_exit_code = 0;
   python_exit_code += PyRun_SimpleString("import spentfuelgpr");
   for (int i = 0; i < old.size(); ++i) {
     CompositionToOutFile_(old[i]->comp(), false);
