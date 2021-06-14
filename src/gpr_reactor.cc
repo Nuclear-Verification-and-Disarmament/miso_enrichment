@@ -673,7 +673,18 @@ cyclus::Composition::Ptr GprReactor::ImportSpentFuelComposition_(double qty) {
   }
 
   // TODO check if Gpr uses atom or mass fraction
-  Composition::Ptr spent_fuel_comp = Composition::CreateFromMass(cm);
+  Composition::Ptr spent_fuel_comp;
+  try {
+    spent_fuel_comp = Composition::CreateFromMass(cm);
+  } catch (const cyclus::ValueError& e) {
+    std::stringstream msg;
+    msg << e.msg() << "\nErroneous composition in GprReactor:\n";
+    for (const std::pair<int,double>& x : cm) {
+      msg << x.first << ": " << x.second << "\n";
+    }
+    throw cyclus::ValueError(msg.str());
+  }
+
   return spent_fuel_comp;
 }
 
