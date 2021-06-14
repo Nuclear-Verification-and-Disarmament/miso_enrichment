@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This module is strongly based on Antonio Figueroa's work, who kindly 
+Define the kernel function used to calculate the predictions.
+
+This module is strongly based on Antonio Figueroa's work, who kindly
 provided the original code. For more information, please see
 https://doi.org/10.1016/j.anucene.2020.108085
-or https://arxiv.org/abs/2006.12921 
+or https://arxiv.org/abs/2006.12921
 or https://github.com/FigueroaAC/GPs-for-SpentFuel
 """
+
+__all__ = ["Kernel"]
 
 import numpy as np
 from scipy.spatial.distance import cdist

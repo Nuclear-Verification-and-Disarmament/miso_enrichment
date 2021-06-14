@@ -1,3 +1,8 @@
+#!/usr/bin/env python3]
+# -*- coding: utf-8 -*-
+"""Interface used by Cyclus to calculate the spent fuel composition."""
+
+__all__ = ["predict", "run_kernel"]
 
 import json
 import numpy as np
