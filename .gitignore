@@ -2,4 +2,7 @@ build
 misc
 commit_msg
 __pycache__
+
+*.egg-info
 *.swp
+*.json
