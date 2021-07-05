@@ -552,26 +552,45 @@ void GprReactor::CompositionToOutFile_(cyclus::Composition::Ptr comp,
   // TODO check if GPRs use mass or atom percent
   cyclus::CompMap cm = comp->atom();
   cyclus::compmath::Normalize(&cm);
+  // Loop over permitted isotopes in composition, add them to the json
+  // output file.
+  for (const int& isotope : permitted_fresh_fuel_comps) {
+    double fraction;
+    try {
+      fraction = cm.at(isotope);
+    } catch (const std::out_of_range& e) {
+      fraction = 0.;
+    }
+    std::string nuc_id = std::to_string(isotope);
+    json_object["fresh_fuel_composition"][nuc_id] = fraction;
+  }
+
+  // If the fresh fuel is composed of isotopes other then the permitted ones,
+  // issue a warning that they are ignored. Throwing an error may be more
+  // correct but also potentially overkill as tiny amounts of, e.g., decayed
+  // material do not influence the reactor operation significantly.
   cyclus::CompMap::iterator compmap_it;
-  // Loop over each isotope in composition.
+  std::vector<int> ignored_isotopes;
   for (compmap_it = cm.begin(); compmap_it != cm.end(); ++compmap_it) {
     std::set<int>::iterator isotope_it = permitted_fresh_fuel_comps.find(
         compmap_it->first);
-    // Ensure that the fresh fuel is solely composed of isotopes taken into
-    // account by the GPR, if not, throw an error.
     if (isotope_it == permitted_fresh_fuel_comps.end()) {
-      std::stringstream msg;
-      msg << "GprReactor fuel must be composed of (some or all of) the "
-             "following isotopes: ";
-      for (const int& iso : permitted_fresh_fuel_comps) {
-        msg << iso << " ";
-      }
-      msg << "\n";
-      throw cyclus::ValueError(msg.str());
+      ignored_isotopes.push_back(compmap_it->first);
     }
-    std::string nuc_id = std::to_string(compmap_it->first);
-    double fraction = compmap_it->second;
-    json_object["fresh_fuel_composition"][nuc_id] = fraction;
+  }
+  if (ignored_isotopes.size() > 0) {
+    std::stringstream msg;
+    msg << "GprReactor fuel must be composed of (some or all of) the "
+           "following isotopes: ";
+    for (const int& iso : permitted_fresh_fuel_comps) {
+      msg << iso << "\n";
+    }
+    msg << "Other isotopes are present:\n";
+    for (const int& iso : ignored_isotopes) {
+      msg << iso << "\n";
+    }
+    msg << "and they are ignored in the Gpr prediction.\n";
+    cyclus::Warn<cyclus::VALUE_WARNING>(msg.str());
   }
 
   // TODO also pass `relevant_spent_fuel_comps` to tell GPR which isotopes to
