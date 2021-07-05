@@ -196,7 +196,7 @@ def store_results(composition):
         json.dump(composition, f, indent=2)
 
 def run_kernel(reactor_input_params, x_train, y_train, trained_kernel,
-               kernel_params, kernel_type='ASQE'):
+               kernel_type='ASQE'):
     """Calculate the mass of one isotope in the spent fuel.
 
     Parameters
