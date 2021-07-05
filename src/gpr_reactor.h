@@ -251,8 +251,12 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
 
   // Filenames of files used to pass arguments and results between the Python 
   // file and the C++ Cyclus archetype.
-  const std::string out_fname;
-  const std::string in_fname;
+  std::string out_fname;
+  std::string in_fname;
+
+  // This variable stores a constant unique identifier (the time since epoch in
+  // ns upon instantiation) and is used when storing the JSON files.
+  const uint64_t uid_fname;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Coordinates
@@ -288,6 +292,8 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   void PushSpent_(std::map<std::string, cyclus::toolkit::MatVec> mats);
   void Transmute_();
   void Transmute_(int n_assem);
+
+  static uint64_t GetUid_();
 };
 
 }  // namespace misoenrichment

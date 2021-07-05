@@ -19,7 +19,7 @@ from . import kernel
 def main():
     return
 
-def predict():
+def predict(uid_fname=""):
     """Calculate the spent fuel composition."""
     # Rationale for the choice of these isotopes:
     # - isotope fraction > 1e-15
@@ -64,7 +64,7 @@ def predict():
         os.path.join(data_dir, "y_trainingset_reduced.npy"),
         allow_pickle=True).item()
     par = ("enrichment", "temperature", "power_output", "burnup")
-    reactor_input_params = get_input_params(par)
+    reactor_input_params = get_input_params(par, uid_fname)
     reactor_input_params = np.expand_dims(reactor_input_params, axis=0)
 
     # Calculate the spent fuel composition for all isotopes.
@@ -93,7 +93,7 @@ def predict():
 
         iso = iso[:-1]+"M" if iso[-1] == "m" else iso
         spent_fuel_composition["spent_fuel_composition"][iso] = mass
-    store_results(spent_fuel_composition)
+    store_results(spent_fuel_composition, uid_fname)
 
 def check_input_params(params, training_data):
     """Check the validity of the input parameters.
@@ -134,7 +134,7 @@ def shrink_dictionary(data, isotopes, fname):
 
     return
 
-def get_input_params(pnames):
+def get_input_params(pnames, uid_fname=""):
     """Read in the Gpr input parameters.
 
     Currently, the input filename is hardcoded. Maybe this will be 
@@ -153,7 +153,7 @@ def get_input_params(pnames):
         An array containing the extracted values in the same order as
         specified in `pnames`.
     """
-    fname = "gpr_reactor_input_params.json"
+    fname = f"gpr_reactor_input_params{uid_fname}.json"
     with open(fname, "r") as f:
         data = json.load(f)
         input_params = []
@@ -182,7 +182,7 @@ def get_input_params(pnames):
     
     return np.array(input_params)
 
-def store_results(composition):
+def store_results(composition, uid_fname=""):
     """Store the composition in a .json file.
 
     Parameters
@@ -191,7 +191,7 @@ def store_results(composition):
         A dictionary with the keys being the isotopes and the values
         being the corresponding masses.
     """
-    fname = "gpr_reactor_spent_fuel_composition.json"
+    fname = f"gpr_reactor_spent_fuel_composition{uid_fname}.json"
     with open(fname, "w") as f:
         json.dump(composition, f, indent=2)
 

@@ -4,6 +4,7 @@
 #include "gpr_reactor.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -54,13 +55,28 @@ GprReactor::GprReactor(cyclus::Context* ctx)
            932410000, 942380000, 942390000, 942400000, 942410000, 942420000, 
            942430000, 942440000}
       )),
-      out_fname("gpr_reactor_input_params.json"),
-      in_fname("gpr_reactor_spent_fuel_composition.json") {
+      uid_fname(GetUid_()) {
   // TODO check, e.g., runtime performance to determine if calling PyStart here
   // and doing the imports here (i.e., once) is actually faster or if this is 
   // all optimised anyway.
   //cyclus::PyStart();
   //PyRun_SimpleString("import setuptest");
+
+  std::stringstream ss_out;
+  ss_out << "gpr_reactor_input_params" << uid_fname << ".json";
+  out_fname = ss_out.str();
+
+  std::stringstream ss_in;
+  ss_in << "gpr_reactor_spent_fuel_composition" << uid_fname << ".json";
+  in_fname = ss_in.str();
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+uint64_t GprReactor::GetUid_() {
+  std::chrono::time_point<std::chrono::system_clock> now =
+      std::chrono::system_clock::now();
+  uint64_t ticks = (uint64_t) now.time_since_epoch().count();
+  return ticks;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -506,7 +522,9 @@ void GprReactor::Transmute_(int n_assem) {
   python_exit_code += PyRun_SimpleString("import spentfuelgpr");
   for (int i = 0; i < old.size(); ++i) {
     CompositionToOutFile_(old[i]->comp(), false);
-    python_exit_code += PyRun_SimpleString("spentfuelgpr.predict()");
+    std::stringstream ss;
+    ss << "spentfuelgpr.predict(" << uid_fname << ")";
+    python_exit_code += PyRun_SimpleString(ss.str().c_str());
     cyclus::Composition::Ptr spent_fuel_comp = ImportSpentFuelComposition_(
         old[i]->quantity());
     old[i]->Transmute(spent_fuel_comp);
