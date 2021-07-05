@@ -50,6 +50,9 @@ class GprReactorTest : public ::testing::Test {
   inline cyclus::Composition::Ptr DoImportSpentFuelComposition(double qty) {
     return facility->ImportSpentFuelComposition_(qty);
   }
+  inline std::string DoGetInFname() {
+    return facility->in_fname;
+  }
   inline void DoCompositionToOutFile(cyclus::Composition::Ptr comp,
                                      bool delete_txt) {
     facility->CompositionToOutFile_(comp, delete_txt);
