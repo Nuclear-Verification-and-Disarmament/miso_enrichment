@@ -159,8 +159,9 @@ TEST_F(GprReactorTest, ExportCompositions) {
   using cyclus::Composition;
 
   Composition::Ptr invalid_comp = gpr_reactor_test::invalid_composition();
-  EXPECT_THROW(DoCompositionToOutFile(invalid_comp, true),
-               cyclus::ValueError);
+  // Expect no throw but this test should nonetheless issue a warning statement
+  // in stdout!
+  EXPECT_NO_THROW(DoCompositionToOutFile(invalid_comp, true));
 
   Composition::Ptr valid_comp = gpr_reactor_test::valid_composition();
   EXPECT_NO_THROW(DoCompositionToOutFile(valid_comp, true));
@@ -184,8 +185,7 @@ TEST_F(GprReactorTest, ImportCompositions) {
     double mass = n_assem_core * assem_size * x.second;
     json_object["spent_fuel_composition"][nuc_name] = mass;
   }
-  std::ofstream file("gpr_reactor_spent_fuel_composition.json",
-                     std::ofstream::out | std::ofstream::trunc);
+  std::ofstream file(DoGetInFname(), std::ofstream::out | std::ofstream::trunc);
   file << json_object;
   file.close();
 
@@ -198,13 +198,12 @@ TEST_F(GprReactorTest, ImportCompositions) {
 
   nlohmann::json json_object2;
   json_object2["test"] = -1;
-  file.open("gpr_reactor_spent_fuel_composition.json",
-            std::ofstream::out | std::ofstream::trunc);
+  file.open(DoGetInFname(), std::ofstream::out | std::ofstream::trunc);
   file << json_object2;
   file.close();
   EXPECT_THROW(DoImportSpentFuelComposition(n_assem_core * assem_size / 2),
                cyclus::IOError);
-  std::remove("gpr_reactor_spent_fuel_composition.json");
+  std::remove(DoGetInFname().c_str());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -228,8 +227,7 @@ TEST_F(GprReactorTest, SpentFuelWaste) {
     double mass = n_assem_core * assem_size * x.second / 2.;
     json_object["spent_fuel_composition"][nuc_name] = mass;
   }
-  std::ofstream file("gpr_reactor_spent_fuel_composition.json",
-                     std::ofstream::out | std::ofstream::trunc);
+  std::ofstream file(DoGetInFname(), std::ofstream::out | std::ofstream::trunc);
   file << json_object;
   file.close();
 
@@ -241,7 +239,7 @@ TEST_F(GprReactorTest, SpentFuelWaste) {
   cyclus::compmath::Normalize(&valid_cm);
   EXPECT_TRUE(cyclus::compmath::AlmostEq(valid_cm, return_cm, kEpsCompMap));
  
-  std::remove("gpr_reactor_spent_fuel_composition.json");
+  std::remove(DoGetInFname().c_str());
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
