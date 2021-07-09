@@ -1,4 +1,5 @@
 # misoenrichment: a Cyclus multi component isotope enrichment module
+![GitHub](https://img.shields.io/github/license/maxschalz/miso_enrichment)
 
 `misoenrichment` is a module developed at the [Nuclear Verification and Disarmament Group](https://www.nvd.rwth-aachen.de/) at RWTH Aachen University for the nuclear fuel cycle simulator
 [Cyclus](http://fuelcycle.org). It currently provides two Cyclus facilities. 
