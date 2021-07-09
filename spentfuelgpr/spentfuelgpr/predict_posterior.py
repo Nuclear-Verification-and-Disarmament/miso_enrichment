@@ -168,7 +168,7 @@ def get_input_params(pnames, uid_fname=""):
                 # Savannah River Site reactor. Currently, they are
                 # hardcoded but this is hopefully subject to change.
                 # TODO update this implementation
-                n_assemblies_tot = 500;
+                n_assemblies_tot = 510;
                 n_assemblies_model = 18;
                 feet_to_cm = 30.48;
                 assembly_length = 12;  # in feet
