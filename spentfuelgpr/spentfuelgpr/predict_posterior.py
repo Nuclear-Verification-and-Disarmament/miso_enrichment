@@ -1,4 +1,4 @@
-#!/usr/bin/env python3]
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Interface used by Cyclus to calculate the spent fuel composition."""
 
