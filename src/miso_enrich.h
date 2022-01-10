@@ -349,4 +349,4 @@ class MIsoEnrich : public cyclus::Facility,
 
 }  // namespace misoenrichment
 
-#endif  // MISOENRICHMENT_MISO_ENRICH_H_
+#endif  // MISOENRICHMENT_SRC_MISO_ENRICH_H_
