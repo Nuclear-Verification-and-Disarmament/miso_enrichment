@@ -23,7 +23,7 @@ namespace misoenrichment {
 void MIsoEnrichTest::SetUp() {
   cyclus::PyStart();
   cyclus::Env::SetNucDataPath();
-  
+
   fake_sim = new cyclus::MockSim(1);
   miso_enrich_facility = new MIsoEnrich(fake_sim->context());
 
@@ -110,7 +110,7 @@ TEST_F(MIsoEnrichTest, BidPrefs) {
   cyclus::compmath::Normalize(&cm);
   Composition::Ptr feed_2 = Composition::CreateFromMass(cm);
 
-  std::string config = 
+  std::string config =
     "   <feed_commod>feed_U</feed_commod> "
     "   <feed_recipe>feed1</feed_recipe> "
     "   <product_commod>enriched_U</product_commod> "
@@ -123,7 +123,7 @@ TEST_F(MIsoEnrichTest, BidPrefs) {
 
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
-                      config, simdur); 
+                      config, simdur);
   sim.AddRecipe("feed1", feed_1);
   sim.AddRecipe("feed2", feed_2);
 
@@ -152,7 +152,7 @@ TEST_F(MIsoEnrichTest, BidPrefs) {
 TEST_F(MIsoEnrichTest, FeedConstraint) {
   // Check that the feed constraint is evaluated correctly. Only 100 kg of
   // feed are at the disposal but the sink requests infinity kg of product.
-  std::string config = 
+  std::string config =
     "   <feed_commod>feed_U</feed_commod> "
     "   <feed_recipe>feed_recipe</feed_recipe> "
     "   <initial_feed>100</initial_feed> "
@@ -167,7 +167,7 @@ TEST_F(MIsoEnrichTest, FeedConstraint) {
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);
   sim.AddRecipe(feed_recipe, recipe);
-  sim.AddRecipe("enriched_U_recipe", misotest::comp_weapongradeU()); 
+  sim.AddRecipe("enriched_U_recipe", misotest::comp_weapongradeU());
   sim.AddSink("enriched_U").recipe("enriched_U_recipe")
                            .Finalize();
   int id = sim.Run();
@@ -188,7 +188,7 @@ TEST_F(MIsoEnrichTest, GetMatlBids) {
   // the product is expected. Finally, an enrichment is performed and two
   // bids are expected (one for the product, one for the tails).
   using cyclus::Material;
-  
+
   cyclus::Request<Material> *req_prod, *req_tails;
   cyclus::CommodMap<Material>::type out_requests;
   std::set<cyclus::BidPortfolio<Material>::Ptr> bids;
@@ -198,24 +198,24 @@ TEST_F(MIsoEnrichTest, GetMatlBids) {
   cm[922350000] = 50;
   cm[922380000] = 49.9945;
   Material::Ptr product = Material::CreateUntracked(
-      1, cyclus::Composition::CreateFromMass(cm)); 
+      1, cyclus::Composition::CreateFromMass(cm));
   // Clearing the CompMap is technically not needed but may be clearer.
   cm.clear();
   cm[922350000] = 0.3;
   cm[922380000] = 99.7;
   Material::Ptr tails = Material::CreateUntracked(
       1, cyclus::Composition::CreateFromMass(cm));
-  req_prod = cyclus::Request<Material>::Create(product, miso_enrich_facility, 
+  req_prod = cyclus::Request<Material>::Create(product, miso_enrich_facility,
                                                product_commod);
   req_tails = cyclus::Request<Material>::Create(tails, miso_enrich_facility,
                                                 tails_commod);
-  
+
   out_requests[req_prod->commodity()].push_back(req_prod);
   out_requests[req_tails->commodity()].push_back(req_tails);
-  
+
   ASSERT_NO_THROW(bids = miso_enrich_facility->GetMatlBids(out_requests));
   EXPECT_EQ(0, bids.size());
-  
+
   DoAddMat(GetFeedMat(1000));
   bids = miso_enrich_facility->GetMatlBids(out_requests);
   EXPECT_EQ(1, bids.size());
@@ -257,7 +257,7 @@ TEST_F(MIsoEnrichTest, NoBidPrefs) {
   cm[922380000] = 98.2835;
   Composition::Ptr feed_2 = Composition::CreateFromMass(cm);
 
-  std::string config = 
+  std::string config =
     "   <feed_commod>feed_U</feed_commod> "
     "   <feed_recipe>feed1</feed_recipe> "
     "   <product_commod>enriched_U</product_commod> "
@@ -270,7 +270,7 @@ TEST_F(MIsoEnrichTest, NoBidPrefs) {
     "   <use_downblending>0</use_downblending> ";
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
-                      config, simdur); 
+                      config, simdur);
   sim.AddRecipe("feed1", feed_1);
   sim.AddRecipe("feed2", feed_2);
 
@@ -299,12 +299,12 @@ TEST_F(MIsoEnrichTest, Request) {
   // Test correctness of quantities and materials requested
   double req_qty = inv_size - initial_feed;
   double add_qty;
- 
+
   // Only initially added material in inventory
   cyclus::Material::Ptr mat = DoRequest();
   EXPECT_DOUBLE_EQ(mat->quantity(), req_qty);
   EXPECT_EQ(mat->comp(), recipe);
-  
+
   // Full inventory
   add_qty = req_qty;
   ASSERT_NO_THROW(DoAddMat(GetFeedMat(add_qty)));
@@ -320,7 +320,7 @@ TEST_F(MIsoEnrichTest, RequestSim) {
   // Check that exactly as much material as needed is requested in exactly
   // one request.
 
-  std::string config = 
+  std::string config =
     "   <feed_commod>feed_U</feed_commod> "
     "   <feed_recipe>feed_recipe</feed_recipe> "
     "   <product_commod>enriched_U</product_commod> "
@@ -334,7 +334,7 @@ TEST_F(MIsoEnrichTest, RequestSim) {
   int simdur = 1;
   cyclus::MockSim sim(cyclus::AgentSpec(":misoenrichment:MIsoEnrich"),
                       config, simdur);
-  
+
   sim.AddRecipe(feed_recipe, recipe);
   sim.AddSource("feed_U").recipe("feed_recipe").Finalize();
 
@@ -351,7 +351,7 @@ TEST_F(MIsoEnrichTest, RequestSim) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(MIsoEnrichTest, TailsTrade) {
-  std::string config = 
+  std::string config =
     "   <feed_commod>feed_U</feed_commod> "
     "   <feed_recipe>feed_recipe</feed_recipe> "
     "   <product_commod>enriched_U</product_commod> "
@@ -372,7 +372,7 @@ TEST_F(MIsoEnrichTest, TailsTrade) {
                            .Finalize();
   sim.AddSink("depleted_U").recipe("depleted_U_recipe")
                            .Finalize();
-  
+
   int id = sim.Run();
 
   std::vector<Cond> conds;
@@ -380,7 +380,7 @@ TEST_F(MIsoEnrichTest, TailsTrade) {
   QueryResult qr = sim.db().Query("Transactions", &conds);
   cyclus::Material::Ptr mat = sim.GetMaterial(
       qr.GetVal<int>("ResourceId"));
-  
+
   EXPECT_EQ(1, qr.rows.size());
   EXPECT_NEAR(99.4246, mat->quantity(), 1e-4);
 }
@@ -407,7 +407,7 @@ TEST_F(MIsoEnrichTest, ValidRequest) {
   cm[922340000] = 0.5;
   cm[922350000] = 0.5;
   Composition::Ptr comp_no_U238 = Composition::CreateFromMass(cm);
- 
+
   Material::Ptr naturalU = Material::CreateUntracked(1, recipe);
   Material::Ptr depletedU = Material::CreateUntracked(1, comp_depletedU());
   Material::Ptr no_U238 = Material::CreateUntracked(1, comp_no_U238);

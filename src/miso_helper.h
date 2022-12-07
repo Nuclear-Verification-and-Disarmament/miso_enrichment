@@ -40,23 +40,23 @@ double MIsoMassAssay(cyclus::Material::Ptr rsrc);
 double MIsoAtomFrac(cyclus::Composition::Ptr composition,
                             int isotope);
 double MIsoAtomFrac(cyclus::Material::Ptr rsrc, int isotope);
-double MIsoMassFrac(cyclus::Composition::Ptr composition, 
+double MIsoMassFrac(cyclus::Composition::Ptr composition,
                             int isotope);
 double MIsoMassFrac(cyclus::Material::Ptr rsrc, int isotope);
 
 double MIsoAssay(cyclus::CompMap compmap);
 double MIsoFrac(cyclus::CompMap compmap, int isotope);
 
-// Calculates the stage separation factor for all isotopes starting from 
+// Calculates the stage separation factor for all isotopes starting from
 // the given U235 overall separation factor.
 //
 // Returns a map containing the stage separation factors for all U isotopes
 // with the keys being the isotopes' mass.
 //
-// Note that the stage separation factor is defined as the ratio of 
-// abundance ratio in product to abundance ratio in tails. This method 
-// follows Houston G. Wood 'Effects of Separation Processes on Minor 
-// Uranium Isotopes in Enrichment Cascades'. In: Science and Global 
+// Note that the stage separation factor is defined as the ratio of
+// abundance ratio in product to abundance ratio in tails. This method
+// follows Houston G. Wood 'Effects of Separation Processes on Minor
+// Uranium Isotopes in Enrichment Cascades'. In: Science and Global
 // Security, 16:26--36 (2008). ISSN: 0892-9882.
 // DOI: 10.1080/08929880802361796
 std::map<int,double> CalculateSeparationFactor(double gamma_235);

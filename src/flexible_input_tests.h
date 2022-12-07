@@ -17,7 +17,7 @@ class FlexibleInputTest : public ::testing::Test {
  protected:
   FlexibleInputTest();
   ~FlexibleInputTest();
-  
+
   cyclus::MockSim SetUpMockSim();
   cyclus::Agent* parent;
   const int duration = 10;

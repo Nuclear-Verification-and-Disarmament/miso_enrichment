@@ -16,48 +16,48 @@
 #include "pyne.h"
 #include <nlohmann/json.hpp>
 
-// Future changes relating to the implementation of Antonio's GPRs are marked 
+// Future changes relating to the implementation of Antonio's GPRs are marked
 // with the following comment:
 // TODO ANTONIO GPR
 
 namespace misoenrichment {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-GprReactor::GprReactor(cyclus::Context* ctx) 
+GprReactor::GprReactor(cyclus::Context* ctx)
     : cyclus::Facility(ctx),
-      in_commods(std::vector<std::string>()), 
-      out_commods(std::vector<std::string>()), 
-      in_recipes(std::vector<std::string>()), 
+      in_commods(std::vector<std::string>()),
+      out_commods(std::vector<std::string>()),
+      in_recipes(std::vector<std::string>()),
       fuel_prefs(std::vector<double>()),
-      n_assem_core(0), 
-      n_assem_batch(0), 
-      assem_size(0), 
-      n_assem_fresh(0), 
-      n_assem_spent(0), 
-      latitude(0.), 
-      longitude(0.), 
-      decom_transmute_all(false), 
-      cycle_time(0), 
-      refuel_time(0), 
-      cycle_step(0), 
-      discharged(false), 
-      power_output(0.), 
+      n_assem_core(0),
+      n_assem_batch(0),
+      assem_size(0),
+      n_assem_fresh(0),
+      n_assem_spent(0),
+      latitude(0.),
+      longitude(0.),
+      decom_transmute_all(false),
+      cycle_time(0),
+      refuel_time(0),
+      cycle_step(0),
+      discharged(false),
+      power_output(0.),
       temperature(0.),
-      res_indexes(std::map<int,int>()), 
+      res_indexes(std::map<int,int>()),
       is_hybrid(true),
-      side_products(std::vector<std::string>()), 
+      side_products(std::vector<std::string>()),
       side_product_quantity(std::vector<double>()),
       unique_out_commods(std::set<std::string>()),
       permitted_fresh_fuel_comps(std::set<int>({922350000, 922380000})),
       relevant_spent_fuel_comps(std::set<int>(
-          {922320000, 922330000, 922340000, 922350000, 922350001, 922360000, 
-           922380000, 922390000, 922400000, 932390000, 932400000, 932400001, 
-           932410000, 942380000, 942390000, 942400000, 942410000, 942420000, 
+          {922320000, 922330000, 922340000, 922350000, 922350001, 922360000,
+           922380000, 922390000, 922400000, 932390000, 932400000, 932400001,
+           932410000, 942380000, 942390000, 942400000, 942410000, 942420000,
            942430000, 942440000}
       )),
       uid_fname(GetUid_()) {
   // TODO check, e.g., runtime performance to determine if calling PyStart here
-  // and doing the imports here (i.e., once) is actually faster or if this is 
+  // and doing the imports here (i.e., once) is actually faster or if this is
   // all optimised anyway.
   //cyclus::PyStart();
   //PyRun_SimpleString("import setuptest");
@@ -90,7 +90,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> GprReactor::GetMatlBids(
     cyclus::CommodMap<cyclus::Material>::type& commod_requests) {
   using cyclus::BidPortfolio;
   using cyclus::Material;
-  
+
   if (unique_out_commods.empty()) {
     for (int i = 0; i < out_commods.size(); ++i) {
       unique_out_commods.insert(out_commods[i]);
@@ -140,7 +140,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> GprReactor::GetMatlBids(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr> 
+std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr>
 GprReactor::GetMatlRequests() {
   using cyclus::Material;
   using cyclus::Request;
@@ -149,7 +149,7 @@ GprReactor::GetMatlRequests() {
   std::set<RequestPortfolio<Material>::Ptr> ports;
   Material::Ptr m;
 
-  int n_assem_order = n_assem_core - core.count() 
+  int n_assem_order = n_assem_core - core.count()
                       + n_assem_fresh - fresh_inv.count();
   // This if clause accounts for the fact that less assemblies may be needed if
   // the reactor retirement is near.
@@ -161,13 +161,13 @@ GprReactor::GetMatlRequests() {
     double n_cycles_left = static_cast<double>(time_left - time_left_cycle)
                            / static_cast<double>(cycle_time + refuel_time);
     n_cycles_left = std::ceil(n_cycles_left);
-    int n_needed = std::max(0.0, n_cycles_left*n_assem_batch - n_assem_fresh 
+    int n_needed = std::max(0.0, n_cycles_left*n_assem_batch - n_assem_fresh
                                  + n_assem_core - core.count());
     n_assem_order = std::min(n_assem_order, n_needed);
   }
 
   if (n_assem_order == 0 || Retired_()) {
-    return ports; 
+    return ports;
   }
 
   // Make a request for each assembly.
@@ -187,7 +187,7 @@ GprReactor::GetMatlRequests() {
     std::vector<double>::iterator result;
     result = std::max_element(fuel_prefs.begin(), fuel_prefs.end());
     int max_index = std::distance(fuel_prefs.begin(), result);
-    
+
     cyclus::toolkit::RecordTimeSeries<double>("demand" + in_commods[max_index],
                                               this, assem_size*n_assem_order);
     port->AddMutualReqs(mutual_reqs);
@@ -201,7 +201,7 @@ std::string GprReactor::str() { return cyclus::Facility::str(); }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void GprReactor::AcceptMatlTrades(
-    const std::vector<std::pair<cyclus::Trade<cyclus::Material>, 
+    const std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                                 cyclus::Material::Ptr> >& responses) {
   std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                         cyclus::Material::Ptr> >::const_iterator trade;
@@ -222,7 +222,7 @@ void GprReactor::AcceptMatlTrades(
     if (core.count() < n_assem_core) {
       core.Push(m);
     } else {
-      // TODO check if it is assured that the fresh inventory does not obtain 
+      // TODO check if it is assured that the fresh inventory does not obtain
       // more fuel than it can accept.
       fresh_inv.Push(m);
     }
@@ -249,7 +249,7 @@ void GprReactor::EnterNotify() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void GprReactor::GetMatlTrades(
     const std::vector<cyclus::Trade<cyclus::Material> >& trades,
-    std::vector<std::pair<cyclus::Trade<cyclus::Material>, 
+    std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                                         cyclus::Material::Ptr> >& responses) {
   std::map<std::string, cyclus::toolkit::MatVec> mats = PopSpent_();
   for (int i = 0; i < trades.size(); i++) {
@@ -299,19 +299,19 @@ void GprReactor::Tick() {
   }
 
   // If the irradiation period is over and the fuel has not yet been discharged,
-  // e.g., because of a full spent fuel inventory, then discharge it now if 
+  // e.g., because of a full spent fuel inventory, then discharge it now if
   // possible.
   if (cycle_step >= cycle_time && !discharged) {
     discharged = Discharge_();
   }
-  
+
   // If the irradiation period is over, try to load fresh fuel into the reactor
   // core.
   if (cycle_step >= cycle_time) {
     Load_();
   }
 
-  // In cycamore's Reactor implementation, the changing of preferences and 
+  // In cycamore's Reactor implementation, the changing of preferences and
   // recipes would take place here.
 }
 
@@ -326,18 +326,18 @@ void GprReactor::Tock() {
   // Check that the irradiation and refuelling period is over, that the core is
   // full and that the spent fuel was successfully discharged in this refuelling
   // period. If all of this is the case, start a new cycle.
-  if (cycle_step >= cycle_time+refuel_time && core.count() == n_assem_core 
+  if (cycle_step >= cycle_time+refuel_time && core.count() == n_assem_core
       && discharged == true) {
     discharged = false;
     cycle_step = 0;
   }
-  
+
   if (cycle_step == 0 && core.count() == n_assem_core) {
     Record_("CYCLE_START", "");
   }
 
   // Normal reactor operation where power is produced
-  if (cycle_step >= 0 && cycle_step < cycle_time 
+  if (cycle_step >= 0 && cycle_step < cycle_time
       && core.count() == n_assem_core) {
     RecordTimeSeries<cyclus::toolkit::POWER>(this, power_output);
     RecordTimeSeries<double>("supplyPOWER", this, power_output);
@@ -348,7 +348,7 @@ void GprReactor::Tock() {
     RecordSideProduct_(false);
   }
 
-  // This statement prevents that a newly deployed reactor (`cycle_step = 0`) 
+  // This statement prevents that a newly deployed reactor (`cycle_step = 0`)
   // increments `cycle_step` although the core might not have been filled yet.
   if (cycle_step > 0 || core.count() == n_assem_core) {
     cycle_step++;
@@ -383,7 +383,7 @@ bool GprReactor::Discharge_() {
     for (cyclus::Material::Ptr mat_ptr : mats) {
       total_spent += mat_ptr->quantity();
     }
-    cyclus::toolkit::RecordTimeSeries<double>("supply"+commod, this, 
+    cyclus::toolkit::RecordTimeSeries<double>("supply"+commod, this,
                                               total_spent);
   }
   return true;
@@ -449,7 +449,7 @@ void GprReactor::Load_() {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void GprReactor::PushSpent_(std::map<std::string, 
+void GprReactor::PushSpent_(std::map<std::string,
                                      cyclus::toolkit::MatVec> mats) {
   std::map<std::string, cyclus::toolkit::MatVec>::iterator it;
   for (it = mats.begin(); it != mats.end(); ++it) {

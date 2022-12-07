@@ -29,8 +29,8 @@ def predict(uid_fname=""):
     # - stable Pu isotopes
 
     isotopes = ('U232', 'U233', 'U234', 'U235', 'U235m', 'U236', 'U238',
-                'U239', 'U240', 'Pu238', 'Pu239', 'Pu240', 'Pu241', 
-                'Pu242', 'Pu243', 'Pu244', 'Np239', 'Np240', 'Np240m', 
+                'U239', 'U240', 'Pu238', 'Pu239', 'Pu240', 'Pu241',
+                'Pu242', 'Pu243', 'Pu244', 'Np239', 'Np240', 'Np240m',
                 'Np241')
 
     # Check if the needed kernels and parameter information exist.
@@ -137,14 +137,14 @@ def shrink_dictionary(data, isotopes, fname):
 def get_input_params(pnames, uid_fname=""):
     """Read in the Gpr input parameters.
 
-    Currently, the input filename is hardcoded. Maybe this will be 
-    changed in the future but at the moment I have no idea how this 
+    Currently, the input filename is hardcoded. Maybe this will be
+    changed in the future but at the moment I have no idea how this
     could be done.
-    
+
     Parameters
     ----------
     pnames : tuple
-        The names of the parameters to be extracted from the JSON 
+        The names of the parameters to be extracted from the JSON
         file.
 
     Returns
@@ -157,7 +157,7 @@ def get_input_params(pnames, uid_fname=""):
     with open(fname, "r") as f:
         data = json.load(f)
         input_params = []
-        
+
         for param in pnames:
             param = param.lower()
             if param == "enrichment":
@@ -179,7 +179,7 @@ def get_input_params(pnames, uid_fname=""):
                 input_params.append(power)
             else:
                 input_params.append(data[param])
-    
+
     return np.array(input_params)
 
 def store_results(composition, uid_fname=""):
@@ -232,12 +232,12 @@ def run_kernel(reactor_input_params, x_train, y_train, trained_kernel,
     # Revert the normalisation of the output which is used during
     # training of the Gpr.
     mu_s = mu_s * np.std(y_train) + np.mean(y_train)
-    
+
     return mu_s
 
 """
-Part of the spent fuel compositions obtained from SERPENT simulations 
-of one Savannah River Site reactors. Taken from Max Schalz' master 
+Part of the spent fuel compositions obtained from SERPENT simulations
+of one Savannah River Site reactors. Taken from Max Schalz' master
 thesis, see https://github.com/maxschalz/studious_potato/blob/main/data/SERPENT_outputs_NatU_percentages.npy
 Simulations kindly provided by Antonio Figueroa.
 
