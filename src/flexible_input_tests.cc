@@ -43,12 +43,12 @@ TEST_F(FlexibleInputTest, CheckSingleInput) {
 
   // OK
   EXPECT_NO_THROW(FlexibleInput<int> f(parent, vals););
-  
+
   std::vector<int> wrong_vals = vals;
   wrong_vals.push_back(10);
-  
+
   // Not OK, wrong_vals has more entries than simulation duration
-  EXPECT_THROW(FlexibleInput<int> ff(parent, wrong_vals);, 
+  EXPECT_THROW(FlexibleInput<int> ff(parent, wrong_vals);,
                cyclus::ValueError);
 }
 
@@ -66,7 +66,7 @@ TEST_F(FlexibleInputTest, CheckDoubleInput) {
 
   // OK
   EXPECT_NO_THROW(FlexibleInput<int> f(parent, vals, time););
-  
+
   vals.pop_back();
   // Not OK, vector sizes mismatch
   EXPECT_THROW(FlexibleInput<int> ff(parent, vals, time);,

@@ -14,7 +14,7 @@ TEST(MIsoHelperTest, ChooseCorrectResBuf) {
   std::vector<Composition::Ptr> comp_vec;
   comp_vec.push_back(misotest::comp_natU());
   comp_vec.push_back(misotest::comp_weapongradeU());
-  
+
   cyclus::CompMap plutonium_cm;
   plutonium_cm[942390000] = 1.;
   Composition::Ptr plutonium = Composition::CreateFromAtom(plutonium_cm);
@@ -26,7 +26,7 @@ TEST(MIsoHelperTest, ChooseCorrectResBuf) {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST(MIsoHelperTest, NucIDConversion) {
   std::vector<int> isotopes(IsotopesNucID());
-  
+
   for (int i : isotopes) {
     int isotope = NucIDToIsotope(i);
     EXPECT_EQ(IsotopeToNucID(isotope), i);
@@ -79,7 +79,7 @@ TEST(MIsoHelperTest, SeparationFactor) {
   expected[922350000] = 1.6;
   expected[922360000] = 1.4;
   expected[922380000] = 1.0;
-  
+
   for (int i : isotopes) {
     EXPECT_DOUBLE_EQ(separation_factor[i], expected[i]);
   }

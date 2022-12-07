@@ -18,15 +18,15 @@ from scipy.spatial.distance import cdist
 def Kernel(X1, X2, Type, *params, gradient=False):
     '''
     All the kernels have a bit of noise added in order to prevent the covariance
-    matrix becoming singular. The amount of noise to be added is also a 
+    matrix becoming singular. The amount of noise to be added is also a
     parameter to reconstruct
     '''
-    
+
     def dif(array1, array2):
         Output = [array1[i] - array2[i] for i in range(len(array1))]
         Output = np.array(Output).ravel()
         return sum(Output)
-    
+
     if Type == 'SQE':
         sqdist = np.sum(X1**2, 1).reshape(-1, 1) + np.sum(X2**2, 1) - 2 * np.dot(X1, X2.T)
         K = (params[0][0]**2) * np.exp(-0.5  * sqdist / params[0][1]**2 ) +\
@@ -37,7 +37,7 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             return K, gradients
         else:
             return K
-        
+
     if Type == 'ASQE':
         LAMBDA = np.eye(len(X2[0]))
         length_scales = 1/params[0][1:-1]
@@ -50,12 +50,12 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
         if gradient:
             g = [cdist(np.expand_dims(X1[:,i],-1),
-                       np.expand_dims(X2[:,i],-1), 
+                       np.expand_dims(X2[:,i],-1),
                        metric='sqeuclidean')/(params[0][i+1]) \
                  for i in range(X1.shape[1]) ]
-            gradients = [np.multiply(g[i],K) for i in range(X1.shape[1])]    
+            gradients = [np.multiply(g[i],K) for i in range(X1.shape[1])]
             gradients = [2*params[0][0]*K] + gradients + [2*params[0][-1]*np.eye(X1.shape[0])]
- 
+
             return K, gradients
         else:
             return K
@@ -77,16 +77,16 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
         if gradient:
             g = [cdist(np.expand_dims(X1[:,i]/params[0][i+1],-1),
-                       np.expand_dims(X2[:,i]/params[0][i+1],-1), 
+                       np.expand_dims(X2[:,i]/params[0][i+1],-1),
                        metric='euclidean')/(params[0][i+1]) \
                  for i in range(X1.shape[1]) ]
-            gradients = [np.multiply(g[i],K) for i in range(X1.shape[1])]    
+            gradients = [np.multiply(g[i],K) for i in range(X1.shape[1])]
             gradients = [2*params[0][0]*K] + gradients + [2*params[0][-1]*np.eye(X1.shape[0])]
-            
+
             return K, gradients
         else:
             return K
-        
+
     if Type == 'Linear':
         # This is a version of Linear modified to include lengthscales for each
         # Input Variable
@@ -97,21 +97,21 @@ def Kernel(X1, X2, Type, *params, gradient=False):
         length_scales = 1/params[0][2:-1]
         np.fill_diagonal(LAMBDA,length_scales)
         X1 = np.dot(X1,LAMBDA)
-        X2 = np.dot(X2,LAMBDA) 
+        X2 = np.dot(X2,LAMBDA)
         K = (params[0][0]*np.dot(X1,X2.T).T)+params[0][1] +\
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
-  
+
         if gradient:
             gradients = [np.dot(X1,X2.T).T] + [np.eye(K.shape[0])] + [2*params[0][0]*\
                                                    np.dot(np.expand_dims(X1[:,i],-1)
                                                           ,np.expand_dims(X2[:,i],-1).T).T/\
                                                        params[0][i]\
-                                                       for i in range(X1.shape[1])] 
+                                                       for i in range(X1.shape[1])]
             gradients = gradients + [2*params[0][-1]*np.eye(X1.shape[0])]
             return K, gradients
         else:
             return K
-        
+
     if Type == 'Poly':
 # =============================================================================
 #         K = (a*(X.Y)+b)**c
@@ -120,7 +120,7 @@ def Kernel(X1, X2, Type, *params, gradient=False):
         length_scales = 1/params[0][3:-1]
         np.fill_diagonal(LAMBDA,length_scales)
         X1 = np.dot(X1,LAMBDA)
-        X2 = np.dot(X2,LAMBDA) 
+        X2 = np.dot(X2,LAMBDA)
         K = ((params[0][0]*np.dot(X1,X2.T).T)+params[0][1])**params[0][2] +\
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
 
@@ -137,7 +137,7 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             return K, gradients
         else:
             return K
-        return 
+        return
     if Type == 'Anova':
         # This isn't working, probably some parameters for lengthscales are needed for each dimension
         K = np.exp((-params[0][0]*cdist(X1,X2, metric='sqeuclidean'))**params[0][1]) +\
@@ -153,10 +153,10 @@ def Kernel(X1, X2, Type, *params, gradient=False):
                          -np.multiply(cdist(X1**3 , X2**3, metric='sqeuclidean'),dd), dd,
                          2*params[0][-1]*np.eye(X1.shape[0])]
             return K, gradients
-        
+
         else:
             return K
-      
+
     if Type == 'Sigmoid':
         # This is not a positive semidefinite Kernel. Some tweaking has to be done
         # to make this work. Probably along the lines of KdotK.T
@@ -170,7 +170,7 @@ def Kernel(X1, X2, Type, *params, gradient=False):
          # This isn't working, probably some parameters for lengthscales are needed for each dimension
         else:
             return K
-    
+
     if Type == 'RQ':
         LAMBDA = np.eye(len(X1[0]))
         length_scales = 1/params[0][1:-1]
@@ -180,22 +180,22 @@ def Kernel(X1, X2, Type, *params, gradient=False):
         sqdist = cdist(X1 , X2, metric='sqeuclidean').T
         K = 1 - (sqdist/(sqdist+(params[0][0])**2)) +\
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
-        
+
         if gradient:
             denom = 1/((sqdist+(params[0][0])**2))**2
             g = [cdist(np.expand_dims(X1[:,i],-1),
-                       np.expand_dims(X2[:,i],-1), 
+                       np.expand_dims(X2[:,i],-1),
                        metric='sqeuclidean')/(params[0][i+1]) \
                  for i in range(X1.shape[1]) ]
-            gradients = [-2*denom*g[i]*(params[0][0])**2 for i in range(X1.shape[1])] 
+            gradients = [-2*denom*g[i]*(params[0][0])**2 for i in range(X1.shape[1])]
             gradients = [2*params[0][0]*sqdist*denom] + gradients +\
                 [2*params[0][-1]*np.eye(X1.shape[0])]
             return K, gradients
-        
+
         else:
             return K
-        
-    
+
+
     if Type == 'SRQ':
         LAMBDA = np.eye(len(X1[0]))
         length_scales = 1/params[0][:-1]
@@ -204,7 +204,7 @@ def Kernel(X1, X2, Type, *params, gradient=False):
         X2 = np.dot(X2,LAMBDA)
         sqdist = cdist(X1 , X2, metric='sqeuclidean').T
         return (1/(1 + (sqdist/params[0][-1])) )**params[0][-1]
-    
+
     if Type == 'MultiQuad':
         # This Kernel is not positive semidefinite so a lot of tweaking would
         # have to be done to make this work. Maybe take some product of KdotK.T
@@ -218,14 +218,14 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
         if gradient:
             g = [cdist(np.expand_dims(X1[:,i],-1),
-                       np.expand_dims(X2[:,i],-1), 
+                       np.expand_dims(X2[:,i],-1),
                        metric='sqeuclidean')/(params[0][i+1]) \
                  for i in range(X1.shape[1]) ]
-            gradients = [np.multiply(g[i],1/K) for i in range(X1.shape[1])]    
+            gradients = [np.multiply(g[i],1/K) for i in range(X1.shape[1])]
             gradients = [params[0][0]/K] + gradients +\
                 [2*params[0][-1]*np.eye(X1.shape[0])]
             return K, gradients
-        
+
         else:
             return K
 
@@ -239,13 +239,13 @@ def Kernel(X1, X2, Type, *params, gradient=False):
         K = 1/sqdist + ((params[0][-1]**2)*np.eye(X1.shape[0]))
         if gradient:
             g = [cdist(np.expand_dims(X1[:,i],-1),
-                       np.expand_dims(X2[:,i],-1), 
+                       np.expand_dims(X2[:,i],-1),
                        metric='sqeuclidean')/(params[0][i+1]) \
                  for i in range(X1.shape[1]) ]
-            gradients = [-np.multiply(g[i],K**3) for i in range(X1.shape[1])]  
+            gradients = [-np.multiply(g[i],K**3) for i in range(X1.shape[1])]
             gradients = [-params[0][0]*(K**3)] +  gradients +\
                 [2*params[0][-1]*np.eye(X1.shape[0])]
-            
+
             return K, gradients
         else:
             return K
@@ -260,23 +260,23 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             return K, gradients
         else:
             return K
-       
+
     if Type == 'Power':
         K = cdist(X1/params[0][1:-1],X2/params[0][1:-1], metric='euclidean')**params[0][0] +\
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
         if gradient:
-            dd = params[0][0] * cdist(X1/params[0][1:-1],X2/params[0][1:-1], 
+            dd = params[0][0] * cdist(X1/params[0][1:-1],X2/params[0][1:-1],
                                       metric='euclidean')**(params[0][0]-1)
             g = [cdist(np.expand_dims(X1[:,i]/params[0][i+1],-1),
-                       np.expand_dims(X2[:,i]/params[0][i+1],-1), 
+                       np.expand_dims(X2[:,i]/params[0][i+1],-1),
                        metric='sqeuclidean')/(params[0][i+1]) \
                  for i in range(X1.shape[1]) ]
-            gradients = [np.multiply(g[i],dd) for i in range(X1.shape[1])]  
+            gradients = [np.multiply(g[i],dd) for i in range(X1.shape[1])]
             gradients = [dd] +  gradients + [2*params[0][-1]*np.eye(X1.shape[0])]
             return K, gradients
         else:
             return K
-    
+
     if Type == 'Log':
         # This is a non positive definite Kernel
         dist = cdist(X1 , X2, metric='euclidean').T
@@ -301,7 +301,7 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             return K, gradients
         else:
             return K
- 
+
     if Type == 'Tstudent':
         # This isn't working at the moment
         LAMBDA = np.eye(len(X1[0]))
@@ -314,11 +314,11 @@ def Kernel(X1, X2, Type, *params, gradient=False):
             ((params[0][-1]**2)*np.eye(X1.shape[0]))
         if gradient:
             da = -(sqdist**params[0][0])*np.log(sqdist)*(K**2)
-            arg = (sqdist**(params[0][0]-2))*(K**2) 
+            arg = (sqdist**(params[0][0]-2))*(K**2)
             gradients =  [da] + [params[0][0]*np.multiply(
                 cdist(np.expand_dims(X1[:,i],-1),
-                       np.expand_dims(X2[:,i],-1), 
-                       metric='sqeuclidean')/(params[0][i+1]),arg) 
+                       np.expand_dims(X2[:,i],-1),
+                       metric='sqeuclidean')/(params[0][i+1]),arg)
                                  for i in range(X1.shape[1])] +\
                 [2*params[0][-1]*np.eye(X1.shape[0])]
             return K, gradients

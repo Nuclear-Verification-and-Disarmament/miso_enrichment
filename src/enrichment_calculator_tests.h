@@ -21,7 +21,7 @@ class EnrichmentCalculatorTest : public ::testing::Test {
   EnrichmentCalculatorTest();
 
   EnrichmentCalculator e;
-  
+
   // Values to be calculated by EnrichmentCalculator
   cyclus::Composition::Ptr product_comp, tails_comp;
   cyclus::CompMap product_cm, tails_cm;
@@ -30,15 +30,15 @@ class EnrichmentCalculatorTest : public ::testing::Test {
 
   const cyclus::CompMap expect_product_comp;
   const cyclus::CompMap expect_tails_comp;
-  
+
   const int expect_n_enriching;
   const int expect_n_stripping;
-  
+
   const double expect_feed_qty;
   const double expect_product_qty;
   const double expect_tails_qty;
   const double expect_swu_used;
-  
+
 };
 
 }  // namespace misoenrichment

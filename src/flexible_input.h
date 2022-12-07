@@ -12,14 +12,14 @@ class FlexibleInput {
  public:
   FlexibleInput();
   FlexibleInput(cyclus::Agent* parent, std::vector<T> value);
-  FlexibleInput(cyclus::Agent* parent, std::vector<T> value, 
+  FlexibleInput(cyclus::Agent* parent, std::vector<T> value,
                 std::vector<int> time);
 
   T UpdateValue(cyclus::Agent* parent);
 
  private:
   void CheckInput_(cyclus::Agent* parent, const std::vector<T>& value);
-  void CheckInput_(cyclus::Agent* parent, const std::vector<T>& value, 
+  void CheckInput_(cyclus::Agent* parent, const std::vector<T>& value,
                    const std::vector<int>& time);
 
   std::vector<T> value_;

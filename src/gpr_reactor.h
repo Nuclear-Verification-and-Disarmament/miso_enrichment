@@ -6,12 +6,12 @@
 
 #include "cyclus.h"
 
-// Future changes relating to the implementation of Antonio's GPRs are marked 
+// Future changes relating to the implementation of Antonio's GPRs are marked
 // with the following comment:
 // TODO ANTONIO GPR
 //
 // TODO list:
-// - check line 49 in .cc file. Ensure that `unique_out_commods.empty()` 
+// - check line 49 in .cc file. Ensure that `unique_out_commods.empty()`
 //   evaluates to `true`, else, the set gets not filled!
 // - no implementation of `Reactor::fuel_pref(cyclus::Material::Ptr)` because
 //   it is not used in the reactor class.
@@ -37,7 +37,7 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   /// @warning The Prime Directive must have a space before it!
 
   #pragma cyclus
-  
+
   #pragma cyclus note {"doc": "A reactor facility that calculates its spent " \
                               "fuel composition using Gaussian process " \
                               "regression."}
@@ -46,9 +46,9 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> GetMatlBids(
       cyclus::CommodMap<cyclus::Material>::type& commod_requests);
   std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr> GetMatlRequests();
-  std::string str(); 
+  std::string str();
   void AcceptMatlTrades(
-      const std::vector<std::pair<cyclus::Trade<cyclus::Material>, 
+      const std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                                   cyclus::Material::Ptr> >& responses);
   void EnterNotify();
   void GetMatlTrades(
@@ -86,7 +86,7 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
            "same default value is used for all fuel requests." \
   }
   std::vector<double> fuel_prefs;
-  
+
   std::set<std::string> unique_out_commods;
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // Core specifics
@@ -105,7 +105,7 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
            "one complete irradiation cycle." \
   }
   int n_assem_batch;
-  
+
   #pragma cyclus var { \
     "uitype": "range", \
     "range": [1., 1e5], \
@@ -117,7 +117,7 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   double assem_size;
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  // Irradiation cycle parameters 
+  // Irradiation cycle parameters
   #pragma cyclus var { \
     "default": 0, \
     "doc": "If true, the archetype transmutes all assemblies upon " \
@@ -134,7 +134,7 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
            "process regression." \
   }
   int cycle_time;
-  
+
   #pragma cyclus var { \
     "default": 1, \
     "doc": "The duration of an entire refuelling period, i.e., the minimum " \
@@ -249,7 +249,7 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
   // interested in and that the GPRs calculate.
   const std::set<int> relevant_spent_fuel_comps;
 
-  // Filenames of files used to pass arguments and results between the Python 
+  // Filenames of files used to pass arguments and results between the Python
   // file and the C++ Cyclus archetype.
   std::string out_fname;
   std::string in_fname;
@@ -265,16 +265,16 @@ class GprReactor : public cyclus::Facility, public cyclus::toolkit::Position  {
     "uilabel": "Geographical latitude in degrees as a double", \
     "doc": "Latitude of the agent's geographical position. The value " \
            "should be expressed in degrees as a double." \
-  } 
+  }
   double latitude;
-  
+
   #pragma cyclus var { \
     "default": 0.0, \
     "uilabel": "Geographical longitude in degrees as a double", \
     "doc": "Longitude of the agent's geographical position. The value " \
            "should be expressed in degrees as a double." \
-  } 
-  double longitude; 
+  }
+  double longitude;
 
   bool Discharge_();
   bool Retired_();

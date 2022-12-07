@@ -17,31 +17,31 @@ namespace misoenrichment {
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
   SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-               double gamma_235, bool use_downblending) 
+               double gamma_235, bool use_downblending)
       : feed_comp_(feed_comp), gamma_235_(gamma_235),
         tails_assay_(tails_assay), use_downblending(use_downblending) {}
-  
+
   virtual ~SwuConverter() {}
 
   virtual double convert(
       cyclus::Material::Ptr m, cyclus::Arc const * a = NULL,
-      cyclus::ExchangeTranslationContext<cyclus::Material> 
+      cyclus::ExchangeTranslationContext<cyclus::Material>
           const * ctx = NULL) const {
-    
+
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
                            1e299, product_qty, 1e299, use_downblending);
     double swu_used = e.SwuUsed();
-    
+
     return swu_used;
   }
 
   virtual bool operator==(Converter& other) const {
     SwuConverter* cast = dynamic_cast<SwuConverter*>(&other);
-    
+
     bool cast_not_null = cast != NULL;
-    bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(), 
+    bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(),
                                               cast->feed_comp_->atom(),
                                               kEpsCompMap);
     bool tails_eq = tails_assay_ == cast->tails_assay_;
@@ -62,22 +62,22 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
  public:
   FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
                 double gamma_235, bool use_downblending)
-      : feed_comp_(feed_comp), gamma_235_(gamma_235), 
+      : feed_comp_(feed_comp), gamma_235_(gamma_235),
         tails_assay_(tails_assay), use_downblending(use_downblending) {}
 
   virtual ~FeedConverter() {}
 
   virtual double convert(
       cyclus::Material::Ptr m, cyclus::Arc const * a = NULL,
-      cyclus::ExchangeTranslationContext<cyclus::Material> 
+      cyclus::ExchangeTranslationContext<cyclus::Material>
           const * ctx = NULL) const {
-    
+
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
                            1e299, product_qty, 1e299, use_downblending);
     double feed_used = e.FeedUsed();
-    
+
     cyclus::toolkit::MatQuery mq(m);
     std::vector<int> isotopes(IsotopesNucID());
     std::set<int> nucs(isotopes.begin(), isotopes.end());
@@ -85,12 +85,12 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
 
     return feed_used / feed_uranium_frac;
   }
-  
+
   virtual bool operator==(Converter& other) const {
     FeedConverter* cast = dynamic_cast<FeedConverter*>(&other);
-    
+
     bool cast_not_null = cast != NULL;
-    bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(), 
+    bool feed_eq = cyclus::compmath::AlmostEq(feed_comp_->atom(),
                                               cast->feed_comp_->atom(),
                                               kEpsCompMap);
     bool tails_eq = tails_assay_ == cast->tails_assay_;
@@ -107,13 +107,13 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
 
 /// @class MIsoEnrich
 ///
-/// @section intro 
+/// @section intro
 ///
-/// @section agentparams 
+/// @section agentparams
 ///
 /// @section optionalparams
 ///
-/// @section detailed 
+/// @section detailed
 class MIsoEnrich : public cyclus::Facility,
                    public cyclus::toolkit::Position {
  public:
@@ -122,14 +122,14 @@ class MIsoEnrich : public cyclus::Facility,
   explicit MIsoEnrich(cyclus::Context* ctx);
 
   ~MIsoEnrich();
-  
+
   friend class MIsoEnrichTest;
 
   #pragma cyclus
 
   #pragma cyclus note {"doc": "A stub facility is provided as a skeleton " \
                               "for the design of new facility agents."}
- 
+
   void EnterNotify();
   void Tick();
   void Tock();
@@ -144,29 +144,29 @@ class MIsoEnrich : public cyclus::Facility,
 
 
   std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
-      GetMatlBids(cyclus::CommodMap<cyclus::Material>::type& 
+      GetMatlBids(cyclus::CommodMap<cyclus::Material>::type&
                   commod_requests);
-  std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr> 
+  std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr>
       GetMatlRequests();
   std::string str();
 
  private:
   void AddMat_(cyclus::Material::Ptr mat);
-  
+
   void AddFeedMat_(cyclus::Material::Ptr mat);
 
   cyclus::Material::Ptr Request_();
 
-  // The Offer function only considers U235 content that needs to be 
-  // achieved and it ignores the minor isotopes. This has the advantage 
-  // that the evolution of minor isotopes does not need to be taken into 
+  // The Offer function only considers U235 content that needs to be
+  // achieved and it ignores the minor isotopes. This has the advantage
+  // that the evolution of minor isotopes does not need to be taken into
   // account when performing requests to a MIsoEnrich facility.
   cyclus::Material::Ptr Offer_(cyclus::Material::Ptr req);
 
   cyclus::Material::Ptr Enrich_(cyclus::Material::Ptr mat, double qty);
 
   bool ValidReq_(const cyclus::Material::Ptr& mat);
-  
+
   ///  @brief records and enrichment with the cyclus::Recorder
   void RecordEnrichment_(double feed_qty, double swu, int feed_inv_idx);
 
@@ -283,7 +283,7 @@ class MIsoEnrich : public cyclus::Facility,
   double intra_timestep_feed;
 
   EnrichmentCalculator enrichment_calc;
-  
+
   // TODO think about how to include these variables in preprocessor
   //#pragma cyclus var {}
   std::vector<cyclus::toolkit::ResBuf<cyclus::Material> > feed_inv;
@@ -291,7 +291,7 @@ class MIsoEnrich : public cyclus::Facility,
   std::vector<cyclus::Composition::Ptr> feed_inv_comp;
 
   int feed_idx;
-  
+
   #pragma cyclus var {}
   cyclus::toolkit::ResBuf<cyclus::Material> tails_inv;
 
@@ -300,19 +300,19 @@ class MIsoEnrich : public cyclus::Facility,
     "uilabel": "Geographical latitude in degrees as a double", \
     "doc": "Latitude of the agent's geographical position. The value " \
            "should be expressed in degrees as a double." \
-  } 
+  }
   double latitude;
-  
+
   #pragma cyclus var { \
     "default": 0.0, \
     "uilabel": "Geographical longitude in degrees as a double", \
     "doc": "Longitude of the agent's geographical position. The value " \
            "should be expressed in degrees as a double." \
-  } 
-  double longitude; 
-  
+  }
+  double longitude;
+
   cyclus::toolkit::Position coordinates;
-  
+
   #pragma cyclus var {  \
     "default": [-1],  \
     "tooltip": "SWU capacity change times in timesteps from beginning " \

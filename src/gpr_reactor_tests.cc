@@ -238,7 +238,7 @@ TEST_F(GprReactorTest, SpentFuelWaste) {
   valid_cm[10010000] = 1.;
   cyclus::compmath::Normalize(&valid_cm);
   EXPECT_TRUE(cyclus::compmath::AlmostEq(valid_cm, return_cm, kEpsCompMap));
- 
+
   std::remove(DoGetInFname().c_str());
 }
 

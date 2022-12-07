@@ -17,23 +17,23 @@ class EnrichmentCalculator {
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
-                       double feed_qty, double product_qty, 
+                       double feed_qty, double product_qty,
                        double max_swu, bool use_downblending=true);
   EnrichmentCalculator(const EnrichmentCalculator& e);
   EnrichmentCalculator& operator= (const EnrichmentCalculator& e);
-  
+
   void PPrint();
 
   void BuildMatchedAbundanceRatioCascade();
 
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
-      double new_target_product_assay, double new_target_tails_assay, 
+      double new_target_product_assay, double new_target_tails_assay,
       double new_feed_qty, double new_product_qty, double new_max_swu,
-      double gamma_235, bool use_downblending); 
+      double gamma_235, bool use_downblending);
 
-  void EnrichmentOutput(cyclus::Composition::Ptr& product_comp, 
+  void EnrichmentOutput(cyclus::Composition::Ptr& product_comp,
                         cyclus::Composition::Ptr& tails_comp, double& feed_used,
-                        double& swu_used, double& product_produced, 
+                        double& swu_used, double& product_produced,
                         double& tails_produced, int& n_enrich, int& n_strip);
   void ProductOutput(cyclus::Composition::Ptr&, double&);
 
@@ -69,9 +69,9 @@ class EnrichmentCalculator {
   // Number of stages in the enriching and in the stripping section
   int n_enriching;
   int n_stripping;
-  
+
   double gamma_235;  // The overall separation factor for U-235
-  
+
   void CalculateGammaAlphaStar_();
   void CalculateNStages_();
   void CalculateFlows_();

@@ -15,10 +15,10 @@ namespace misoenrichment {
 class MIsoEnrichTest : public ::testing::Test {
  protected:
   MIsoEnrich* miso_enrich_facility;
-  
+
   cyclus::MockSim* fake_sim;
   cyclus::Composition::Ptr recipe;
-  
+
   bool order_prefs;
   double gamma_235, initial_feed, inv_size, latitude, longitude,
          max_enrich, swu_capacity, tails_assay;
@@ -26,17 +26,17 @@ class MIsoEnrichTest : public ::testing::Test {
   std::string feed_commod, product_commod, tails_commod, feed_recipe;
   std::vector<double> swu_vals;
   std::vector<int> swu_times;
-  
+
   // Functions to initialise and end each test
   void SetUp();
   void TearDown();
   void InitParameters();
   void SetUpMIsoEnrichment();
-  
+
   // Helper functions
   cyclus::Material::Ptr GetFeedMat(double qty);
 
-  // The Do* functions are a hack: MIsoEnrichTest is a friend class to 
+  // The Do* functions are a hack: MIsoEnrichTest is a friend class to
   // MIsoEnrich and it can therefore access private functions. However,
   // all of the tests are sub-classes of the fixture and they cannot access
   // the private functions, hence we need to use the Do* functions as an
@@ -51,7 +51,7 @@ class MIsoEnrichTest : public ::testing::Test {
   inline void DoAddMat(cyclus::Material::Ptr mat) {
     miso_enrich_facility->AddMat_(mat);
   }
-  inline void DoAddFeedMat(cyclus::Material::Ptr mat) { 
+  inline void DoAddFeedMat(cyclus::Material::Ptr mat) {
     miso_enrich_facility->AddFeedMat_(mat);
   }
   inline void DoEnrich(cyclus::Material::Ptr mat, double qty) {
