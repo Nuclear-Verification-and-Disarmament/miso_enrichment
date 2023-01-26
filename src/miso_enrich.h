@@ -17,9 +17,10 @@ namespace misoenrichment {
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
   SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-               double gamma_235, bool use_downblending)
+               double gamma_235, bool use_downblending, bool use_integer_stages)
       : feed_comp_(feed_comp), gamma_235_(gamma_235),
-        tails_assay_(tails_assay), use_downblending(use_downblending) {}
+        tails_assay_(tails_assay), use_downblending(use_downblending),
+        use_integer_stages(use_integer_stages) {}
 
   virtual ~SwuConverter() {}
 
@@ -31,7 +32,8 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
-                           1e299, product_qty, 1e299, use_downblending);
+                           1e299, product_qty, 1e299, use_downblending,
+                           use_integer_stages);
     double swu_used = e.SwuUsed();
 
     return swu_used;
@@ -51,6 +53,7 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
 
  private:
   bool use_downblending;
+  bool use_integer_stages;
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
   double tails_assay_;
@@ -61,9 +64,11 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
 class FeedConverter : public cyclus::Converter<cyclus::Material> {
  public:
   FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-                double gamma_235, bool use_downblending)
+                double gamma_235, bool use_downblending,
+                bool use_integer_stages)
       : feed_comp_(feed_comp), gamma_235_(gamma_235),
-        tails_assay_(tails_assay), use_downblending(use_downblending) {}
+        tails_assay_(tails_assay), use_downblending(use_downblending),
+        use_integer_stages(use_integer_stages) {}
 
   virtual ~FeedConverter() {}
 
@@ -75,7 +80,8 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
-                           1e299, product_qty, 1e299, use_downblending);
+                           1e299, product_qty, 1e299, use_downblending,
+                           use_integer_stages);
     double feed_used = e.FeedUsed();
 
     cyclus::toolkit::MatQuery mq(m);
@@ -100,6 +106,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
 
  private:
   bool use_downblending;
+  bool use_integer_stages;
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
   double tails_assay_;
@@ -341,10 +348,23 @@ class MIsoEnrich : public cyclus::Facility,
     "uilabel": "Downblend the product to required enrichment level",  \
     "doc": "If set to true and if the enriched product exceeds the "  \
            "desired enrichment level, the product is downblended using "  \
-           "enrichment feed to match the desired level."  \
+           "enrichment feed to match the desired level. If this variable "  \
+           "is set to 'true',  then 'use_integer_stages' must be 'true', as "  \
+           "well."  \
   }
   bool use_downblending;
 
+  #pragma cyclus var {  \
+    "default": 1,  \
+    "tooltip": "Use an integer number of stages",  \
+    "uilabel": "Use an integer number of stages",  \
+    "doc": "If set to true (default), then an integer number of stages is "  \
+           "used such that the desired product assay is reached or exceeded "  \
+           "and the desired tails assay is reached or undershot. If set to "  \
+           "false, then a floating point number of stages is used such that "  \
+           "the desired product and tails assays are obtained."  \
+  }
+  bool use_integer_stages;
 };
 
 }  // namespace misoenrichment

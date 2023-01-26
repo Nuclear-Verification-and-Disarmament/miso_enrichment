@@ -26,13 +26,13 @@ class EnrichmentCalculatorTest : public ::testing::Test {
   cyclus::Composition::Ptr product_comp, tails_comp;
   cyclus::CompMap product_cm, tails_cm;
   double feed_qty, product_qty, tails_qty, swu_used;
-  int n_enriching, n_stripping;
+  double n_enriching, n_stripping;
 
   const cyclus::CompMap expect_product_comp;
   const cyclus::CompMap expect_tails_comp;
 
-  const int expect_n_enriching;
-  const int expect_n_stripping;
+  const double expect_n_enriching;
+  const double expect_n_stripping;
 
   const double expect_feed_qty;
   const double expect_product_qty;
