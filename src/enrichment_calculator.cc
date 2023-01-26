@@ -9,6 +9,7 @@
 #include "error.h"
 
 #include "miso_helper.h"
+#include "../CppNumericalSolvers/include/cppoptlib/solver/bfgssolver.h"
 
 namespace misoenrichment {
 
@@ -29,7 +30,7 @@ EnrichmentCalculator::EnrichmentCalculator(
     cyclus::Composition::Ptr feed_comp,
     double target_product_assay, double target_tails_assay,
     double gamma_235, double feed_qty, double product_qty,
-    double max_swu, bool use_downblending) :
+    double max_swu, bool use_downblending, bool use_integer_stages) :
       feed_composition(feed_comp->atom()),
       target_product_assay(target_product_assay),
       target_tails_assay(target_tails_assay),
@@ -39,10 +40,16 @@ EnrichmentCalculator::EnrichmentCalculator(
       feed_qty(0.), product_qty(0.),
       max_swu(max_swu),
       use_downblending(use_downblending),
+      use_integer_stages(use_integer_stages),
       isotopes(IsotopesNucID()) {
   if (feed_qty==1e299 && product_qty==1e299 && max_swu==1e299) {
     // TODO think about whether one or two of these variables have to be
     // defined. Additionally, add an exception that should be thrown.
+  }
+  if (use_downblending && !use_integer_stages) {
+    throw cyclus::ValueError(
+      "'use_integer_stages' must be 'true' if 'use_downblending' is 'true'"
+    );
   }
   cyclus::compmath::Normalize(&feed_composition);
   CalculateGammaAlphaStar_();
@@ -192,7 +199,7 @@ void EnrichmentCalculator::SetInput(
 void EnrichmentCalculator::EnrichmentOutput(
     cyclus::Composition::Ptr& product_comp, cyclus::Composition::Ptr& tails_comp,
     double& feed_used, double& swu_used, double& product_produced,
-    double& tails_produced, int& n_enrich, int& n_strip) {
+    double& tails_produced, double& n_enrich, double& n_strip) {
 
   // This step is needed to prevent a 'double free' error. It is caused for
   // unknown reasons by cyclus::Material::ExtractComp and
@@ -225,16 +232,19 @@ void EnrichmentCalculator::ProductOutput(
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::BuildMatchedAbundanceRatioCascade() {
-  CalculateNStages_();
+  if (use_integer_stages) {
+    CalculateIntegerStages_();
+  } else {
+    CalculateDecimalStages_();
+  }
   CalculateFlows_();
-
   if (use_downblending) {
     Downblend_();
   }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void EnrichmentCalculator::CalculateNStages_() {
+void EnrichmentCalculator::CalculateIntegerStages_() {
   // The target concentrations should always be reached or exceeded (i.e.,
   // at least equal U235 concentration in product, at most equal
   // U235 concentration in tails).
@@ -254,6 +264,48 @@ void EnrichmentCalculator::CalculateNStages_() {
   if ((n_enriching == kIterMax) || (n_stripping == kIterMax)) {
     throw cyclus::Error("Unable to determine the number of stages!");
   }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void EnrichmentCalculator::CalculateDecimalStages_() {
+  // Solver determines the number of stages sucht that the relative difference
+  // between actual and desired uranium assay in product and tails gets
+  // minimised.
+  EnrichmentProblem problem(this);
+  cppoptlib::BfgsSolver<EnrichmentProblem> solver;
+
+  // Offer multiple starting values to the solver to improve convergence.
+  std::vector<double> n_init_stages({1, 10, 50});
+  cppoptlib::Problem<double>::TVector staging(2);
+
+  bool found_solution = false;
+  for (double n_init_enriching : n_init_stages) {
+    for (double n_init_stripping : n_init_stages) {
+      staging[0] = n_init_enriching;
+      staging[1] = n_init_stripping;
+      solver.minimize(problem, staging);
+      // Rough sanity checks to ensure that no non-sensical solution got used.
+      // Maybe this will be replaced later by a bounded problem.
+      if (
+        problem(staging) < 1e-6
+        && staging[0] > 0 && staging[0] < 100
+        && staging[1] > 0 && staging[1] < 100
+      ) {
+        found_solution = true;
+        break;
+      }
+    }
+    if (found_solution) {
+      break;
+    }
+  }
+  if (!found_solution) {
+    PPrint();
+    throw cyclus::Error("Did not manage to determine the correct staging!");
+  }
+  n_enriching = staging[0];
+  n_stripping = staging[1];
+  CalculateConcentrations_();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -353,7 +405,7 @@ void EnrichmentCalculator::CalculateConcentrations_() {
   for (int i : isotopes) {
     // Eq. (37)
     e[i] = 1. / alpha_star[i]
-           / (1.-std::pow(alpha_star[i],-n_enriching));
+           / (1.-std::pow(alpha_star[i], -n_enriching));
     // Eq. (39)
     s[i] = 1. / alpha_star[i]
            / (std::pow(alpha_star[i], n_stripping+1.)-1.);
@@ -460,6 +512,23 @@ void EnrichmentCalculator::CalculateSums(double& sum_e, double& sum_s) {
     sum_e += e * atom_frac / (e+s);  // right-hand side of Eq. (47)
     sum_s += s * atom_frac / (e+s);  // right-hand side of Eq. (50)
   }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+EnrichmentProblem::EnrichmentProblem(EnrichmentCalculator* c) :
+  calculator(c) {}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+double EnrichmentProblem::value(const cppoptlib::Problem<double>::TVector &staging) {
+  calculator->n_enriching = staging[0];
+  calculator->n_stripping = staging[1];
+  calculator->CalculateConcentrations_();
+
+  double target_p = calculator->target_product_assay;
+  double target_t = calculator->target_tails_assay;
+
+  return pow((calculator->product_composition[922350000] - target_p) / target_p, 2)
+         + pow((calculator->tails_composition[922350000] - target_t) / target_t, 2);
 }
 
 }  // namespace misoenrichment

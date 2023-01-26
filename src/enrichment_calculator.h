@@ -6,19 +6,26 @@
 
 #include <gtest/gtest.h>
 
+#include "include/cppoptlib/problem.h"  // from external/CppNumericalSolvers
 #include "composition.h"
+
+class EnrichmentProblem;
 
 namespace misoenrichment {
 
 class EnrichmentCalculator {
  public:
+  friend class EnrichmentProblem;
+  FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
+
   EnrichmentCalculator();
   EnrichmentCalculator(double gamma_235);
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
                        double feed_qty, double product_qty,
-                       double max_swu, bool use_downblending=true);
+                       double max_swu, bool use_downblending=true,
+                       bool use_integer_stages=true);
   EnrichmentCalculator(const EnrichmentCalculator& e);
   EnrichmentCalculator& operator= (const EnrichmentCalculator& e);
 
@@ -34,17 +41,16 @@ class EnrichmentCalculator {
   void EnrichmentOutput(cyclus::Composition::Ptr& product_comp,
                         cyclus::Composition::Ptr& tails_comp, double& feed_used,
                         double& swu_used, double& product_produced,
-                        double& tails_produced, int& n_enrich, int& n_strip);
+                        double& tails_produced, double& n_enrich,
+                        double& n_strip);
   void ProductOutput(cyclus::Composition::Ptr&, double&);
 
   inline double FeedUsed() { return feed_qty; }
   inline double SwuUsed() { return swu; }
 
-  FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
-
  private:
-
-  bool use_downblending;
+  bool use_downblending;  // Use only in conjunction with `use_integer_stages`.
+  bool use_integer_stages;  // Else use floating-point number of stages
 
   cyclus::CompMap feed_composition;
   cyclus::CompMap product_composition;
@@ -67,13 +73,14 @@ class EnrichmentCalculator {
   std::map<int,double> alpha_star;
 
   // Number of stages in the enriching and in the stripping section
-  int n_enriching;
-  int n_stripping;
+  double n_enriching;
+  double n_stripping;
 
   double gamma_235;  // The overall separation factor for U-235
 
   void CalculateGammaAlphaStar_();
-  void CalculateNStages_();
+  void CalculateIntegerStages_();
+  void CalculateDecimalStages_();
   void CalculateFlows_();
   void CalculateSwu_();
   void CalculateConcentrations_();
@@ -83,7 +90,20 @@ class EnrichmentCalculator {
   double ValueFunction_(const cyclus::CompMap& composition);
 };
 
+class EnrichmentProblem : public cppoptlib::Problem<double> {
+ public:
+  EnrichmentProblem(EnrichmentCalculator*);
+
+  // Function to be minimised (must *not* be renamed).
+  // Calculates the relative difference between actual and desired uranium
+  // assay for an enrichment process with a given staging; for both product and
+  // tails output.
+  double value(const cppoptlib::Problem<double>::TVector &staging);
+
+ private:
+  EnrichmentCalculator* calculator;
+};
+
 }  // namespace misoenrichment
 
 #endif  // MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
-

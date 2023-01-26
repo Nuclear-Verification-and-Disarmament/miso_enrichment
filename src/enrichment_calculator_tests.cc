@@ -50,6 +50,7 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
     expect_n_enriching(56),
     expect_n_stripping(14) {
   bool use_downblending = false;
+  bool use_integer_stages = true;
   double target_product_assay = 0.9;
   double target_tails_assay = 0.001;
   double gamma = 1.3;
@@ -60,7 +61,7 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
   e = EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
                              target_tails_assay, gamma, target_feed_qty,
                              target_product_qty, max_swu,
-                             use_downblending);
+                             use_downblending, use_integer_stages);
   e.EnrichmentOutput(product_comp, tails_comp, feed_qty, swu_used,
                      product_qty, tails_qty, n_enriching, n_stripping);
   product_cm = product_comp->atom();
@@ -77,7 +78,7 @@ TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
 
   cyclus::Composition::Ptr product_comp2, tails_comp2;
   double feed_qty2, product_qty2, tails_qty2, swu_used2;
-  int n_enriching2, n_stripping2;
+  double n_enriching2, n_stripping2;
 
   e2.EnrichmentOutput(product_comp2, tails_comp2, feed_qty2, swu_used2,
                       product_qty2, tails_qty2, n_enriching2, n_stripping2);
@@ -94,8 +95,8 @@ TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   EXPECT_DOUBLE_EQ(product_qty2, product_qty);
   EXPECT_DOUBLE_EQ(tails_qty2, tails_qty);
   EXPECT_DOUBLE_EQ(swu_used2, swu_used);
-  EXPECT_EQ(n_enriching2, n_enriching);
-  EXPECT_EQ(n_stripping2, n_stripping);
+  EXPECT_DOUBLE_EQ(n_enriching2, n_enriching);
+  EXPECT_DOUBLE_EQ(n_stripping2, n_stripping);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -119,8 +120,8 @@ TEST_F(EnrichmentCalculatorTest, Swu) {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, NumberStages) {
-  EXPECT_EQ(expect_n_enriching, n_enriching);
-  EXPECT_EQ(expect_n_stripping, n_stripping);
+  EXPECT_DOUBLE_EQ(expect_n_enriching, n_enriching);
+  EXPECT_DOUBLE_EQ(expect_n_stripping, n_stripping);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -131,14 +132,14 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   cyclus::Composition::Ptr bl_product_comp2;
   double bl_feed_qty, bl_product_qty, bl_tails_qty, bl_swu_used;
   double bl_feed_qty2, bl_product_qty2;
-  int dummy_int;
+  double dummy_double;
 
   // In this case, the feed is the constraining factor.
   EnrichmentCalculator blender(compPtr_nat_U(), target_product_assay,
                                0.001, 1.3, 100, 1e299, 1e299, true);
   blender.EnrichmentOutput(bl_product_comp, bl_tails_comp, bl_feed_qty,
                            bl_swu_used, bl_product_qty, bl_tails_qty,
-                           dummy_int, dummy_int);
+                           dummy_double, dummy_double);
 
   EXPECT_DOUBLE_EQ(target_product_assay, MIsoAtomAssay(bl_product_comp));
   EXPECT_DOUBLE_EQ(expect_feed_qty, bl_feed_qty);
@@ -152,7 +153,7 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
                                 1e299, true);
   blender2.EnrichmentOutput(bl_product_comp2, bl_tails_comp, bl_feed_qty2,
                             bl_swu_used, bl_product_qty2, bl_tails_qty,
-                            dummy_int, dummy_int);
+                            dummy_double, dummy_double);
 
   EXPECT_DOUBLE_EQ(target_product_assay, MIsoAtomAssay(bl_product_comp2));
   EXPECT_DOUBLE_EQ(bl_feed_qty, bl_feed_qty2);

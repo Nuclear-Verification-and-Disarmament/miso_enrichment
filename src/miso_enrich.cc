@@ -31,6 +31,7 @@ MIsoEnrich::MIsoEnrich(cyclus::Context* ctx)
       latitude(0.0),
       longitude(0.0),
       coordinates(latitude, longitude),
+      use_integer_stages(true),
       use_downblending(true) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -255,10 +256,10 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
     cyclus::Composition::Ptr feed_comp = feed_inv_comp[feed_idx];
     cyclus::Converter<Material>::Ptr swu_converter(
         new SwuConverter(feed_comp, tails_assay, gamma_235,
-                         use_downblending));
+                         use_downblending, use_integer_stages));
     cyclus::Converter<Material>::Ptr feed_converter(
         new FeedConverter(feed_comp, tails_assay, gamma_235,
-                          use_downblending));
+                          use_downblending, use_integer_stages));
     CapacityConstraint<Material> swu_constraint(swu_capacity,
                                                 swu_converter);
     CapacityConstraint<Material> feed_constraint(
@@ -287,7 +288,7 @@ cyclus::Material::Ptr MIsoEnrich::Offer_(
 
   EnrichmentCalculator e(feed_inv_comp[feed_idx], product_assay,
                          tails_assay, gamma_235, feed_qty, product_qty,
-                         swu_capacity, use_downblending);
+                         swu_capacity, use_downblending, use_integer_stages);
   e.ProductOutput(product_comp, product_qty);
 
   return cyclus::Material::CreateUntracked(product_qty, product_comp);
@@ -443,7 +444,7 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
   cyclus::Composition::Ptr product_comp;
   cyclus::Composition::Ptr tails_comp;
   double feed_required, swu_required, product_qty, tails_qty;
-  int n_enriching, n_stripping;
+  double n_enriching, n_stripping;
 
   double feed_assay = MIsoAtomAssay(feed_inv_comp[feed_idx]);
   double feed_qty = feed_inv[feed_idx].quantity();
@@ -453,7 +454,7 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
   // performed!
   EnrichmentCalculator e(feed_inv_comp[feed_idx], product_assay,
                          tails_assay, gamma_235, feed_qty, request_qty,
-                         swu_capacity, use_downblending);
+                         swu_capacity, use_downblending, use_integer_stages);
   e.EnrichmentOutput(product_comp, tails_comp, feed_required,
                                    swu_required, product_qty, tails_qty,
                                    n_enriching, n_stripping);
