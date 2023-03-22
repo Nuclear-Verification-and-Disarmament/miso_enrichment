@@ -16,11 +16,11 @@ PROJECT(misoenrichment)
 
 # check for and enable c++11 support
 INCLUDE(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-IF(COMPILER_SUPPORTS_CXX11)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+IF(COMPILER_SUPPORTS_CXX14)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 ELSE()
-  MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11
+  MESSAGE(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++14
   support. Please use a different C++ compiler.")
 ENDIF()
 
@@ -85,7 +85,7 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 # Tell CMake where the modules are
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_INSTALL_PREFIX}/share/cyclus/cmake")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${STUB_SOURCE_DIR}/cmake)
-MESSAGE("--CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}")
+MESSAGE("-- CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}")
 
 # Find cyclus
 FIND_PACKAGE(Cyclus REQUIRED)
@@ -95,7 +95,7 @@ SET(LIBS ${LIBS} ${CYCLUS_CORE_LIBRARIES})
 # Include macros
 INCLUDE(UseCyclus)
 
-MESSAGE("--LD_LIBRARY_PATH: $ENV{LD_LIBRARY_PATH}")
+MESSAGE("-- LD_LIBRARY_PATH: $ENV{LD_LIBRARY_PATH}")
 
 # Include the boost header files, system, and filesystem libraries
 SET(Boost_USE_STATIC_LIBS       OFF)
@@ -124,12 +124,25 @@ set(LIBS ${LIBS} ${COIN_LIBRARIES})
 FIND_PACKAGE(PythonLibs REQUIRED)
 SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
 
+# Find and include external libraries and submodules.
+MESSAGE(STATUS "Finding and including submodules.")
+
 # Find Niels Lohmann's 'JSON for Modern C++' package
 FIND_PACKAGE(nlohmann_json REQUIRED)
+
 # The line below does not work!
 # For unknown reasons, CMake does not find the include directories
 # and nlohmann_json_INCLUDE_DIRS is an unset variable.
-SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${nlohmann_json_INCLUDE_DIRS})
+#SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${nlohmann_json_DIR})
+
+MESSAGE(STATUS "Eigen")
+FIND_PATH(EIGEN_DIR Eigen external/eigen)
+SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${EIGEN_DIR})
+
+MESSAGE(STATUS "CppNumericalSolvers")
+SET(CPP_NUMERICAL_SOLVERS_DIR "external/CppNumericalSolvers")
+FIND_PATH(CPP_NUMERICAL_SOLVERS_DIR CppNumericalSolvers external/CppNumericalSolvers)
+SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${CPP_NUMERICAL_SOLVERS_DIR})
 
 # include all the directories we just found
 INCLUDE_DIRECTORIES(${STUB_INCLUDE_DIRS})
