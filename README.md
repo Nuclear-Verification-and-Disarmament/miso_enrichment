@@ -1,5 +1,7 @@
 # misoenrichment: a nuclear archaeology module for Cyclus
 ![GitHub](https://img.shields.io/github/license/maxschalz/miso_enrichment)
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 `misoenrichment` is a module for the nuclear fuel cycle simulator
 [Cyclus](http://fuelcycle.org) and is developed at the

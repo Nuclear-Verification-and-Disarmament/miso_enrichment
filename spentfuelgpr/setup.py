@@ -3,6 +3,7 @@
 
 from setuptools import setup
 
+
 def main():
     setup(
         name="spentfuelgpr",
@@ -12,11 +13,14 @@ def main():
         url="https://github.com/maxschalz/miso_enrichment/",
         license="BSD-3-Clause",
         packages=["spentfuelgpr"],
-        classifiers=["License :: OSI Approved :: BSD-3-Clause License",
-                     "Programming Language :: Python :: 3"],
-        install_requires=["numpy", "scipy"]
+        classifiers=[
+            "License :: OSI Approved :: BSD-3-Clause License",
+            "Programming Language :: Python :: 3",
+        ],
+        install_requires=["numpy", "scipy"],
     )
     return
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()
