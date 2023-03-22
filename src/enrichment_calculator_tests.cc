@@ -70,6 +70,47 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(EnrichmentCalculatorTest, DownblendingOptions) {
+  double target_product_assay = 0.9;
+  double target_tails_assay = 0.001;
+  double gamma = 1.3;
+  double target_feed_qty = 100;
+  double target_product_qty = 1e299;
+  double max_swu = 1e299;
+
+  bool use_downblending = true;
+  bool use_integer_stages = true;
+  EXPECT_NO_THROW(
+    EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
+                         target_tails_assay, gamma, target_feed_qty,
+                         target_product_qty, max_swu,
+                         use_downblending, use_integer_stages)
+  );
+  use_downblending = false;
+  EXPECT_NO_THROW(
+    EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
+                         target_tails_assay, gamma, target_feed_qty,
+                         target_product_qty, max_swu,
+                         use_downblending, use_integer_stages)
+  );
+  use_integer_stages = false;
+  EXPECT_NO_THROW(
+    EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
+                         target_tails_assay, gamma, target_feed_qty,
+                         target_product_qty, max_swu,
+                         use_downblending, use_integer_stages)
+  );
+  use_downblending = true;
+  EXPECT_THROW(
+    EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
+                         target_tails_assay, gamma, target_feed_qty,
+                         target_product_qty, max_swu,
+                         use_downblending, use_integer_stages),
+    cyclus::ValueError
+  );
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   EnrichmentCalculator e2(
     cyclus::Composition::CreateFromAtom(weapons_grade_U()), 0.95, 0.1, 1.1,
@@ -158,6 +199,40 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   EXPECT_DOUBLE_EQ(target_product_assay, MIsoAtomAssay(bl_product_comp2));
   EXPECT_DOUBLE_EQ(bl_feed_qty, bl_feed_qty2);
   EXPECT_DOUBLE_EQ(bl_product_qty, bl_product_qty2);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST_F(EnrichmentCalculatorTest, NonIntegerStagesNumbers) {
+  double target_product_assay = 0.9;
+  double target_tails_assay = 0.001;
+  double gamma = 1.3;
+  double target_feed_qty = 100;
+  double target_product_qty = 1e299;
+  double max_swu = 1e299;
+  bool use_downblending = false;
+  bool use_integer_stages = false;
+
+  cyclus::Composition::Ptr pc, tc;
+  cyclus::CompMap expected_product_comp, expected_tails_comp;
+  expected_product_comp[922340000] = 0.00772031;
+  expected_product_comp[922350000] = 0.900002;
+  expected_product_comp[922380000] = 0.09227769;
+
+  expected_tails_comp[922340000] = 2.54688424e-06;
+  expected_tails_comp[922350000] = 1.00001000e-03;
+  expected_tails_comp[922380000] = 9.98997443e-01;
+
+  EnrichmentCalculator e2(compPtr_nat_U(), target_product_assay,
+                          target_tails_assay, gamma, target_feed_qty,
+                          target_product_qty, max_swu,
+                          use_downblending, use_integer_stages);
+
+  e2.EnrichmentOutput(pc, tc, feed_qty, swu_used,
+                      product_qty, tails_qty, n_enriching, n_stripping);
+  product_cm = pc->atom();
+  tails_cm = tc->atom();
+  EXPECT_TRUE(misotest::CompareCompMap(product_cm, expected_product_comp));
+  EXPECT_TRUE(misotest::CompareCompMap(tails_cm, expected_tails_comp));
 }
 
 }  // namespace misoenrichment
