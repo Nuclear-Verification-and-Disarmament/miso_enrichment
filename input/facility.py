@@ -51,6 +51,7 @@ def facility():
                         "swu_capacity_vals": {"val": [1e5, 5e4, 5e5]},
                         "swu_capacity_times": {"val": [0, 5, 6]},
                         "use_downblending": True,
+                        "use_integer_stages": True,  # Must be 'True' because downblending is enabled
                     }
                 },
             },

@@ -1,7 +1,6 @@
 # misoenrichment: a nuclear archaeology module for Cyclus
 ![GitHub](https://img.shields.io/github/license/maxschalz/miso_enrichment)
-![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)]
 
 `misoenrichment` is a module for the nuclear fuel cycle simulator
 [Cyclus](http://fuelcycle.org) and is developed at the
@@ -25,15 +24,25 @@ on which input parameters are chosen, the source code of `GprReactor` may
 need minor tweaking. Additional information on this issue will be given
 in future commits.
 
-Table of Contents
-- [MIsoEnrich](#misoenrich)
-  - [Getting Started](#getting-started)
-  - [Theoretical background](#theoretical-background)
-- [GprReactor](#gprreactor)
-  - [Requirements](#requirements)
-- [References](#references)
-
 ## MIsoEnrich
+### Installation
+This module has some dependencies.
+Python dependencies ([`scipy`](https://github.com/scipy/scipy) and
+[`numpy`](https://github.com/numpy/numpy) are installed automatically via `pip`,
+while the C++ dependencies
+([CppOptimizationLibrary](https://github.com/PatWie/CppNumericalSolvers/tree/master),
+[Eigen](https://eigen.tuxfamily.org/) and
+[JSON for Modern C++](https://github.com/nlohmann/json)) are included as Git
+submodules.
+These need to be fetched first, as shown below:
+```
+$ git clone https://github.com/Nuclear-Verification-and-Disarmament/miso_enrichment.git
+$ cd miso_enrichment
+$ git submodule update --init --recursive  # Download C++ dependencies
+$ python3 install.py  # Install misoenrichment module
+$ misoenrichment_unit_tests  # Run unit tests (optional).
+```
+
 ### Getting started
 An example input file is found in `input/main.py` featuring a
 `cycamore::Source` source agent, a `MIsoEnrich` enrichment facility and two
@@ -48,8 +57,14 @@ sufficient). In fact, one cannot request a material with a certain
 concentration in minor isotopes or with a constraint on the minor isotopes
 concentration (e.g., to make it ASTM compliant, see Ref 4).
 
-Additionally, it should be noted that the facility supports downblending of
-uranium. This means that the facility tries to match the desired enrichment
+Additionally, it should be noted that the facility allows to select between
+integer number of stages (default) or decimal number of stages.
+The former option will exceed (undershoot) the desired product (tails) assay,
+the latter option will match both assays as close as possible.
+
+Also note that when using an integer number of stages, the facility supports
+downblending of uranium.
+This means that the facility tries to match the desired enrichment
 level as precise as possible by first enriching the uranium (to a higher
 level, as explained above) and then blending the product with uranium from
 the feed. This procedure is only performed if the `use_downblending`
