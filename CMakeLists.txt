@@ -128,7 +128,7 @@ SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
 MESSAGE(STATUS "Finding and including submodules.")
 
 # Find Niels Lohmann's 'JSON for Modern C++' package
-FIND_PACKAGE(nlohmann_json REQUIRED)
+#FIND_PACKAGE(nlohmann_json REQUIRED)
 
 # The line below does not work!
 # For unknown reasons, CMake does not find the include directories
