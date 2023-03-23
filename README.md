@@ -81,6 +81,11 @@ using constant overall stage separation factors while Ref 2 gives a new
 physically founded approach to calculating said separation factors.
 
 ## GprReactor
+:rotating_light: Please note that this module does not work at the moment.
+I do not manage to correctly include the JSON dependency in the build system and
+will have to investigate this further or even remove this package entirely.
+For updates see [issue #6](https://github.com/Nuclear-Verification-and-Disarmament/miso_enrichment/issues/6).
+
 ### Requirements
 This facility needs Niels Lohmann's [JSON for Modern C++](https://json.nlohmann.me/)
 library. It can be downloaded from his [GitHub repository](https://github.com/nlohmann/json)
