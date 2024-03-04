@@ -52,6 +52,8 @@ class EnrichmentCalculator {
   bool use_downblending;  // Use only in conjunction with `use_integer_stages`.
   bool use_integer_stages;  // Else use floating-point number of stages
 
+
+  // All assays, compositions, cyclus::CompMap are assumed to be atom fraction
   cyclus::CompMap feed_composition;
   cyclus::CompMap product_composition;
   cyclus::CompMap tails_composition;
