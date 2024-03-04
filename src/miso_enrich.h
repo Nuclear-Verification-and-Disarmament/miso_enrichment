@@ -12,8 +12,6 @@
 
 namespace misoenrichment {
 
-// TODO think about passing a pointer to MIsoEnrich's EnrichmentCalculator
-// object? Think about how this works with possibly uninitialised gamma_235
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
   SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
@@ -59,8 +57,6 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
   double tails_assay_;
 };
 
-// TODO think about passing a pointer to MIsoEnrich's EnrichmentCalculator
-// object? Think about how this works with possibly uninitialised gamma_235
 class FeedConverter : public cyclus::Converter<cyclus::Material> {
  public:
   FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
@@ -213,10 +209,11 @@ class MIsoEnrich : public cyclus::Facility,
   std::string tails_commod;
 
   #pragma cyclus var { \
-    "default": 0.003, "tooltip": "tails assay",	\
-    "uilabel": "Tails Assay", \
+    "default": 0.003, \
+    "tooltip": "tails assay (atom fraction)",	\
+    "uilabel": "Tails Assay (atom fraction)", \
     "uitype": "range", \
-    "doc": "tails assay from the enrichment process", \
+    "doc": "tails assay from the enrichment process as atom/mole fraction", \
   }
   double tails_assay;
 
@@ -241,7 +238,7 @@ class MIsoEnrich : public cyclus::Facility,
   #pragma cyclus var { \
     "default": 1.0,	\
     "tooltip": "maximum allowed enrichment fraction", \
-    "doc": "maximum allowed weight fraction of U235 in product", \
+    "doc": "maximum allowed atom/mole fraction of U235 in product", \
     "uilabel": "Maximum Allowed Enrichment", \
     "uitype": "range", \
     "range": [0.0,1.0], \
@@ -288,8 +285,6 @@ class MIsoEnrich : public cyclus::Facility,
 
   double intra_timestep_swu;
   double intra_timestep_feed;
-
-  EnrichmentCalculator enrichment_calc;
 
   // TODO think about how to include these variables in preprocessor
   //#pragma cyclus var {}

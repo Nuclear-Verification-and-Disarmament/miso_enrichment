@@ -125,7 +125,7 @@ void EnrichmentCalculator::PPrint() {
   for (int nuc : isotopes) {
     printf("%6.4f   ", separation_factors[nuc]);
   }
-  std::cout << "\n  Compositions\n"
+  std::cout << "\n  Compositions (atom fraction)\n"
             << "  Isotope         Feed     Product       Tails\n";
   for (int nuc : isotopes) {
     printf("      %3d   %10.4e  %10.4e  %10.4e\n", NucIDToIsotope(nuc),
