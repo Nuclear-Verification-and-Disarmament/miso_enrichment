@@ -1002,7 +1002,7 @@ int ConnectAgentTests();
 static int cyclus_agent_tests_connected = ConnectAgentTests();
 #define CYCLUS_AGENT_TESTS_CONNECTED cyclus_agent_tests_connected
 #endif  // CYCLUS_AGENT_TESTS_CONNECTED
-INSTANTIATE_TEST_CASE_P(GprReactor, FacilityTests,
-                        ::testing::Values(&GprReactorConstructor));
-INSTANTIATE_TEST_CASE_P(GprReactor, AgentTests,
-                        ::testing::Values(&GprReactorConstructor));
+INSTANTIATE_TEST_SUITE_P(GprReactor, FacilityTests,
+                         ::testing::Values(&GprReactorConstructor));
+INSTANTIATE_TEST_SUITE_P(GprReactor, AgentTests,
+                         ::testing::Values(&GprReactorConstructor));
