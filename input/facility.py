@@ -4,12 +4,36 @@ def facility():
             {
                 "name": "NaturalUSource",
                 "config": {
-                    "Source": {
-                        "outcommod": "NaturalU",
-                        "outrecipe": "NaturalURecipe",
-                        "throughput": 10000,
+                    "VarRecipeSource": {
+                        "out_commod": "NaturalU",
+                        "var_out_recipe": {
+                            "mass_or_atom": "mass",
+                            "nuclides": {"item": [
+                                {
+                                    "nuc_id": 922340000,
+                                    "rng_properties": {
+                                        "distribution": "uniform",
+                                        "parameters": {"val": [5.1e-5, 5.4e-5]}
+                                    }
+                                },
+                                {
+                                    "nuc_id": 922350000,
+                                    "rng_properties": {
+                                        "distribution": "normal",
+                                        "parameters": {"val": [7.1e-3, 0.01e-3]}
+                                    }
+                                },
+                                {
+                                    "nuc_id": 922380000,
+                                    "rng_properties": {
+                                        "distribution": "normalisation",
+                                        "parameters": {"val": [0., 0.]}
+                                    }
+                                }
+                            ]}
+                        }
                     }
-                },
+                }
             },
             {
                 "name": "SpentFuelSink",
@@ -55,23 +79,23 @@ def facility():
                     }
                 },
             },
-            {
-                "name": "SavannahRiverReactor",
-                "config": {
-                    "GprReactor": {
-                        "in_commods": {"val": ["FreshFuel"]},
-                        "out_commods": {"val": ["SpentFuel"]},
-                        "in_recipes": {"val": ["EnrichedURecipe"]},
-                        "n_assem_core": 1,
-                        "n_assem_batch": 1,
-                        "assem_size": 110820,
-                        "cycle_time": 88,
-                        "refuel_time": 6,
-                        "power_output": 2400,
-                        "temperature": 350,
-                    }
-                },
-            },
+            #{
+            #    "name": "SavannahRiverReactor",
+            #    "config": {
+            #        "GprReactor": {
+            #            "in_commods": {"val": ["FreshFuel"]},
+            #            "out_commods": {"val": ["SpentFuel"]},
+            #            "in_recipes": {"val": ["EnrichedURecipe"]},
+            #            "n_assem_core": 1,
+            #            "n_assem_batch": 1,
+            #            "assem_size": 110820,
+            #            "cycle_time": 88,
+            #            "refuel_time": 6,
+            #            "power_output": 2400,
+            #            "temperature": 350,
+            #        }
+            #    },
+            #},
         ]
     }
     return d
