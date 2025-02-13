@@ -7,8 +7,9 @@ def archetypes():
                 {"lib": "cycamore", "name": "Sink"},
                 {"lib": "cycamore", "name": "Source"},
                 {"lib": "cycamore", "name": "Storage"},
-                {"lib": "misoenrichment", "name": "GprReactor"},
+                #{"lib": "misoenrichment", "name": "GprReactor"},
                 {"lib": "misoenrichment", "name": "MIsoEnrich"},
+                {"lib": "misoenrichment", "name": "VarRecipeSource"},
             ]
         }
     }
