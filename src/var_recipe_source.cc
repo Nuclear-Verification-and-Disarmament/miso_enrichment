@@ -5,8 +5,6 @@
 #include <sstream>
 #include <limits>
 
-#include <boost/lexical_cast.hpp>
-
 #include "pyne.h"  // pyne::nucname::isnuclide
 
 namespace misoenrichment {
