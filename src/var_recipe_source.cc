@@ -79,8 +79,10 @@ void VarRecipeSource::EnterNotify() {
 
   cyclus::Facility::EnterNotify();
 
+  // Run checks on variable recipe input.
   CheckVarOutRecipe_();
 
+  // Initialise and run checks for flexible input.
   if (throughput_times[0]==-1) {
     flexible_throughput = FlexibleInput<double>(this, throughput_vals);
   } else {
@@ -88,6 +90,7 @@ void VarRecipeSource::EnterNotify() {
                                                 throughput_times);
   }
   current_throughput = throughput_vals[0];
+
   tk::CommodityProducer::SetCapacity(tk::Commodity(out_commod),
                                      current_throughput);
   tk::CommodityProducer::SetCost(tk::Commodity(out_commod), current_throughput);
@@ -194,9 +197,21 @@ void VarRecipeSource::CheckVarOutRecipe_() {
     if (rng_properties.first == "normalisation") {
       n_normalisation_distributions++;
       normalisation_nuc_id_ = nuc_id;
-    } else if (
-        rng_properties.first != "uniform"
-        && rng_properties.first != "normal") {
+    } else if (rng_properties.first == "uniform") {
+      if (rng_properties.second.size() != 2) {
+        throw cyclus::KeyError(
+            "'uniform' distribution needs exactly two parameters: lower and "
+            "upper bounds."
+        );
+      }
+    } else if (rng_properties.first == "normal") {
+      if (rng_properties.second.size() != 4) {
+        throw cyclus::KeyError(
+            "'normal' distribution needs exactly four parameters: mean, "
+            "standard deviation, lower bound and upper bound."
+        );
+      }
+    } else {
       throw cyclus::ValueError(
           "Distributions must be 'uniform' or 'normal'. Moreover, exactly one "
           "distribution must be 'normalisation'."
