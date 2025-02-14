@@ -31,7 +31,9 @@ def facility():
                                     }
                                 }
                             ]}
-                        }
+                        },
+                        "throughput_vals": {"val": [10]},
+                        "throughput_times": {"val": [0]}
                     }
                 }
             },
