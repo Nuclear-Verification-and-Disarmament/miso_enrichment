@@ -20,7 +20,7 @@ def facility():
                                     "nuc_id": 922350000,
                                     "rng_properties": {
                                         "distribution": "normal",
-                                        "parameters": {"val": [7.1e-3, 0.01e-3]}
+                                        "parameters": {"val": [7.1e-3, 0.01e-3, 0., 1.]}
                                     }
                                 },
                                 {

@@ -76,10 +76,19 @@ TEST_F(VarRecipeSourceTest, CheckVarOutRecipe_) {
   EXPECT_THROW(check_var_out_recipe(src_facility), cyclus::ValueError);
 
   var_out_recipe.first = "mass";
-  var_out_recipe.second[922380000].first = "mass";
+  var_out_recipe.second[922380000].first = "uniform";
+  var_out_recipe.second[922380000].second.push_back(0.);
+  var_out_recipe.second[922380000].second.push_back(1.);
   update_var_out_recipe(src_facility);
   EXPECT_THROW(check_var_out_recipe(src_facility), cyclus::ValueError);
 
+  var_out_recipe.second[922380000].first = "normalisation";
+  var_out_recipe.second[922350000].second.push_back(0.);
+  update_var_out_recipe(src_facility);
+  EXPECT_THROW(check_var_out_recipe(src_facility), cyclus::KeyError);
+
+
+  var_out_recipe.second[922350000].second.pop_back();
   var_out_recipe.second[922350000].first = "normalisation";
   var_out_recipe.second[922380000].first = "normalisation";
   update_var_out_recipe(src_facility);
