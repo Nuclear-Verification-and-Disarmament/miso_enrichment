@@ -132,13 +132,12 @@ class VarRecipeSource : public cyclus::Facility,
   double inventory_size;
 
   #pragma cyclus var { \
-    "default": [-1], \
     "tooltip": "Throughput change times in timesteps from beginning " \
                "of deployment", \
     "uilabel": "throughput change times", \
     "doc": "list of timesteps where the throughput is changed. If the list contains " \
            "`-1` as only element, method 2 (see README) is used. This means " \
-           "that `throughputs` contains all SWU values, and not only " \
+           "that `throughputs` contains all throughput values, and not only " \
            "the changes. \n"\
            "Else, the first timestep has to be `0`, which sets the initial " \
            "value and all timesteps are measured from the moment of " \
@@ -147,7 +146,6 @@ class VarRecipeSource : public cyclus::Facility,
   std::vector<int> throughput_times;
 
   #pragma cyclus var {  \
-    "default": [], \
     "tooltip": "List of throughput per timestep", \
     "units": "kg/(time step)", \
     "uilabel": "Maximum Throughput List", \
