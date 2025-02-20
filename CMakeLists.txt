@@ -118,7 +118,7 @@ MESSAGE("--    HDF5 Libraries: ${HDF5_LIBRARIES}")
 # find Coin
 FIND_PACKAGE(COIN REQUIRED)
 SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${COIN_INCLUDE_DIR})
-set(LIBS ${LIBS} ${COIN_LIBRARIES})
+SET(LIBS ${LIBS} ${COIN_LIBRARIES})
 
 # Find Python and python.h
 FIND_PACKAGE(PythonLibs REQUIRED)
@@ -129,15 +129,10 @@ MESSAGE(STATUS "Finding and including submodules.")
 
 SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/external/json/single_include")
 MESSAGE(STATUS "   JSON for Modern C++")
-
-MESSAGE(STATUS "Eigen")
-FIND_PATH(EIGEN_DIR Eigen external/eigen)
-SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${EIGEN_DIR})
-
-MESSAGE(STATUS "CppNumericalSolvers")
-SET(CPP_NUMERICAL_SOLVERS_DIR "external/CppNumericalSolvers")
-FIND_PATH(CPP_NUMERICAL_SOLVERS_DIR CppNumericalSolvers external/CppNumericalSolvers)
-SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${CPP_NUMERICAL_SOLVERS_DIR})
+SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/external/eigen")
+MESSAGE(STATUS "   Eigen")
+SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/external/CppNumericalSolvers")
+MESSAGE(STATUS "   CppNumericalSolvers")
 
 # include all the directories we just found
 INCLUDE_DIRECTORIES(${STUB_INCLUDE_DIRS})
