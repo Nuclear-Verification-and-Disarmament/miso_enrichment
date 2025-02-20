@@ -84,36 +84,6 @@ Ref 1 derives the mathematical formalism of a matched abundance ratio cascade
 using constant overall stage separation factors while Ref 2 gives a new
 physically founded approach to calculating said separation factors.
 
-## GprReactor
-:rotating_light: Please note that this module does not work at the moment.
-I do not manage to correctly include the JSON dependency in the build system and
-will have to investigate this further or even remove this package entirely.
-For updates see [issue #6](https://github.com/Nuclear-Verification-and-Disarmament/miso_enrichment/issues/6).
-
-### Requirements
-This facility needs Niels Lohmann's [JSON for Modern C++](https://json.nlohmann.me/)
-library. It can be downloaded from his [GitHub repository](https://github.com/nlohmann/json)
-or using one of the many package managers, see [here](https://github.com/nlohmann/json#package-managers).
-Successfully tested using `conda install -c conda-forge nlohmann_json` and using `CMake`.
-When using `CMake`, then the package needs to be installed globally
-(i.e., under `/usr/local`), as shown in the following:
-```
-$ git clone https://github.com/nlohmann/json
-$ cd json
-$ mkdir build
-$cd build
-$ cmake ..
-$ make
-$ sudo make install
-```
-While it _should_ be possible to install `JSON for Modern C++` locally,
-i.e. in `~/.local`, this results in `CMake` not finding `nlohmann/json.hpp`
-during the `misoenrichment` installation. I will hopefully manage to
-fix this in future versions.
-
-Additionally, one needs `Python3` in combination with the `NumPy` and
-`SciPy` packages.
-
 ## References
 
 1. E. von Halle, _Multicomponent Isotope Separation in Matched Abundance
