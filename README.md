@@ -26,7 +26,11 @@ in future commits.
 
 ## MIsoEnrich
 ### Installation
-This module has some dependencies.
+In order to use the `VarRecipeSource` archetype, a [patched version of
+Cyclus](https://github.com/maxschalz/cyclus/tree/add-datatype) needs to be
+used (commit [`15e1f30`](https://github.com/maxschalz/cyclus/commit/15e1f303be4335a6545e8a7d1752d6195a4e72ff)) or later.
+This patch will be integrated into Cyclus' main branch.
+The module has additional dependencies.
 Python dependencies ([`scipy`](https://github.com/scipy/scipy) and
 [`numpy`](https://github.com/numpy/numpy) are installed automatically via `pip`,
 while the C++ dependencies
