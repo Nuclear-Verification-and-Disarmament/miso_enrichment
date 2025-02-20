@@ -127,13 +127,8 @@ SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
 # Find and include external libraries and submodules.
 MESSAGE(STATUS "Finding and including submodules.")
 
-# Find Niels Lohmann's 'JSON for Modern C++' package
-#FIND_PACKAGE(nlohmann_json REQUIRED)
-
-# The line below does not work!
-# For unknown reasons, CMake does not find the include directories
-# and nlohmann_json_INCLUDE_DIRS is an unset variable.
-#SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} ${nlohmann_json_DIR})
+SET(STUB_INCLUDE_DIRS ${STUB_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/external/json/single_include")
+MESSAGE(STATUS "   JSON for Modern C++")
 
 MESSAGE(STATUS "Eigen")
 FIND_PATH(EIGEN_DIR Eigen external/eigen)
