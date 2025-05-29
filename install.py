@@ -39,7 +39,8 @@ def install(args):
 
     print("Installing Python (sub)module 'spentfuelgpr'...")
     spent_fuel_gpr_dir = os.path.join(root_dir, "spentfuelgpr")
-    subprocess.check_call(["pip3", "install", "-e", spent_fuel_gpr_dir])
+    # The line below follows https://stackoverflow.com/a/50255019/30370934
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", spent_fuel_gpr_dir])
     print()
 
     if not os.path.exists(makefile):

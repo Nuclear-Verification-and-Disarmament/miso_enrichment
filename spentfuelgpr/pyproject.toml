@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spentfuelgpr"
+authors = [
+  { name = "Nuclear Verification and Disarmament Group, RWTH Aachen University" },
+  { name = "Max Schalz" },
+  { name = "Antonio Figueroa" }
+]
+maintainers = [{ name = "Max Schalz" }]
+version = "0.1"
+license = { text = "BSD-3-Clause" }
+description = "Python part of the MIsoEnrichment module"
+classifiers = [
+  "License :: OSI Approved :: BSD-3-Clause License",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "numpy",
+  "scipy"
+]
+
+[project.urls]
+Homepage = "https://github.com/Nuclear-Verification-and-Disarmament/miso_enrichment"
+
+[tool.setuptools]
+packages = ["spentfuelgpr"]
