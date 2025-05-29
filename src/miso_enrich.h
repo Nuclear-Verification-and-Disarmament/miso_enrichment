@@ -271,15 +271,6 @@ class MIsoEnrich : public cyclus::Facility,
   }
   double gamma_235;
 
-  #pragma cyclus var { \
-    "default": 1e299,	\
-    "tooltip": "SWU capacity (kgSWU/month)", \
-    "uilabel": "SWU Capacity", \
-    "uitype": "range", \
-    "range": [0.0, 1e299], \
-    "doc": "separative work unit (SWU) capacity of enrichment "	\
-           "facility (kgSWU/timestep) " \
-  }
   double swu_capacity;
   double current_swu_capacity;
 
