@@ -54,12 +54,14 @@ EnrichmentCalculatorTest::EnrichmentCalculatorTest() :
   double target_product_assay = 0.9;
   double target_tails_assay = 0.001;
   double gamma = 1.3;
+  std::string enrichment_process("centrifuge");
   double target_feed_qty = 100;
   double target_product_qty = 1e299;
   double max_swu = 1e299;
 
   e = EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
-                             target_tails_assay, gamma, target_feed_qty,
+                             target_tails_assay, gamma, enrichment_process,
+                             target_feed_qty,
                              target_product_qty, max_swu,
                              use_downblending, use_integer_stages);
   e.EnrichmentOutput(product_comp, tails_comp, feed_qty, swu_used,
@@ -74,6 +76,7 @@ TEST_F(EnrichmentCalculatorTest, DownblendingOptions) {
   double target_product_assay = 0.9;
   double target_tails_assay = 0.001;
   double gamma = 1.3;
+  std::string enrichment_process("centrifuge");
   double target_feed_qty = 100;
   double target_product_qty = 1e299;
   double max_swu = 1e299;
@@ -82,28 +85,32 @@ TEST_F(EnrichmentCalculatorTest, DownblendingOptions) {
   bool use_integer_stages = true;
   EXPECT_NO_THROW(
     EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
-                         target_tails_assay, gamma, target_feed_qty,
+                         target_tails_assay, gamma, enrichment_process,
+                         target_feed_qty,
                          target_product_qty, max_swu,
                          use_downblending, use_integer_stages)
   );
   use_downblending = false;
   EXPECT_NO_THROW(
     EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
-                         target_tails_assay, gamma, target_feed_qty,
+                         target_tails_assay, gamma, enrichment_process,
+                         target_feed_qty,
                          target_product_qty, max_swu,
                          use_downblending, use_integer_stages)
   );
   use_integer_stages = false;
   EXPECT_NO_THROW(
     EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
-                         target_tails_assay, gamma, target_feed_qty,
+                         target_tails_assay, gamma, enrichment_process,
+                         target_feed_qty,
                          target_product_qty, max_swu,
                          use_downblending, use_integer_stages)
   );
   use_downblending = true;
   EXPECT_THROW(
     EnrichmentCalculator(compPtr_nat_U(), target_product_assay,
-                         target_tails_assay, gamma, target_feed_qty,
+                         target_tails_assay, gamma, enrichment_process,
+                         target_feed_qty,
                          target_product_qty, max_swu,
                          use_downblending, use_integer_stages),
     cyclus::ValueError
@@ -114,7 +121,7 @@ TEST_F(EnrichmentCalculatorTest, DownblendingOptions) {
 TEST_F(EnrichmentCalculatorTest, AssignmentOperator) {
   EnrichmentCalculator e2(
     cyclus::Composition::CreateFromAtom(weapons_grade_U()), 0.95, 0.1, 1.1,
-    1., 1e299, 1e299, true);
+    "centrifuge", 1., 1e299, 1e299, true);
   e2 = e;
 
   cyclus::Composition::Ptr product_comp2, tails_comp2;
@@ -176,8 +183,8 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   double dummy_double;
 
   // In this case, the feed is the constraining factor.
-  EnrichmentCalculator blender(compPtr_nat_U(), target_product_assay,
-                               0.001, 1.3, 100, 1e299, 1e299, true);
+  EnrichmentCalculator blender(compPtr_nat_U(), target_product_assay, 0.001,
+                               1.3, "centrifuge", 100, 1e299, 1e299, true);
   blender.EnrichmentOutput(bl_product_comp, bl_tails_comp, bl_feed_qty,
                            bl_swu_used, bl_product_qty, bl_tails_qty,
                            dummy_double, dummy_double);
@@ -190,8 +197,8 @@ TEST_F(EnrichmentCalculatorTest, Downblending) {
   // Of course, the results from this and from the previous enrichment
   // should be identical.
   EnrichmentCalculator blender2(compPtr_nat_U(), target_product_assay,
-                                0.001, 1.3, 1e299, bl_product_qty,
-                                1e299, true);
+                                0.001, 1.3, "centrifuge", 1e299,
+                                bl_product_qty, 1e299, true);
   blender2.EnrichmentOutput(bl_product_comp2, bl_tails_comp, bl_feed_qty2,
                             bl_swu_used, bl_product_qty2, bl_tails_qty,
                             dummy_double, dummy_double);
@@ -206,6 +213,7 @@ TEST_F(EnrichmentCalculatorTest, NonIntegerStagesNumbers) {
   double target_product_assay = 0.9;
   double target_tails_assay = 0.001;
   double gamma = 1.3;
+  std::string enrichment_process("centrifuge");
   double target_feed_qty = 100;
   double target_product_qty = 1e299;
   double max_swu = 1e299;
@@ -223,7 +231,8 @@ TEST_F(EnrichmentCalculatorTest, NonIntegerStagesNumbers) {
   expected_tails_comp[922380000] = 9.98997443e-01;
 
   EnrichmentCalculator e2(compPtr_nat_U(), target_product_assay,
-                          target_tails_assay, gamma, target_feed_qty,
+                          target_tails_assay, gamma, enrichment_process,
+                          target_feed_qty,
                           target_product_qty, max_swu,
                           use_downblending, use_integer_stages);
 

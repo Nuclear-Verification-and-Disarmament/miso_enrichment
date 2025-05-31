@@ -1,6 +1,7 @@
 #include "miso_helper.h"
 
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <sstream>
 
@@ -222,16 +223,32 @@ double MIsoFrac(cyclus::CompMap compmap, int isotope) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-std::map<int,double> CalculateSeparationFactor(double gamma_235) {
-  std::vector<int> isotopes(IsotopesNucID());
+std::map<int,double> CalculateSeparationFactor(double gamma_235,
+                                               std::string enrichment_process) {
+  std::vector<int> uranium_nuc_ids(IsotopesNucID());
   std::map<int,double> separation_factors;
+
+  const double mass_hexafluoride = 6 * 19;
 
   // We consider U-238 to be the key component hence the mass differences
   // are calculated with respect to this isotope.
-  for (int i : isotopes) {
-    double delta_mass = 238. - NucIDToIsotope(i);
-    double gamma = 1. + delta_mass*(gamma_235-1.) / (238.-235.);
-    separation_factors[i] = gamma;
+  if (enrichment_process == "centrifuge") {
+    for (int n : uranium_nuc_ids) {
+      double delta_mass = 238. - NucIDToIsotope(n);
+      double gamma = 1. + delta_mass*(gamma_235-1.) / (238.-235.);
+      separation_factors[n] = gamma;
+    }
+  } else if (enrichment_process == "diffusion") {
+    for (int n : uranium_nuc_ids) {
+      double uranium_mass = NucIDToIsotope(n) + mass_hexafluoride;
+      double key_isotope_mass = 238. + mass_hexafluoride;
+      separation_factors[n] = std::sqrt(key_isotope_mass / uranium_mass);
+    }
+  } else {
+    std::stringstream ss;
+    ss << "'enrichment_process' is " << enrichment_process
+       << ". However, it must be either 'centrifuge' or 'diffusion'.";
+    throw cyclus::ValueError(ss.str());
   }
   return separation_factors;
 }

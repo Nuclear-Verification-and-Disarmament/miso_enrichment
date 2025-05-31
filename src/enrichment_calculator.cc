@@ -16,25 +16,28 @@ namespace misoenrichment {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Constructor delegation only possible from C++11 onwards, CMake checks if
 // C++11 is supported.
-EnrichmentCalculator::EnrichmentCalculator() : EnrichmentCalculator(1.4) {}
+EnrichmentCalculator::EnrichmentCalculator() : EnrichmentCalculator(
+    1.4, "centrifuge") {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Constructor delegation only possible from C++11 onwards, CMake checks if
 // C++11 is supported.
-EnrichmentCalculator::EnrichmentCalculator(double gamma_235) :
+EnrichmentCalculator::EnrichmentCalculator(double gamma_235,
+                                           std::string enrichment_process) :
   EnrichmentCalculator(misotest::comp_reprocessedU(), 0.05, 0.003,
-                       gamma_235, 1, 1, 1e299, true) {}
+                       gamma_235, enrichment_process, 1, 1, 1e299, true) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 EnrichmentCalculator::EnrichmentCalculator(
     cyclus::Composition::Ptr feed_comp,
     double target_product_assay, double target_tails_assay,
-    double gamma_235, double feed_qty, double product_qty,
+    double gamma_235, std::string enrichment_process, double feed_qty, double product_qty,
     double max_swu, bool use_downblending, bool use_integer_stages) :
       feed_composition(feed_comp->atom()),
       target_product_assay(target_product_assay),
       target_tails_assay(target_tails_assay),
       gamma_235(gamma_235),
+      enrichment_process(enrichment_process),
       target_feed_qty(feed_qty),
       target_product_qty(product_qty),
       feed_qty(0.), product_qty(0.),
@@ -67,14 +70,14 @@ EnrichmentCalculator::EnrichmentCalculator(const EnrichmentCalculator& e) :
     target_feed_qty(e.target_feed_qty),
     target_product_qty(e.target_product_qty), max_swu(e.max_swu),
     use_downblending(e.use_downblending), isotopes(IsotopesNucID()),
-    gamma_235(e.gamma_235) {
+    gamma_235(e.gamma_235), enrichment_process(e.enrichment_process) {
   CalculateGammaAlphaStar_();
   BuildMatchedAbundanceRatioCascade();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentCalculator::CalculateGammaAlphaStar_() {
-  separation_factors = CalculateSeparationFactor(gamma_235);
+  separation_factors = CalculateSeparationFactor(gamma_235, enrichment_process);
   for (int i : isotopes) {
     // E. von Halle Eq. (15)
     alpha_star[i] = separation_factors[i]
@@ -99,6 +102,7 @@ EnrichmentCalculator& EnrichmentCalculator::operator= (
   use_downblending = e.use_downblending;
 
   gamma_235 = e.gamma_235;
+  enrichment_process = e.enrichment_process;
   CalculateGammaAlphaStar_();
 
   // TODO Check why the recalculated variables are not copied
@@ -120,6 +124,7 @@ void EnrichmentCalculator::PPrint() {
             << "  Separative work used   " << swu << "\n\n"
             << "  n(enriching)           " << n_enriching << "\n"
             << "  n(stripping)           " << n_stripping << "\n"
+            << "  Enrichment process     " << enrichment_process << "\n"
             << "  Separation factors         232     233      234      235"
             << "      236      238\n                         ";
   for (int nuc : isotopes) {
@@ -139,13 +144,16 @@ void EnrichmentCalculator::SetInput(
     cyclus::Composition::Ptr new_feed_composition,
     double new_target_product_assay, double new_target_tails_assay,
     double new_feed_qty, double new_product_qty, double new_max_swu,
-    double new_gamma_235, bool new_use_downblending) {
+    double new_gamma_235, std::string new_enrichment_process,
+    bool new_use_downblending) {
 
   feed_composition = new_feed_composition->atom();
   cyclus::compmath::Normalize(&feed_composition);
 
-  if (new_gamma_235 != gamma_235) {
+  if (new_gamma_235 != gamma_235
+      || new_enrichment_process != enrichment_process) {
     gamma_235 = new_gamma_235;
+    enrichment_process = new_enrichment_process;
     CalculateGammaAlphaStar_();
   }
   target_product_assay = new_target_product_assay;

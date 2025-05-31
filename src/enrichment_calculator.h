@@ -2,6 +2,7 @@
 #define MISOENRICHMENT_SRC_ENRICHMENT_CALCULATOR_H_
 
 #include <map>
+#include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -19,10 +20,11 @@ class EnrichmentCalculator {
   FRIEND_TEST(EnrichmentCalculatorTest, AssignmentOperator);
 
   EnrichmentCalculator();
-  EnrichmentCalculator(double gamma_235);
+  EnrichmentCalculator(double gamma_235, std::string enrichment_process);
   EnrichmentCalculator(cyclus::Composition::Ptr feed_comp,
                        double target_product_assay,
                        double target_tails_assay, double gamma,
+                       std::string enrichment_process,
                        double feed_qty, double product_qty,
                        double max_swu, bool use_downblending=true,
                        bool use_integer_stages=true);
@@ -36,7 +38,7 @@ class EnrichmentCalculator {
   void SetInput(cyclus::Composition::Ptr new_feed_composition,
       double new_target_product_assay, double new_target_tails_assay,
       double new_feed_qty, double new_product_qty, double new_max_swu,
-      double gamma_235, bool use_downblending);
+      double gamma_235, std::string enrichment_process, bool use_downblending);
 
   void EnrichmentOutput(cyclus::Composition::Ptr& product_comp,
                         cyclus::Composition::Ptr& tails_comp, double& feed_used,
@@ -71,6 +73,7 @@ class EnrichmentCalculator {
                    // in kg SWU timestep^-1
 
   const std::vector<int> isotopes;
+  std::string enrichment_process;
   std::map<int,double> separation_factors;
   std::map<int,double> alpha_star;
 

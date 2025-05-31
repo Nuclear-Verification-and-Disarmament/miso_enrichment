@@ -15,8 +15,10 @@ namespace misoenrichment {
 class SwuConverter : public cyclus::Converter<cyclus::Material> {
  public:
   SwuConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-               double gamma_235, bool use_downblending, bool use_integer_stages)
+               double gamma_235, std::string enrichment_process,
+               bool use_downblending, bool use_integer_stages)
       : feed_comp_(feed_comp), gamma_235_(gamma_235),
+        enrichment_process_(enrichment_process),
         tails_assay_(tails_assay), use_downblending(use_downblending),
         use_integer_stages(use_integer_stages) {}
 
@@ -30,6 +32,7 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
+                           enrichment_process_,
                            1e299, product_qty, 1e299, use_downblending,
                            use_integer_stages);
     double swu_used = e.SwuUsed();
@@ -54,15 +57,18 @@ class SwuConverter : public cyclus::Converter<cyclus::Material> {
   bool use_integer_stages;
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
+  std::string enrichment_process_;
   double tails_assay_;
 };
 
 class FeedConverter : public cyclus::Converter<cyclus::Material> {
  public:
   FeedConverter(cyclus::Composition::Ptr feed_comp, double tails_assay,
-                double gamma_235, bool use_downblending,
+                double gamma_235, std::string enrichment_process,
+                bool use_downblending,
                 bool use_integer_stages)
       : feed_comp_(feed_comp), gamma_235_(gamma_235),
+        enrichment_process_(enrichment_process),
         tails_assay_(tails_assay), use_downblending(use_downblending),
         use_integer_stages(use_integer_stages) {}
 
@@ -76,6 +82,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
     double product_qty = m->quantity();
     double product_assay = MIsoAtomAssay(m);
     EnrichmentCalculator e(feed_comp_, product_assay, tails_assay_, gamma_235_,
+                           enrichment_process_,
                            1e299, product_qty, 1e299, use_downblending,
                            use_integer_stages);
     double feed_used = e.FeedUsed();
@@ -105,6 +112,7 @@ class FeedConverter : public cyclus::Converter<cyclus::Material> {
   bool use_integer_stages;
   cyclus::Composition::Ptr feed_comp_;
   double gamma_235_;
+  std::string enrichment_process_;
   double tails_assay_;
 };
 
@@ -270,6 +278,13 @@ class MIsoEnrich : public cyclus::Facility,
     "doc": "overall stage separation factor for U235" \
   }
   double gamma_235;
+
+  #pragma cyclus var { \
+    "tooltip": "Enrichment process used, must be 'diffusion' or 'centrifuge'", \
+    "uilabel": "Enrichment process used, must be 'diffusion' or 'centrifuge'", \
+    "doc": "Enrichment process used, must be 'diffusion' or 'centrifuge'", \
+  }
+  std::string enrichment_process;
 
   double swu_capacity;
   double current_swu_capacity;
