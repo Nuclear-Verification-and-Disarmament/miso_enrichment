@@ -24,6 +24,7 @@ class MIsoEnrichTest : public ::testing::Test {
          max_enrich, swu_capacity, tails_assay;
 
   std::string feed_commod, product_commod, tails_commod, feed_recipe;
+  std::string enrichment_process;
   std::vector<double> swu_vals;
   std::vector<int> swu_times;
 

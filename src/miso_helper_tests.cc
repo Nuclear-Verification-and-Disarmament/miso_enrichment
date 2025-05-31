@@ -65,11 +65,19 @@ TEST(MIsoHelperTest, CheckFractionsMaterial) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-TEST(MIsoHelperTest, SeparationFactor) {
+TEST(MIsoHelperTest, SeparationFactorInput) {
+  EXPECT_THROW(CalculateSeparationFactor(1.0, "test"), cyclus::ValueError);
+  EXPECT_NO_THROW(CalculateSeparationFactor(1.0, "diffusion"));
+  EXPECT_NO_THROW(CalculateSeparationFactor(1.0, "centrifuge"));
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST(MIsoHelperTest, SeparationFactorCentrifuge) {
   // The values below are valid for alpha*beta = 1.6
   double gamma_235 = 1.6;
+  std::string method("centrifuge");
   std::map<int,double> separation_factor = CalculateSeparationFactor(
-                                                              gamma_235);
+      gamma_235, method);
 
   std::vector<int> isotopes(IsotopesNucID());
   std::map<int,double> expected;
@@ -82,6 +90,27 @@ TEST(MIsoHelperTest, SeparationFactor) {
 
   for (int i : isotopes) {
     EXPECT_DOUBLE_EQ(separation_factor[i], expected[i]);
+  }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+TEST(MIsoHelperTest, SeparationFactorDiffusion) {
+  double gamma_235 = 1.6;
+  std::string method("diffusion");
+  std::map<int,double> separation_factor = CalculateSeparationFactor(
+      gamma_235, method);
+
+  std::vector<int> isotopes(IsotopesNucID());
+  std::map<int,double> expected;
+
+  expected[922320000] = 1.008633253697;
+  expected[922330000] = 1.007178843057;
+  expected[922340000] = 1.005730705941;
+  expected[922350000] = 1.004288797378;
+  expected[922360000] = 1.002853072845;
+  expected[922380000] = 1.;
+  for (int i : isotopes) {
+    EXPECT_NEAR(separation_factor[i], expected[i], 1e-12);
   }
 }
 

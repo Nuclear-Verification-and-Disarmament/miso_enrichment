@@ -255,10 +255,11 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr>
 
     cyclus::Composition::Ptr feed_comp = feed_inv_comp[feed_idx];
     cyclus::Converter<Material>::Ptr swu_converter(
-        new SwuConverter(feed_comp, tails_assay, gamma_235,
+        new SwuConverter(feed_comp, tails_assay, gamma_235, enrichment_process,
                          use_downblending, use_integer_stages));
     cyclus::Converter<Material>::Ptr feed_converter(
         new FeedConverter(feed_comp, tails_assay, gamma_235,
+                          enrichment_process,
                           use_downblending, use_integer_stages));
     CapacityConstraint<Material> swu_constraint(swu_capacity,
                                                 swu_converter);
@@ -287,7 +288,8 @@ cyclus::Material::Ptr MIsoEnrich::Offer_(
   double product_qty = mat->quantity();
 
   EnrichmentCalculator e(feed_inv_comp[feed_idx], product_assay,
-                         tails_assay, gamma_235, feed_qty, product_qty,
+                         tails_assay, gamma_235,
+                         enrichment_process, feed_qty, product_qty,
                          swu_capacity, use_downblending, use_integer_stages);
   e.ProductOutput(product_comp, product_qty);
 
@@ -453,7 +455,8 @@ cyclus::Material::Ptr MIsoEnrich::Enrich_(
   // In the following line, the enrichment is calculated but it is not yet
   // performed!
   EnrichmentCalculator e(feed_inv_comp[feed_idx], product_assay,
-                         tails_assay, gamma_235, feed_qty, request_qty,
+                         tails_assay, gamma_235, enrichment_process,
+                         feed_qty, request_qty,
                          swu_capacity, use_downblending, use_integer_stages);
   e.EnrichmentOutput(product_comp, tails_comp, feed_required,
                                    swu_required, product_qty, tails_qty,

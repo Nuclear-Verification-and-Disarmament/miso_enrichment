@@ -65,6 +65,7 @@ void MIsoEnrichTest::InitParameters() {
   swu_vals = std::vector<double>(1,1);
   swu_times = std::vector<int>(1,0);
   gamma_235 = 1.4;
+  enrichment_process = "centrifuge";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -81,6 +82,7 @@ void MIsoEnrichTest::SetUpMIsoEnrichment() {
   miso_enrich_facility->current_swu_capacity = swu_capacity;
   miso_enrich_facility->max_enrich = max_enrich;
   miso_enrich_facility->gamma_235 = gamma_235;
+  miso_enrich_facility->enrichment_process = enrichment_process;
   miso_enrich_facility->latitude = latitude;
   miso_enrich_facility->longitude = longitude;
   miso_enrich_facility->swu_capacity_vals = swu_vals;
@@ -120,6 +122,7 @@ TEST_F(MIsoEnrichTest, BidPrefs) {
     "   <tails_assay>0.002</tails_assay> "
     "   <max_feed_inventory>1</max_feed_inventory> "
     "   <order_prefs>1</order_prefs>"
+    "   <enrichment_process>centrifuge</enrichment_process> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> ";
 
@@ -161,6 +164,7 @@ TEST_F(MIsoEnrichTest, FeedConstraint) {
     "   <product_commod>enriched_U</product_commod> "
     "   <tails_commod>depleted_U</tails_commod> "
     "   <tails_assay>0.002</tails_assay> "
+    "   <enrichment_process>centrifuge</enrichment_process> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
     "   <use_downblending>0</use_downblending> "
@@ -268,6 +272,7 @@ TEST_F(MIsoEnrichTest, NoBidPrefs) {
     "   <tails_assay>0.002</tails_assay> "
     "   <max_feed_inventory>2</max_feed_inventory> "
     "   <order_prefs>1</order_prefs>"
+    "   <enrichment_process>centrifuge</enrichment_process> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
     "   <use_downblending>0</use_downblending> "
@@ -332,6 +337,7 @@ TEST_F(MIsoEnrichTest, RequestSim) {
     "   <tails_assay>0.002</tails_assay> "
     "   <max_feed_inventory>100</max_feed_inventory> "
     "   <max_enrich>0.8</max_enrich> "
+    "   <enrichment_process>centrifuge</enrichment_process> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
     "   <use_downblending>0</use_downblending> "
@@ -363,6 +369,7 @@ TEST_F(MIsoEnrichTest, TailsTrade) {
     "   <tails_commod>depleted_U</tails_commod> "
     "   <tails_assay>0.002</tails_assay> "
     "   <initial_feed>100</initial_feed> "
+    "   <enrichment_process>centrifuge</enrichment_process> "
     "   <swu_capacity_times><val>0</val></swu_capacity_times> "
     "   <swu_capacity_vals><val>10000</val></swu_capacity_vals> "
     "   <use_downblending>0</use_downblending> "
